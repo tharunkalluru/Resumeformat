@@ -23,7 +23,7 @@
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
 }
 
 body {
@@ -47,7 +47,7 @@ body {
   margin: 0 auto;
   
   /* Typography */
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   line-height: 1.45;
   color: #000000;
@@ -73,7 +73,7 @@ body {
 }
 
 .resume-preview .resume-name {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 20pt;
   font-weight: bold;
   color: #000000;
@@ -89,7 +89,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   color: #333333;
   align-items: baseline;
@@ -152,7 +152,7 @@ body {
 
 /* ===== SECTION TITLES - Left aligned with gap before underline ===== */
 .resume-preview .section-title {
-  font-family: Georgia, 'Times New Roman', Times, serif !important;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
   font-size: 10pt !important;
   font-weight: bold !important;
   text-transform: uppercase;
@@ -185,7 +185,7 @@ body {
 }
 
 .resume-preview .job-title-line {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9.5pt;
   color: #000000;
   text-align: left;
@@ -205,7 +205,7 @@ body {
 }
 
 .resume-preview .job-date {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   color: #333333;
   font-style: italic;
@@ -222,7 +222,7 @@ body {
 }
 
 .resume-preview .resume-bullets li {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   line-height: 1.45;
   margin-bottom: var(--bullet-gap, 1px);
@@ -252,7 +252,7 @@ body {
 
 /* ===== STARTUPS ===== */
 .resume-preview .startups-list {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
 }
 
@@ -277,7 +277,7 @@ body {
 
 /* ===== SKILLS ===== */
 .resume-preview .skills-list {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
 }
 
@@ -317,7 +317,7 @@ body {
 }
 
 .resume-preview .education-school {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9.5pt;
   font-weight: bold;
   color: #000000;
@@ -325,7 +325,7 @@ body {
 }
 
 .resume-preview .education-date {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   color: #333333;
   font-style: italic;
@@ -345,7 +345,7 @@ body {
 }
 
 .resume-preview .education-degree {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   line-height: 1.45;
   color: #000000;
@@ -354,7 +354,7 @@ body {
 }
 
 .resume-preview .education-gpa {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   line-height: 1.45;
   color: #000000;
@@ -364,7 +364,7 @@ body {
 }
 
 .resume-preview .education-detail {
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   margin: 3px 0 0 0;
   padding: 0;

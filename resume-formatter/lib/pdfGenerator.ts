@@ -52,7 +52,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     margin: 0;
     background-color: #ffffff;
     color: #000000;
-    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif;
     font-size: 9pt;
     line-height: 1.45;
     box-sizing: border-box;
@@ -76,7 +76,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const name = clone.querySelector('.resume-name') as HTMLElement;
   if (name) {
     name.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 20pt;
       font-weight: bold;
       color: #000000;
@@ -96,7 +96,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       justify-content: center;
       align-items: baseline;
       gap: 12px;
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       color: #333333;
       margin: 0;
@@ -167,7 +167,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const sectionTitles = clone.querySelectorAll('.section-title') as NodeListOf<HTMLElement>;
   sectionTitles.forEach(title => {
     title.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 10pt;
       font-weight: bold;
       text-transform: uppercase;
@@ -208,7 +208,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const jobTitleLines = clone.querySelectorAll('.job-title-line') as NodeListOf<HTMLElement>;
   jobTitleLines.forEach(line => {
     line.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9.5pt;
       color: #000000;
       text-align: left;
@@ -225,7 +225,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const jobDates = clone.querySelectorAll('.job-date') as NodeListOf<HTMLElement>;
   jobDates.forEach(date => {
     date.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       color: #333333;
       font-style: italic;
@@ -251,7 +251,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     const parent = bullet.parentElement;
     const isLast = parent ? bullet === parent.lastElementChild : index === arr.length - 1;
     bullet.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       line-height: 1.45;
       margin: 0 0 ${isLast ? '0' : bulletGap} 0;
@@ -278,7 +278,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const eduSchools = clone.querySelectorAll('.education-school') as NodeListOf<HTMLElement>;
   eduSchools.forEach(school => {
     school.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9.5pt;
       font-weight: bold;
       color: #000000;
@@ -290,7 +290,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const eduDates = clone.querySelectorAll('.education-date') as NodeListOf<HTMLElement>;
   eduDates.forEach(date => {
     date.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       color: #333333;
       font-style: italic;
@@ -317,7 +317,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const eduDegrees = clone.querySelectorAll('.education-degree') as NodeListOf<HTMLElement>;
   eduDegrees.forEach(degree => {
     degree.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       line-height: 1.45;
       color: #000000;
@@ -330,7 +330,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const eduGpas = clone.querySelectorAll('.education-gpa') as NodeListOf<HTMLElement>;
   eduGpas.forEach(gpa => {
     gpa.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       line-height: 1.45;
       color: #000000;
@@ -344,7 +344,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const eduDetails = clone.querySelectorAll('.education-detail') as NodeListOf<HTMLElement>;
   eduDetails.forEach(detail => {
     detail.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       margin: 3px 0 0 0;
       padding: 0;
@@ -358,7 +358,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   startupEntries.forEach((entry, index, arr) => {
     const isLast = index === arr.length - 1;
     entry.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       margin: 0 0 ${isLast ? '0' : '5px'} 0;
       padding: 0;
@@ -378,7 +378,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   skillLines.forEach((line, index, arr) => {
     const isLast = index === arr.length - 1;
     line.style.cssText = `
-      font-family: Georgia, 'Times New Roman', Times, serif;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       font-size: 9pt;
       margin: 0 0 ${isLast ? '0' : '5px'} 0;
       padding: 0;
@@ -406,9 +406,10 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   await new Promise(resolve => setTimeout(resolve, 200));
 
   try {
-    // Generate canvas from the styled clone
+    // Generate canvas at maximum resolution for the sharpest possible text
+    // Scale 4 = 300+ DPI equivalent, professional print quality
     const canvas = await html2canvas(clone, {
-      scale: 2,
+      scale: 4,
       useCORS: true,
       logging: false,
       width: 816,
@@ -416,23 +417,30 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       backgroundColor: '#ffffff',
       windowWidth: 816,
       windowHeight: 1056,
+      imageTimeout: 0,
+      removeContainer: false,
     });
 
-    // Create PDF
+    // Create PDF with compression enabled
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'in',
       format: 'letter',
+      compress: true,
+      putOnlyUsedFonts: true,
+      floatPrecision: 16,
     });
 
-    // Add the canvas as an image
+    // Use PNG for lossless, razor-sharp text
     const imgData = canvas.toDataURL('image/png');
-    pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11);
+    
+    // Add image with SLOW compression for best quality
+    pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11, undefined, 'SLOW');
 
     // Save the PDF
     pdf.save(filename);
     
-    console.log('[PDF] Generated successfully!');
+    console.log('[PDF] Generated successfully! Maximum quality.');
   } finally {
     // Clean up
     document.body.removeChild(clone);
