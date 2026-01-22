@@ -143,6 +143,7 @@ body {
 
 .resume-preview .icon-phone {
   font-size: 8pt;
+  vertical-align: middle;
 }
 
 /* ===== SECTIONS - Dynamic spacing ===== */
