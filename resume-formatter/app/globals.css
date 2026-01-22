@@ -103,6 +103,10 @@ body {
   gap: 3px;
 }
 
+.resume-preview .contact-item-phone {
+  align-items: center;
+}
+
 .resume-preview .contact-link {
   color: inherit;
   text-decoration: none;
