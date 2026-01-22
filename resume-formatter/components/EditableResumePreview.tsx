@@ -27,7 +27,7 @@ interface EditableResumePreviewProps {
  * - More sections → more section gaps
  * - More bullets → more bullet gaps
  * - Balanced across all elements
- * 
+ * aa
  * Result: Uniform borders, one page, consistent formatting for ANY content length
  */
 
