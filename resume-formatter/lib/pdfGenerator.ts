@@ -148,7 +148,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     } else if (icon.classList.contains('icon-email')) {
       icon.style.cssText = baseStyle + 'font-size: 7pt;';
     } else if (icon.classList.contains('icon-phone')) {
-      icon.style.cssText = baseStyle + 'font-size: 9pt;';
+      icon.style.cssText = baseStyle + 'font-size: 8.3pt;';
     } else {
       icon.style.cssText = baseStyle + 'font-size: 9pt;';
     }
