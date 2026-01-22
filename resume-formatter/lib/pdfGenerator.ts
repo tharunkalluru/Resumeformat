@@ -306,7 +306,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     row.style.cssText = `
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: center;
       gap: 10px;
       margin: 4px 0 0 0;
       padding: 0;
@@ -319,8 +319,10 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     degree.style.cssText = `
       font-family: Georgia, 'Times New Roman', Times, serif;
       font-size: 9pt;
+      line-height: 1.45;
       color: #000000;
       text-align: left;
+      flex: 1;
     `;
   });
 
@@ -330,6 +332,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     gpa.style.cssText = `
       font-family: Georgia, 'Times New Roman', Times, serif;
       font-size: 9pt;
+      line-height: 1.45;
       color: #000000;
       text-align: right;
       white-space: nowrap;

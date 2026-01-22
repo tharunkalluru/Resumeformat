@@ -142,7 +142,7 @@ body {
 }
 
 .resume-preview .icon-phone {
-  font-size: 13pt;
+  font-size: 10pt;
 }
 
 /* ===== SECTIONS - Dynamic spacing ===== */
@@ -338,7 +338,7 @@ body {
 .resume-preview .education-degree-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center; /* Changed from baseline to center for perfect alignment */
   gap: 10px;
   margin: 4px 0 0 0;
   padding: 0;
@@ -347,13 +347,16 @@ body {
 .resume-preview .education-degree {
   font-family: Georgia, 'Times New Roman', Times, serif;
   font-size: 9pt;
+  line-height: 1.45;
   color: #000000;
   text-align: left;
+  flex: 1; /* Takes available space, pushes CGPA to right */
 }
 
 .resume-preview .education-gpa {
   font-family: Georgia, 'Times New Roman', Times, serif;
   font-size: 9pt;
+  line-height: 1.45;
   color: #000000;
   text-align: right;
   white-space: nowrap;

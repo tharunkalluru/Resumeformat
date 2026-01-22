@@ -224,40 +224,75 @@ function parseExperience(lines: string[]): JobExperience[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     
-    // Date pattern
-    const datePattern = /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\s*[-–]\s*(?:Present|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}))/i;
-    const dateMatch = line.match(datePattern);
+    // Enhanced date patterns - support multiple formats
+    // Pattern 1: Month YYYY - Month YYYY or Present (e.g., "Sep 2024 - Present", "Jan 2023 - Dec 2024")
+    const datePattern1 = /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\s*[-–—]\s*(?:Present|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}))/i;
+    // Pattern 2: Just year ranges (e.g., "2023 - 2024", "2023 - Present")
+    const datePattern2 = /(\d{4}\s*[-–—]\s*(?:Present|\d{4}))/i;
+    // Pattern 3: Month/Year format (e.g., "09/2024 - Present", "01/2023 - 12/2024")
+    const datePattern3 = /(\d{1,2}\/\d{4}\s*[-–—]\s*(?:Present|\d{1,2}\/\d{4}))/i;
+    
+    let dateMatch = line.match(datePattern1) || line.match(datePattern2) || line.match(datePattern3);
     
     // Check for job header with pipe separators
-    const headerMatch = line.match(/^([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+?)(?:\s{2,}|\t+|$)/);
+    // Updated regex to capture everything after the last pipe (including dates)
+    const headerMatch = line.match(/^([^|]+)\s*\|\s*([^|]+)\s*\|\s*(.+)$/);
     
     if (headerMatch) {
       if (current) {
         experiences.push(current);
       }
       
-      // Clean up the location (remove date if it's embedded)
-      let location = headerMatch[3].trim();
-      if (dateMatch) {
-        location = location.replace(datePattern, '').trim();
+      // Extract location and date from the third part
+      let locationAndDate = headerMatch[3].trim();
+      let location = locationAndDate;
+      let dateRange = '';
+      
+      // Try to find the date in the location+date string
+      if (!dateMatch) {
+        dateMatch = locationAndDate.match(datePattern1) || 
+                   locationAndDate.match(datePattern2) || 
+                   locationAndDate.match(datePattern3);
       }
+      
+      if (dateMatch) {
+        dateRange = dateMatch[1].trim();
+        // Remove the date from location
+        location = locationAndDate.replace(dateMatch[0], '').trim();
+        // Clean up any trailing tabs/spaces
+        location = location.replace(/\s+$/, '');
+      }
+      
+      console.log('[Parser] Job header found:', {
+        title: headerMatch[1].trim(),
+        company: headerMatch[2].trim(),
+        location: location,
+        dateRange: dateRange,
+        originalLine: line
+      });
       
       current = {
         title: headerMatch[1].trim(),
         company: headerMatch[2].trim(),
         location: location,
-        dateRange: dateMatch ? dateMatch[1].trim() : '',
+        dateRange: dateRange,
         bullets: [],
       };
     } else if (current) {
-      // This could be a bullet point
-      const bulletMatch = line.match(/^[-•*●]\s*(.+)$/);
-      
-      if (bulletMatch) {
-        current.bullets.push(bulletMatch[1].trim());
-      } else if (line.length > 20 && !isJobHeader(line) && !isSectionHeader(line)) {
-        // It's a longer line without explicit bullet - treat as achievement
-        current.bullets.push(line);
+      // Check if this line might be a standalone date (if we didn't get it from header)
+      if (!current.dateRange && dateMatch) {
+        current.dateRange = dateMatch[1].trim();
+        console.log('[Parser] Found standalone date:', current.dateRange);
+      } else {
+        // This could be a bullet point
+        const bulletMatch = line.match(/^[-•*●]\s*(.+)$/);
+        
+        if (bulletMatch) {
+          current.bullets.push(bulletMatch[1].trim());
+        } else if (line.length > 20 && !isJobHeader(line) && !isSectionHeader(line)) {
+          // It's a longer line without explicit bullet - treat as achievement
+          current.bullets.push(line);
+        }
       }
     }
   }
@@ -266,6 +301,7 @@ function parseExperience(lines: string[]): JobExperience[] {
     experiences.push(current);
   }
 
+  console.log('[Parser] Total experience entries:', experiences.length);
   return experiences;
 }
 
@@ -276,27 +312,52 @@ function parseEducation(lines: string[]): Education[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     
-    // Date pattern
-    const datePattern = /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\s*[-–]\s*(?:Present|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}))/i;
-    const dateMatch = line.match(datePattern);
+    // Enhanced date patterns - same as experience
+    const datePattern1 = /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\s*[-–—]\s*(?:Present|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}))/i;
+    const datePattern2 = /(\d{4}\s*[-–—]\s*(?:Present|\d{4}))/i;
+    const datePattern3 = /(\d{1,2}\/\d{4}\s*[-–—]\s*(?:Present|\d{1,2}\/\d{4}))/i;
+    
+    let dateMatch = line.match(datePattern1) || line.match(datePattern2) || line.match(datePattern3);
     
     // Check for school name with location (e.g., "George Mason University, Fairfax, VA")
-    const schoolMatch = line.match(/^([^,]+),\s*([^,]+,\s*[A-Z]{2})/);
+    // This line might also have a date at the end
+    const schoolMatch = line.match(/^([^,]+),\s*([^,]+(?:,\s*[A-Z]{2})?)/);
     
     if (schoolMatch) {
       if (current) {
         education.push(current);
       }
       
+      let location = schoolMatch[2].trim();
+      let dateRange = '';
+      
+      // Check if date is in the line
+      if (dateMatch) {
+        dateRange = dateMatch[1].trim();
+        // Remove date from location if it's there
+        location = location.replace(dateMatch[0], '').trim();
+      }
+      
       current = {
         school: schoolMatch[1].trim(),
-        location: schoolMatch[2].trim(),
-        dateRange: dateMatch ? dateMatch[1].trim() : '',
+        location: location,
+        dateRange: dateRange,
         degree: '',
       };
+      
+      console.log('[Parser] Education entry found:', {
+        school: current.school,
+        location: current.location,
+        dateRange: dateRange
+      });
     } else if (current) {
+      // Check if this is a standalone date line (if we didn't get it from header)
+      if (!current.dateRange && dateMatch) {
+        current.dateRange = dateMatch[1].trim();
+        console.log('[Parser] Found standalone education date:', current.dateRange);
+      }
       // Check for degree (handle format: "Master of Science: Computer Science" or with CGPA on same line)
-      if (/Master|Bachelor|PhD|Doctor|Associate|M\.S\.|B\.S\.|M\.A\.|B\.A\./i.test(line)) {
+      else if (/Master|Bachelor|PhD|Doctor|Associate|M\.S\.|B\.S\.|M\.A\.|B\.A\./i.test(line)) {
         // Extract degree, might have CGPA on same line
         let degreeLine = line.replace(/^[-•*]\s*/, '').trim();
         
@@ -326,6 +387,7 @@ function parseEducation(lines: string[]): Education[] {
     education.push(current);
   }
 
+  console.log('[Parser] Total education entries:', education.length);
   return education;
 }
 

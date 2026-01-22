@@ -81,7 +81,9 @@ export default function TextInput({ onSubmit }: TextInputProps) {
       
       <p className="text-sm text-zinc-400">
         Paste the text from your custom GPT. The app will automatically detect sections like 
-        EXPERIENCE, EDUCATION, SKILLS, etc.
+        EXPERIENCE, SKILLS, STARTUPS, etc. 
+        <br />
+        <span className="text-blue-400 font-medium">Note:</span> Name, contact info, and education are constant and won't change.
       </p>
 
       <textarea
@@ -89,21 +91,23 @@ export default function TextInput({ onSubmit }: TextInputProps) {
         onChange={(e) => setText(e.target.value)}
         placeholder={`Paste your resume text here...
 
+NOTE: Name, contact info, and education are hardcoded and won't change.
+Only paste EXPERIENCE, SKILLS, and STARTUPS sections.
+
 Example format:
-John Doe
-- linkedin.com/in/johndoe
-- john@email.com
-- (555) 123-4567
 
 EXPERIENCE
 
-Product Manager | Company Name | City, State
-Jan 2023 - Present
+Product Manager | Company Name | City, State   Jan 2023 - Present
 - Achievement with metrics...
 - Another achievement...
 
-EDUCATION
-University Name, City, State
+UNIVERSITY STARTUPS
+Founder, Company - Description with metrics...
+
+SKILLS & COMPETENCIES
+Technical Skills: Python, SQL, etc.
+Tools: Figma, Analytics, etc.
 ...`}
         className="w-full h-[400px] bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-white 
                    placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500 

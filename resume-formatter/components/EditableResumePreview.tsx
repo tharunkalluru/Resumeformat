@@ -62,6 +62,16 @@ const CONSTANT_CONTACT = {
   phone: '571-564-8010'
 };
 
+// Constant education information - never changes
+const CONSTANT_EDUCATION = {
+  school: 'George Mason University',
+  location: 'Fairfax, VA',
+  dateRange: 'Jan 2023 - Dec 2024',
+  degree: 'Master of Science: Computer Science',
+  gpa: '3.83',
+  coursework: 'Machine Learning, Artificial Intelligence, Databases, Project Management, Software Testing'
+};
+
 // Editable text component
 function EditableText({ 
   value, 
@@ -523,71 +533,36 @@ export default function EditableResumePreview({ parsedResume, onResumeChange }: 
           </section>
         )}
 
-        {/* Education */}
-        {resume.education.length > 0 && (
-          <section className="resume-section">
-            <h2 className="section-title">EDUCATION</h2>
-            {resume.education.map((edu, index) => (
-              <div key={index} className="education-entry">
-                {/* Row 1: University Name, Location | Date */}
-                <div className="education-header">
-                  <span className="education-school">
-                    <EditableText
-                      value={`${edu.school}, ${edu.location}`}
-                      onChange={(val) => {
-                        const parts = val.split(',').map(p => p.trim());
-                        updateEducation(index, { 
-                          school: parts[0] || edu.school,
-                          location: parts.slice(1).join(', ') || edu.location
-                        });
-                      }}
-                    />
-                  </span>
-                  {edu.dateRange && (
-                    <span className="education-date">
-                      <EditableText
-                        value={edu.dateRange}
-                        onChange={(val) => updateEducation(index, { dateRange: val })}
-                      />
-                    </span>
-                  )}
-                </div>
-                
-                {/* Row 2: Degree | CGPA (same line, left/right aligned) */}
-                {(edu.degree || edu.gpa) && (
-                  <div className="education-degree-row">
-                    <span className="education-degree">
-                      {edu.degree && (
-                        <EditableText
-                          value={edu.degree}
-                          onChange={(val) => updateEducation(index, { degree: val })}
-                        />
-                      )}
-                    </span>
-                    {edu.gpa && (
-                      <span className="education-gpa">
-                        CGPA: <EditableText
-                          value={edu.gpa}
-                          onChange={(val) => updateEducation(index, { gpa: val })}
-                        />
-                      </span>
-                    )}
-                  </div>
-                )}
-                
-                {/* Row 3: Selected Coursework */}
-                {edu.coursework && (
-                  <div className="education-detail">
-                    Selected Coursework: <EditableText
-                      value={edu.coursework}
-                      onChange={(val) => updateEducation(index, { coursework: val })}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-          </section>
-        )}
+        {/* Education - Always constant */}
+        <section className="resume-section">
+          <h2 className="section-title">EDUCATION</h2>
+          <div className="education-entry">
+            {/* Row 1: University Name, Location | Date */}
+            <div className="education-header">
+              <span className="education-school">
+                {CONSTANT_EDUCATION.school}, {CONSTANT_EDUCATION.location}
+              </span>
+              <span className="education-date">
+                {CONSTANT_EDUCATION.dateRange}
+              </span>
+            </div>
+            
+            {/* Row 2: Degree | CGPA (same line, left/right aligned) */}
+            <div className="education-degree-row">
+              <span className="education-degree">
+                {CONSTANT_EDUCATION.degree}
+              </span>
+              <span className="education-gpa">
+                CGPA: {CONSTANT_EDUCATION.gpa}
+              </span>
+            </div>
+            
+            {/* Row 3: Selected Coursework */}
+            <div className="education-detail">
+              Selected Coursework: {CONSTANT_EDUCATION.coursework}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
