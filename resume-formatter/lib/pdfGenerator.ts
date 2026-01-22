@@ -437,10 +437,62 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     // Add image with SLOW compression for best quality
     pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11, undefined, 'SLOW');
 
+    // Add clickable hyperlinks for LinkedIn and Portfolio
+    // These need to be added as annotations on top of the image
+    const linkedinLink = resumeElement.querySelector('a[href*="linkedin"]') as HTMLAnchorElement;
+    const portfolioLink = resumeElement.querySelector('a[href*="tharunkalluru.com"]') as HTMLAnchorElement;
+    
+    // Page dimensions
+    const PAGE_WIDTH = 8.5; // inches
+    const PAGE_HEIGHT = 11; // inches
+    const DPI = 96;
+    
+    if (linkedinLink) {
+      // Get bounding box of the link
+      const rect = linkedinLink.getBoundingClientRect();
+      const resumeRect = resumeElement.getBoundingClientRect();
+      
+      // Calculate position in pixels relative to resume top-left
+      const xPx = rect.left - resumeRect.left;
+      const yPx = rect.top - resumeRect.top;
+      const widthPx = rect.width;
+      const heightPx = rect.height;
+      
+      // Convert to inches (816px wide = 8.5in, so ratio is 8.5/816)
+      const x = (xPx / 816) * PAGE_WIDTH;
+      const y = (yPx / 1056) * PAGE_HEIGHT;
+      const width = (widthPx / 816) * PAGE_WIDTH;
+      const height = (heightPx / 1056) * PAGE_HEIGHT;
+      
+      // Add clickable link annotation
+      pdf.link(x, y, width, height, { url: linkedinLink.href });
+      console.log('[PDF] Added LinkedIn link:', linkedinLink.href);
+      console.log('  Position (inches):', { x: x.toFixed(3), y: y.toFixed(3), width: width.toFixed(3), height: height.toFixed(3) });
+    }
+    
+    if (portfolioLink) {
+      const rect = portfolioLink.getBoundingClientRect();
+      const resumeRect = resumeElement.getBoundingClientRect();
+      
+      const xPx = rect.left - resumeRect.left;
+      const yPx = rect.top - resumeRect.top;
+      const widthPx = rect.width;
+      const heightPx = rect.height;
+      
+      const x = (xPx / 816) * PAGE_WIDTH;
+      const y = (yPx / 1056) * PAGE_HEIGHT;
+      const width = (widthPx / 816) * PAGE_WIDTH;
+      const height = (heightPx / 1056) * PAGE_HEIGHT;
+      
+      pdf.link(x, y, width, height, { url: portfolioLink.href });
+      console.log('[PDF] Added Portfolio link:', portfolioLink.href);
+      console.log('  Position (inches):', { x: x.toFixed(3), y: y.toFixed(3), width: width.toFixed(3), height: height.toFixed(3) });
+    }
+
     // Save the PDF
     pdf.save(filename);
     
-    console.log('[PDF] Generated successfully! Maximum quality.');
+    console.log('[PDF] Generated successfully! Maximum quality with clickable links.');
   } finally {
     // Clean up
     document.body.removeChild(clone);
