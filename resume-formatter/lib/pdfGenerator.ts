@@ -116,9 +116,11 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   // CONTACT ITEMS
   const contactItems = clone.querySelectorAll('.contact-item') as NodeListOf<HTMLElement>;
   contactItems.forEach(item => {
+    // Use center alignment for phone item, baseline for others
+    const isPhoneItem = item.classList.contains('contact-item-phone');
     item.style.cssText = `
       display: inline-flex;
-      align-items: baseline;
+      align-items: ${isPhoneItem ? 'center' : 'baseline'};
       gap: 3px;
     `;
   });
@@ -148,7 +150,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     } else if (icon.classList.contains('icon-email')) {
       icon.style.cssText = baseStyle + 'font-size: 7pt;';
     } else if (icon.classList.contains('icon-phone')) {
-      icon.style.cssText = baseStyle + 'font-size: 8.3pt;';
+      icon.style.cssText = baseStyle + 'font-size: 8.3pt; vertical-align: middle;';
     } else {
       icon.style.cssText = baseStyle + 'font-size: 9pt;';
     }
@@ -402,23 +404,18 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
 
   document.body.appendChild(clone);
 
-  // Wait for styles to apply and fonts to load
-  await new Promise(resolve => setTimeout(resolve, 200));
+  // Wait for styles to apply
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
-    // Generate canvas at maximum resolution for the sharpest possible text
-    // Scale 4 = 300+ DPI equivalent, professional print quality
+    // Generate canvas at high resolution for sharp text (scale 3 = good balance of quality and speed)
     const canvas = await html2canvas(clone, {
-      scale: 4,
+      scale: 3,
       useCORS: true,
       logging: false,
       width: 816,
       height: 1056,
       backgroundColor: '#ffffff',
-      windowWidth: 816,
-      windowHeight: 1056,
-      imageTimeout: 0,
-      removeContainer: false,
     });
 
     // Create PDF with compression enabled
@@ -427,15 +424,13 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       unit: 'in',
       format: 'letter',
       compress: true,
-      putOnlyUsedFonts: true,
-      floatPrecision: 16,
     });
 
-    // Use PNG for lossless, razor-sharp text
+    // Use PNG for lossless, sharp text
     const imgData = canvas.toDataURL('image/png');
     
-    // Add image with SLOW compression for best quality
-    pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11, undefined, 'SLOW');
+    // Add image with FAST compression (doesn't affect visual quality, just processing speed)
+    pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11, undefined, 'FAST');
 
     // Add clickable hyperlinks for LinkedIn and Portfolio
     // These need to be added as annotations on top of the image

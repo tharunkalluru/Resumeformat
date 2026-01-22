@@ -412,7 +412,7 @@ export default function EditableResumePreview({ parsedResume, onResumeChange }: 
               <span className="contact-icon icon-email">@</span>
               <span>{CONSTANT_CONTACT.email}</span>
             </span>
-            <span className="contact-item">
+            <span className="contact-item contact-item-phone">
               <span className="contact-icon icon-phone">✆</span>
               <span>{CONSTANT_CONTACT.phone}</span>
             </span>
