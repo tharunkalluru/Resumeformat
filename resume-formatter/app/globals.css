@@ -103,6 +103,10 @@ body {
   gap: 3px;
 }
 
+.resume-preview .contact-item-phone {
+  align-items: center;
+}
+
 .resume-preview .contact-link {
   color: inherit;
   text-decoration: none;
@@ -143,6 +147,7 @@ body {
 
 .resume-preview .icon-phone {
   font-size: 8pt;
+  vertical-align: middle;
 }
 
 /* ===== SECTIONS - Dynamic spacing ===== */
