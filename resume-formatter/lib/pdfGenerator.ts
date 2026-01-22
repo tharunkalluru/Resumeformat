@@ -8,8 +8,8 @@ import jsPDF from 'jspdf';
  * Key: Apply ALL styles as inline styles since html2canvas doesn't
  * reliably capture CSS computed styles.
  */
-export async function generatePDF(): Promise<void> {
-  const resumeElement = document.getElementById('resume-preview');
+export async function generatePDF(elementId: string = 'resume-preview', filename: string = 'resume.pdf'): Promise<void> {
+  const resumeElement = document.getElementById(elementId);
   if (!resumeElement) {
     throw new Error('Resume preview element not found');
   }
@@ -427,7 +427,7 @@ export async function generatePDF(): Promise<void> {
     pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11);
 
     // Save the PDF
-    pdf.save('resume.pdf');
+    pdf.save(filename);
     
     console.log('[PDF] Generated successfully!');
   } finally {
