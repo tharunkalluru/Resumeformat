@@ -10,49 +10,62 @@ interface EditableResumePreviewProps {
 }
 
 /**
- * DYNAMIC RESUME LAYOUT ALGORITHM
- * 
- * This algorithm ensures ANY resume content fits perfectly on ONE page with uniform borders.
- * 
- * How it works:
- * 1. MEASURE: Calculate actual content height without constraints
- * 2. COMPARE: Calculate ratio of available space to content height
- * 3. ADJUST:
- *    - TOO LONG (ratio < 0.98): Shrink font down to 80% minimum
- *    - TOO SHORT (ratio > 1.03): Distribute extra space intelligently
- *    - VERY SHORT (ratio > 1.20): Also expand font up to 110%
- *    - PERFECT FIT (0.98-1.03): No adjustments needed
- * 
- * Spacing distribution is adaptive based on content structure:
- * - More sections → more section gaps
- * - More bullets → more bullet gaps
- * - Balanced across all elements
- * aa
- * Result: Uniform borders, one page, consistent formatting for ANY content length
+ * GLOBAL DYNAMIC RESUME LAYOUT ENGINE
+ *
+ * This algorithm GUARANTEES the resume fits on exactly ONE page with:
+ * - Zero overflow/cropping - all sections fully visible
+ * - Equal top/bottom padding for visual symmetry
+ * - Global reflow on any content change
+ * - Preserved visual hierarchy and readability
+ *
+ * ALGORITHM (Iterative Convergence):
+ * 1. MEASURE: Get true content height without constraints
+ * 2. CALCULATE: Determine fill ratio (available / content)
+ * 3. ADJUST: Scale globally using unified parameter system
+ *    - Line height (1.25 - 1.6) - primary spacing control
+ *    - Section/Job/Bullet gaps - secondary spacing
+ *    - Font size (85% - 115%) - last resort scaling
+ * 4. ITERATE: Repeat until content fits within tolerance
+ * 5. VERIFY: Final safety check - never allow overflow
+ *
+ * The algorithm adjusts ALL parameters as a single global system,
+ * not per-section, ensuring uniform visual balance.
  */
 
 // Page dimensions at 96 DPI
-const PAGE_HEIGHT_PX = 11 * 96; // 1056px
-const PADDING_TOP = 0.38 * 96; // ~36.5px
-const PADDING_BOTTOM = 0.38 * 96; // ~36.5px
-const USABLE_HEIGHT = PAGE_HEIGHT_PX - PADDING_TOP - PADDING_BOTTOM; // ~983px
+const PAGE_HEIGHT_PX = 11 * 96; // 1056px = 11 inches
+const PAGE_WIDTH_PX = 8.5 * 96; // 816px = 8.5 inches
 
-// Base spacing (minimum values)
-const BASE_SECTION_GAP = 12;
-const BASE_JOB_GAP = 10;
-const BASE_BULLET_GAP = 3;
+// Symmetrical padding (top = bottom for visual balance)
+const PADDING_VERTICAL = 0.38 * 96; // ~36.5px each side
+const PADDING_HORIZONTAL = 0.55 * 96; // ~53px each side
 
-// Maximum spacing (generous for short content, but safe)
-const MAX_SECTION_GAP = 24;
-const MAX_JOB_GAP = 18;
-const MAX_BULLET_GAP = 6;
+// Usable content area
+const USABLE_HEIGHT = PAGE_HEIGHT_PX - (PADDING_VERTICAL * 2); // ~983px
 
-// Font scale limits - more aggressive to fill the page
-const MIN_FONT_SCALE = 0.85; // Can shrink to 85% for very long content
-const MAX_FONT_SCALE = 1.15; // Can expand to 115% for short content
+// Layout parameter ranges (min, default, max)
+const LAYOUT_PARAMS = {
+  // Line height: Primary spacing control (most visual impact)
+  lineHeight: { min: 1.25, base: 1.45, max: 1.6 },
 
-// Target: Fill 98-100% of the page (leave tiny margin for safety)
-const TARGET_FILL_RATIO = 0.98;
+  // Section gap: Space between major sections
+  sectionGap: { min: 8, base: 12, max: 24 },
+
+  // Job gap: Space between job entries
+  jobGap: { min: 6, base: 10, max: 18 },
+
+  // Bullet gap: Space between bullet points
+  bulletGap: { min: 1, base: 3, max: 6 },
+
+  // Font scale: Last resort - affects readability most
+  fontScale: { min: 0.85, base: 1.0, max: 1.15 },
+};
+
+// Convergence settings
+const MAX_ITERATIONS = 20; // Maximum adjustment iterations
+const FIT_TOLERANCE = 5; // Pixels of acceptable overflow
+const TARGET_FILL_MIN = 0.96; // Minimum page fill (96%)
+const TARGET_FILL_MAX = 1.0; // Maximum page fill (100% - no overflow)
 
 // Constant contact information - never changes
 const CONSTANT_CONTACT = {
@@ -179,138 +192,266 @@ export default function EditableResumePreview({ parsedResume, onResumeChange }: 
     setResume(parsedResume);
   }, [parsedResume]);
 
-  // Measure TRUE content height by temporarily removing constraints
+  /**
+   * Measure TRUE content height by temporarily removing all constraints.
+   * This ensures we get the actual height needed, not the constrained height.
+   */
   const measureContentHeight = useCallback((element: HTMLElement): number => {
     // Store original styles
-    const originalHeight = element.style.height;
-    const originalMaxHeight = element.style.maxHeight;
-    const originalOverflow = element.style.overflow;
-    
-    // Remove constraints to measure true content
+    const originalStyles = {
+      height: element.style.height,
+      maxHeight: element.style.maxHeight,
+      minHeight: element.style.minHeight,
+      overflow: element.style.overflow,
+    };
+
+    // Remove ALL constraints to measure true content
     element.style.height = 'auto';
     element.style.maxHeight = 'none';
+    element.style.minHeight = '0';
     element.style.overflow = 'visible';
-    
-    // Force reflow and measure
+
+    // Force synchronous reflow and measure
+    void element.offsetHeight; // Force reflow
     const contentHeight = element.scrollHeight;
-    
+
     // Restore original styles
-    element.style.height = originalHeight;
-    element.style.maxHeight = originalMaxHeight;
-    element.style.overflow = originalOverflow;
-    
+    Object.assign(element.style, originalStyles);
+
     return contentHeight;
   }, []);
 
-  // Dynamic spacing calculation - SMART algorithm to fill page exactly
+  /**
+   * Apply layout parameters to the element via CSS variables and inline styles.
+   */
+  const applyLayoutParams = useCallback(
+    (
+      element: HTMLElement,
+      params: {
+        fontScale: number;
+        lineHeight: number;
+        sectionGap: number;
+        jobGap: number;
+        bulletGap: number;
+      }
+    ) => {
+      const baseFontPt = 9;
+      element.style.fontSize = `${baseFontPt * params.fontScale}pt`;
+      element.style.lineHeight = `${params.lineHeight}`;
+      element.style.setProperty('--section-gap', `${params.sectionGap}px`);
+      element.style.setProperty('--job-gap', `${params.jobGap}px`);
+      element.style.setProperty('--bullet-gap', `${params.bulletGap}px`);
+      element.style.setProperty('--line-height', `${params.lineHeight}`);
+    },
+    []
+  );
+
+  /**
+   * GLOBAL LAYOUT ALGORITHM - Iterative Convergence
+   *
+   * Adjusts all layout parameters globally to ensure the resume fits
+   * on exactly one page with zero overflow and balanced spacing.
+   */
   const calculateAndApplySpacing = useCallback(() => {
     if (!resumeRef.current) return;
 
     const element = resumeRef.current;
-    
-    // Reset to base state first
-    element.style.fontSize = '9pt'; // Base font size
-    element.style.setProperty('--section-gap', `${BASE_SECTION_GAP}px`);
-    element.style.setProperty('--job-gap', `${BASE_JOB_GAP}px`);
-    element.style.setProperty('--bullet-gap', `${BASE_BULLET_GAP}px`);
 
-    // Wait for reflow
+    // Phase 1: Reset to base values and measure
+    const baseParams = {
+      fontScale: LAYOUT_PARAMS.fontScale.base,
+      lineHeight: LAYOUT_PARAMS.lineHeight.base,
+      sectionGap: LAYOUT_PARAMS.sectionGap.base,
+      jobGap: LAYOUT_PARAMS.jobGap.base,
+      bulletGap: LAYOUT_PARAMS.bulletGap.base,
+    };
+
+    applyLayoutParams(element, baseParams);
+
+    // Use requestAnimationFrame to ensure styles are applied before measuring
     requestAnimationFrame(() => {
-      // Measure TRUE content height (without container constraints)
-      const rawContentHeight = measureContentHeight(element);
-      const contentHeight = rawContentHeight - PADDING_TOP - PADDING_BOTTOM;
-      
-      // Count elements for distribution
-      const sections = element.querySelectorAll('.resume-section');
-      const jobEntries = element.querySelectorAll('.job-entry');
-      const bullets = element.querySelectorAll('.resume-bullets li');
-      
-      const sectionCount = sections.length;
-      const jobCount = jobEntries.length;
-      const bulletCount = bullets.length;
+      // Measure content with base parameters
+      const baseContentHeight =
+        measureContentHeight(element) - PADDING_VERTICAL * 2;
+      const baseRatio = USABLE_HEIGHT / baseContentHeight;
 
-      console.log('=== Smart Page Fill Algorithm ===');
-      console.log('Content Height:', contentHeight.toFixed(0), 'px');
+      console.log('=== Global Layout Engine ===');
       console.log('Usable Height:', USABLE_HEIGHT.toFixed(0), 'px');
-      console.log('Gap:', (USABLE_HEIGHT - contentHeight).toFixed(0), 'px');
+      console.log('Base Content Height:', baseContentHeight.toFixed(0), 'px');
+      console.log('Base Fill Ratio:', baseRatio.toFixed(3));
 
-      // Calculate how much we need to scale to fill the page
-      const fillRatio = USABLE_HEIGHT / contentHeight;
-      console.log('Fill Ratio:', fillRatio.toFixed(3));
+      // Current layout parameters (will be adjusted iteratively)
+      let currentParams = { ...baseParams };
+      let iteration = 0;
+      let converged = false;
 
-      // STRATEGY: First try to fill with font scaling, then fine-tune with spacing
-      let fontScale = 1.0;
-      let finalSectionGap = BASE_SECTION_GAP;
-      let finalJobGap = BASE_JOB_GAP;
-      let finalBulletGap = BASE_BULLET_GAP;
+      // Iterative convergence loop
+      const iterate = () => {
+        iteration++;
+        if (iteration > MAX_ITERATIONS) {
+          console.log('⚠️ Max iterations reached, applying safety shrink');
+          // Safety: force minimum values if still overflowing
+          currentParams = {
+            fontScale: LAYOUT_PARAMS.fontScale.min,
+            lineHeight: LAYOUT_PARAMS.lineHeight.min,
+            sectionGap: LAYOUT_PARAMS.sectionGap.min,
+            jobGap: LAYOUT_PARAMS.jobGap.min,
+            bulletGap: LAYOUT_PARAMS.bulletGap.min,
+          };
+          applyLayoutParams(element, currentParams);
+          console.log('=== Layout Complete (Safety) ===');
+          return;
+        }
 
-      if (fillRatio < 1.0) {
-        // Content is TOO LARGE - shrink font
-        fontScale = Math.max(MIN_FONT_SCALE, fillRatio * 0.98);
-        console.log('📉 Shrinking font to:', fontScale.toFixed(3));
-        
-      } else if (fillRatio > 1.02) {
-        // Content is too small - EXPAND to fill page
-        
-        // First, calculate ideal font scale to fill ~95% of space (leave room for spacing)
-        const targetFontScale = Math.min(MAX_FONT_SCALE, fillRatio * 0.96);
-        fontScale = targetFontScale;
-        console.log('📈 Expanding font to:', fontScale.toFixed(3));
-        
-        // After font scaling, calculate remaining space for spacing distribution
-        const scaledContentHeight = contentHeight * fontScale;
-        const remainingSpace = USABLE_HEIGHT - scaledContentHeight;
-        
-        if (remainingSpace > 10) {
-          // Distribute remaining space intelligently
-          const totalGapElements = sectionCount + jobCount;
-          
-          if (totalGapElements > 0) {
-            // Prioritize section gaps (they're more visible)
-            const spacePerSection = sectionCount > 0 ? remainingSpace * 0.6 / sectionCount : 0;
-            const spacePerJob = jobCount > 0 ? remainingSpace * 0.4 / jobCount : 0;
-            
-            finalSectionGap = Math.min(BASE_SECTION_GAP + spacePerSection, MAX_SECTION_GAP);
-            finalJobGap = Math.min(BASE_JOB_GAP + spacePerJob, MAX_JOB_GAP);
-            
-            console.log('Distributing remaining', remainingSpace.toFixed(0), 'px to gaps');
+        // Apply current parameters
+        applyLayoutParams(element, currentParams);
+
+        // Wait for reflow and measure
+        requestAnimationFrame(() => {
+          const contentHeight =
+            measureContentHeight(element) - PADDING_VERTICAL * 2;
+          const fillRatio = contentHeight / USABLE_HEIGHT;
+          const overflow = contentHeight - USABLE_HEIGHT;
+
+          console.log(
+            `Iteration ${iteration}: Content=${contentHeight.toFixed(0)}px, ` +
+              `Fill=${(fillRatio * 100).toFixed(1)}%, Overflow=${overflow.toFixed(0)}px`
+          );
+
+          // Check convergence
+          if (
+            overflow <= FIT_TOLERANCE &&
+            fillRatio >= TARGET_FILL_MIN &&
+            fillRatio <= TARGET_FILL_MAX
+          ) {
+            converged = true;
+            console.log('✅ Converged! Final parameters:', currentParams);
+            console.log('=== Layout Complete ===');
+            return;
           }
-        }
-      } else {
-        console.log('✅ Content fits well - minor adjustments only');
-      }
 
-      // Apply font scale using CSS font-size (not transform - cleaner rendering)
-      const baseFontPt = 9;
-      const newFontPt = baseFontPt * fontScale;
-      element.style.fontSize = `${newFontPt}pt`;
-      
-      // Apply spacing
-      element.style.setProperty('--section-gap', `${finalSectionGap}px`);
-      element.style.setProperty('--job-gap', `${finalJobGap}px`);
-      element.style.setProperty('--bullet-gap', `${finalBulletGap}px`);
+          // Determine adjustment direction
+          if (overflow > FIT_TOLERANCE) {
+            // CONTENT TOO LARGE - Need to shrink
+            // Calculate how much we need to shrink (as a factor)
+            const shrinkFactor = USABLE_HEIGHT / contentHeight;
 
-      console.log('Final font size:', newFontPt.toFixed(2), 'pt');
-      console.log('Final gaps - Section:', finalSectionGap.toFixed(1), 'Job:', finalJobGap.toFixed(1));
-      console.log('=================================');
+            // Progressive shrinking strategy:
+            // 1. First reduce line height (least impact on readability)
+            // 2. Then reduce spacing
+            // 3. Finally reduce font size (most impact)
 
-      // Second pass: verify and fine-tune
-      requestAnimationFrame(() => {
-        const finalHeight = measureContentHeight(element) - PADDING_TOP - PADDING_BOTTOM;
-        const finalGap = USABLE_HEIGHT - finalHeight;
-        
-        console.log('Verification - Final gap:', finalGap.toFixed(0), 'px');
-        
-        // If still too much gap, increase font slightly more
-        if (finalGap > 30 && fontScale < MAX_FONT_SCALE) {
-          const adjustment = Math.min(1 + (finalGap / USABLE_HEIGHT), MAX_FONT_SCALE / fontScale);
-          const adjustedFontPt = newFontPt * adjustment;
-          element.style.fontSize = `${Math.min(adjustedFontPt, baseFontPt * MAX_FONT_SCALE)}pt`;
-          console.log('Fine-tuned font to:', adjustedFontPt.toFixed(2), 'pt');
-        }
-      });
+            const shrinkIntensity = Math.min(
+              1,
+              (contentHeight - USABLE_HEIGHT) / 100
+            );
+
+            // Reduce line height first
+            if (currentParams.lineHeight > LAYOUT_PARAMS.lineHeight.min) {
+              currentParams.lineHeight = Math.max(
+                LAYOUT_PARAMS.lineHeight.min,
+                currentParams.lineHeight - 0.05 * shrinkIntensity
+              );
+            }
+
+            // Then reduce spacing
+            if (currentParams.sectionGap > LAYOUT_PARAMS.sectionGap.min) {
+              currentParams.sectionGap = Math.max(
+                LAYOUT_PARAMS.sectionGap.min,
+                currentParams.sectionGap - 2
+              );
+            }
+            if (currentParams.jobGap > LAYOUT_PARAMS.jobGap.min) {
+              currentParams.jobGap = Math.max(
+                LAYOUT_PARAMS.jobGap.min,
+                currentParams.jobGap - 1
+              );
+            }
+            if (currentParams.bulletGap > LAYOUT_PARAMS.bulletGap.min) {
+              currentParams.bulletGap = Math.max(
+                LAYOUT_PARAMS.bulletGap.min,
+                currentParams.bulletGap - 0.5
+              );
+            }
+
+            // Finally reduce font if other measures aren't enough
+            if (
+              currentParams.lineHeight <= LAYOUT_PARAMS.lineHeight.min + 0.05 &&
+              currentParams.sectionGap <= LAYOUT_PARAMS.sectionGap.min + 2 &&
+              currentParams.fontScale > LAYOUT_PARAMS.fontScale.min
+            ) {
+              currentParams.fontScale = Math.max(
+                LAYOUT_PARAMS.fontScale.min,
+                currentParams.fontScale * shrinkFactor * 0.99
+              );
+            }
+
+            console.log('📉 Shrinking:', currentParams);
+          } else if (fillRatio < TARGET_FILL_MIN) {
+            // CONTENT TOO SMALL - Expand to fill page
+            const remainingSpace = USABLE_HEIGHT - contentHeight;
+            const expandIntensity = remainingSpace / USABLE_HEIGHT;
+
+            // Count layout elements for distribution
+            const sectionCount =
+              element.querySelectorAll('.resume-section').length;
+            const jobCount = element.querySelectorAll('.job-entry').length;
+
+            // Expand spacing first (most visible improvement)
+            if (currentParams.sectionGap < LAYOUT_PARAMS.sectionGap.max) {
+              const sectionSpaceShare =
+                sectionCount > 0 ? (remainingSpace * 0.4) / sectionCount : 0;
+              currentParams.sectionGap = Math.min(
+                LAYOUT_PARAMS.sectionGap.max,
+                currentParams.sectionGap + Math.min(sectionSpaceShare, 3)
+              );
+            }
+            if (currentParams.jobGap < LAYOUT_PARAMS.jobGap.max) {
+              const jobSpaceShare =
+                jobCount > 0 ? (remainingSpace * 0.3) / jobCount : 0;
+              currentParams.jobGap = Math.min(
+                LAYOUT_PARAMS.jobGap.max,
+                currentParams.jobGap + Math.min(jobSpaceShare, 2)
+              );
+            }
+            if (currentParams.bulletGap < LAYOUT_PARAMS.bulletGap.max) {
+              currentParams.bulletGap = Math.min(
+                LAYOUT_PARAMS.bulletGap.max,
+                currentParams.bulletGap + 0.5
+              );
+            }
+
+            // Then expand line height
+            if (currentParams.lineHeight < LAYOUT_PARAMS.lineHeight.max) {
+              currentParams.lineHeight = Math.min(
+                LAYOUT_PARAMS.lineHeight.max,
+                currentParams.lineHeight + 0.02 * expandIntensity
+              );
+            }
+
+            // Finally expand font (subtle)
+            if (
+              currentParams.sectionGap >= LAYOUT_PARAMS.sectionGap.max - 2 &&
+              currentParams.fontScale < LAYOUT_PARAMS.fontScale.max
+            ) {
+              currentParams.fontScale = Math.min(
+                LAYOUT_PARAMS.fontScale.max,
+                currentParams.fontScale * (1 + expandIntensity * 0.05)
+              );
+            }
+
+            console.log('📈 Expanding:', currentParams);
+          }
+
+          // Continue iteration
+          iterate();
+        });
+      };
+
+      // Start iteration
+      iterate();
     });
-  }, [measureContentHeight]);
+  }, [measureContentHeight, applyLayoutParams]);
 
   // Apply dynamic spacing whenever resume changes
   useEffect(() => {

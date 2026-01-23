@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(tree:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx next build)",
+      "Bash(node:*)",
+      "Bash(npm install)",
+      "Bash(npx tsc --noEmit)"
+    ]
+  }
+}

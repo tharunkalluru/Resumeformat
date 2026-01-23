@@ -41,11 +41,12 @@
   --card-bg: #141414;
   --border-color: #262626;
   --font-inter: 'Inter', system-ui, sans-serif;
-  
-  /* Dynamic spacing variables - will be overridden by JS */
+
+  /* Dynamic layout variables - controlled by Global Layout Engine */
   --section-gap: 12px;
   --job-gap: 10px;
   --bullet-gap: 3px;
+  --line-height: 1.45;
 }
 
 * {
@@ -142,28 +143,32 @@ body {
    ======================================== */
 
 .resume-preview {
-  /* Exact Letter size */
+  /* Exact Letter size - NEVER exceeds this */
   width: 8.5in;
   height: 11in;
   max-height: 11in;
-  overflow: hidden;
-  
-  /* Page margins */
+  min-height: 11in;
+  overflow: hidden; /* Clips any overflow - safety net */
+
+  /* Symmetrical page margins (top = bottom for visual balance) */
   padding: 0.38in 0.55in;
   margin: 0 auto;
-  
-  /* Typography */
+
+  /* Typography - base values, dynamically adjusted by layout engine */
   font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
-  line-height: 1.45;
+  line-height: var(--line-height, 1.45);
   color: #000000;
   background: #ffffff;
-  
-  /* CSS variables for dynamic spacing */
+
+  /* CSS variables for Global Layout Engine */
   --section-gap: 12px;
   --job-gap: 10px;
   --bullet-gap: 3px;
-  --font-scale: 1;
+  --line-height: 1.45;
+
+  /* Enable smooth transitions for layout adjustments */
+  transition: font-size 0.1s ease-out, line-height 0.1s ease-out;
 }
 
 /* Content wrapper for measurement */
@@ -317,7 +322,7 @@ body {
 .resume-preview .resume-bullets li {
   font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 1em; /* 9pt relative to base */
-  line-height: 1.45;
+  line-height: var(--line-height, 1.45);
   margin-bottom: var(--bullet-gap, 1px);
   position: relative;
   padding-left: 0;
@@ -352,7 +357,7 @@ body {
 .resume-preview .startup-entry {
   margin: 0 0 5px 0;
   padding: 0;
-  line-height: 1.45;
+  line-height: var(--line-height, 1.45);
   color: #000000;
 }
 
@@ -377,7 +382,7 @@ body {
 .resume-preview .skill-line {
   margin: 0 0 5px 0;
   padding: 0;
-  line-height: 1.45;
+  line-height: var(--line-height, 1.45);
   color: #000000;
 }
 
@@ -440,7 +445,7 @@ body {
 .resume-preview .education-degree {
   font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 1em; /* 9pt relative to base */
-  line-height: 1.45;
+  line-height: var(--line-height, 1.45);
   color: #000000;
   text-align: left;
   flex: 1; /* Takes available space, pushes CGPA to right */
@@ -449,7 +454,7 @@ body {
 .resume-preview .education-gpa {
   font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 1em; /* 9pt relative to base */
-  line-height: 1.45;
+  line-height: var(--line-height, 1.45);
   color: #000000;
   text-align: right;
   white-space: nowrap;
@@ -461,7 +466,7 @@ body {
   font-size: 1em; /* 9pt relative to base */
   margin: 3px 0 0 0;
   padding: 0;
-  line-height: 1.45;
+  line-height: var(--line-height, 1.45);
   color: #000000;
 }
 
