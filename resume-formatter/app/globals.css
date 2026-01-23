@@ -161,23 +161,38 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
+  gap: 0;
   font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
+  line-height: 1.2;
   color: #333333;
-  align-items: baseline;
+  align-items: center;
   margin: 0;
   padding: 0;
 }
 
 .resume-preview .contact-item {
   display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
+  align-items: center;
+  line-height: 1.2;
 }
 
-.resume-preview .contact-item-phone {
+.resume-preview .contact-separator {
+  margin: 0 6px 0 18px; /* 6 spaces before bullet, 2 spaces after (3:1 ratio) */
+  font-size: 0; /* Hide the bullet text character */
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  height: 9pt; /* Match text line height */
+}
+
+.resume-preview .contact-separator::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background-color: #000000;
+  border-radius: 50%;
+  display: block;
 }
 
 .resume-preview .contact-link {
@@ -188,39 +203,6 @@ body {
 
 .resume-preview .contact-link:hover {
   text-decoration: underline;
-}
-
-.resume-preview .contact-icon {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 9pt;
-  font-weight: bold;
-  color: #000000;
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  line-height: 14px;
-  text-align: center;
-  vertical-align: baseline;
-  flex-shrink: 0;
-}
-
-/* Individual icon size adjustments for visual balance */
-.resume-preview .icon-linkedin {
-  font-size: 9pt;
-}
-
-.resume-preview .icon-web {
-  font-size: 8pt;
-  color: #000000;
-}
-
-.resume-preview .icon-email {
-  font-size: 8pt;
-}
-
-.resume-preview .icon-phone {
-  font-size: 8pt;
-  vertical-align: middle;
 }
 
 /* ===== SECTIONS - Dynamic spacing ===== */
@@ -236,10 +218,10 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #000000 !important;
-  /* Gap between text and underline - 8px creates more visible space */
-  padding: 0 0 8px 0;
+  /* Underline very close to text - 1px gap to match PDF */
+  padding: 0 0 1px 0;
   border-bottom: 1.5px solid #000000;
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   display: block;
   text-align: left;
 }

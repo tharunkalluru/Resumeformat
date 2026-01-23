@@ -1,12 +1,8 @@
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 /**
- * Generates a PDF that exactly matches the preview on screen.
- * WYSIWYG - What You See Is What You Get
- * 
- * Key: Apply ALL styles as inline styles since html2canvas doesn't
- * reliably capture CSS computed styles.
+ * Generates a native text-based PDF (like Word/Docs output).
+ * No images, no invisible text - just real, selectable, ATS-friendly text.
  */
 export async function generatePDF(elementId: string = 'resume-preview', filename: string = 'resume.pdf'): Promise<void> {
   const resumeElement = document.getElementById(elementId);
@@ -14,482 +10,313 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     throw new Error('Resume preview element not found');
   }
 
-  // Get the computed styles from the preview (these include the dynamic spacing)
-  const computedStyle = window.getComputedStyle(resumeElement);
-  
-  // Get CSS variable values that were dynamically calculated
-  const sectionGap = computedStyle.getPropertyValue('--section-gap').trim() || '8px';
-  const jobGap = computedStyle.getPropertyValue('--job-gap').trim() || '6px';
-  const bulletGap = computedStyle.getPropertyValue('--bullet-gap').trim() || '1px';
-  
-  // Get the current transform (includes any scaling applied by dynamic algorithm)
-  const currentTransform = computedStyle.transform;
-
-  console.log('[PDF] Capturing with spacing:', { sectionGap, jobGap, bulletGap, currentTransform });
-
-  // Clone the element
-  const clone = resumeElement.cloneNode(true) as HTMLElement;
-  clone.id = 'resume-clone-for-pdf';
-  
-  // Remove contenteditable attributes
-  clone.querySelectorAll('[contenteditable]').forEach(el => {
-    el.removeAttribute('contenteditable');
-    el.classList.remove('editable-field');
+  // Create PDF with letter size
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'pt',
+    format: 'letter',
+    compress: true,
   });
 
-  // Position off-screen for rendering
-  // IMPORTANT: Do NOT apply transform to clone - it causes cropping issues
-  // Instead, we'll let the dynamic spacing handle fitting
-  clone.style.cssText = `
-    position: absolute;
-    left: -9999px;
-    top: 0;
-    width: 816px;
-    height: 1056px;
-    max-height: 1056px;
-    overflow: hidden;
-    padding: 36.5px 52.8px;
-    margin: 0;
-    background-color: #ffffff;
-    color: #000000;
-    font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-    font-size: 9pt;
-    line-height: 1.45;
-    box-sizing: border-box;
-    transform: none;
-  `;
+  // Page dimensions in points (1 inch = 72 points)
+  const PAGE_WIDTH = 612; // 8.5 inches
+  const PAGE_HEIGHT = 792; // 11 inches
+  const MARGIN_LEFT = 40;
+  const MARGIN_RIGHT = 40;
+  const MARGIN_TOP = 36;
+  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
 
-  // ====== APPLY ALL INLINE STYLES EXPLICITLY ======
-  // This ensures html2canvas sees the exact styles we want
+  let y = MARGIN_TOP; // Current Y position
 
-  // HEADER
-  const header = clone.querySelector('.resume-header') as HTMLElement;
-  if (header) {
-    header.style.cssText = `
-      text-align: center;
-      margin: 0 0 10px 0;
-      padding: 0;
-    `;
-  }
-
-  // NAME
-  const name = clone.querySelector('.resume-name') as HTMLElement;
-  if (name) {
-    name.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 20pt;
-      font-weight: bold;
-      color: #000000;
-      margin: 0 0 6px 0;
-      padding: 0;
-      display: block;
-      text-align: center;
-    `;
-  }
-
-  // CONTACT LINE
-  const contactLine = clone.querySelector('.contact-line') as HTMLElement;
-  if (contactLine) {
-    contactLine.style.cssText = `
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: baseline;
-      gap: 12px;
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      color: #333333;
-      margin: 0;
-      padding: 0;
-    `;
-  }
-
-  // CONTACT LINKS (LinkedIn, Portfolio)
-  const contactLinks = clone.querySelectorAll('.contact-link') as NodeListOf<HTMLElement>;
-  contactLinks.forEach(link => {
-    link.style.cssText = `
-      color: inherit;
-      text-decoration: none;
-    `;
-  });
-
-  // CONTACT ITEMS
-  const contactItems = clone.querySelectorAll('.contact-item') as NodeListOf<HTMLElement>;
-  contactItems.forEach(item => {
-    // Use center alignment for phone item, baseline for others
-    const isPhoneItem = item.classList.contains('contact-item-phone');
-    item.style.cssText = `
-      display: inline-flex;
-      align-items: ${isPhoneItem ? 'center' : 'baseline'};
-      gap: 3px;
-    `;
-  });
-
-  // CONTACT ICONS - All icons on same baseline
-  const contactIcons = clone.querySelectorAll('.contact-icon') as NodeListOf<HTMLElement>;
-  contactIcons.forEach(icon => {
-    // Base style - using inline-block for consistent baseline alignment
-    const baseStyle = `
-      font-family: Arial, Helvetica, sans-serif;
-      font-weight: bold;
-      color: #000000;
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      line-height: 14px;
-      text-align: center;
-      vertical-align: baseline;
-      flex-shrink: 0;
-    `;
+  // Helper: Add text and return new Y position
+  const addText = (
+    text: string,
+    x: number,
+    fontSize: number,
+    options: {
+      fontStyle?: 'normal' | 'bold' | 'italic' | 'bolditalic';
+      color?: [number, number, number];
+      maxWidth?: number;
+      align?: 'left' | 'center' | 'right';
+    } = {}
+  ): number => {
+    const { fontStyle = 'normal', color = [0, 0, 0], maxWidth = CONTENT_WIDTH, align = 'left' } = options;
     
-    // Apply individual sizes based on icon type - all on same baseline
-    if (icon.classList.contains('icon-linkedin')) {
-      icon.style.cssText = baseStyle + 'font-size: 9pt;';
-    } else if (icon.classList.contains('icon-web')) {
-      icon.style.cssText = baseStyle + 'font-size: 8pt; color: #000000;';
-    } else if (icon.classList.contains('icon-email')) {
-      icon.style.cssText = baseStyle + 'font-size: 7pt;';
-    } else if (icon.classList.contains('icon-phone')) {
-      icon.style.cssText = baseStyle + 'font-size: 8.3pt; vertical-align: middle;';
-    } else {
-      icon.style.cssText = baseStyle + 'font-size: 9pt;';
+    pdf.setFont('helvetica', fontStyle);
+    pdf.setFontSize(fontSize);
+    pdf.setTextColor(color[0], color[1], color[2]);
+    
+    // Split text to fit width
+    const lines = pdf.splitTextToSize(text, maxWidth);
+    const lineHeight = fontSize * 1.3;
+    
+    lines.forEach((line: string, index: number) => {
+      let textX = x;
+      if (align === 'center') {
+        const textWidth = pdf.getTextWidth(line);
+        textX = (PAGE_WIDTH - textWidth) / 2;
+      } else if (align === 'right') {
+        const textWidth = pdf.getTextWidth(line);
+        textX = PAGE_WIDTH - MARGIN_RIGHT - textWidth;
+      }
+      pdf.text(line, textX, y + (index * lineHeight));
+    });
+    
+    return y + (lines.length * lineHeight);
+  };
+
+  // Helper: Add a horizontal line
+  const addLine = (yPos: number, width: number = CONTENT_WIDTH): void => {
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(1);
+    pdf.line(MARGIN_LEFT, yPos, MARGIN_LEFT + width, yPos);
+  };
+
+  // ========== EXTRACT DATA FROM DOM ==========
+  
+  // Name
+  const nameEl = resumeElement.querySelector('.resume-name');
+  const name = nameEl?.textContent?.trim() || '';
+
+  // Contact info
+  const contactItems: { icon: string; text: string; url?: string }[] = [];
+  
+  // LinkedIn
+  const linkedinLink = resumeElement.querySelector('a[href*="linkedin"]') as HTMLAnchorElement;
+  if (linkedinLink) {
+    const text = linkedinLink.querySelector('.contact-item span:not(.contact-icon)')?.textContent?.trim();
+    if (text) contactItems.push({ icon: 'in', text, url: linkedinLink.href });
+  }
+  
+  // Portfolio
+  const portfolioLink = resumeElement.querySelector('a[href*="tharunkalluru"]') as HTMLAnchorElement;
+  if (portfolioLink) {
+    const text = portfolioLink.querySelector('.contact-item span:not(.contact-icon)')?.textContent?.trim();
+    if (text) contactItems.push({ icon: '◆', text, url: portfolioLink.href });
+  }
+  
+  // Email & Phone (not in links)
+  resumeElement.querySelectorAll('.contact-item').forEach(item => {
+    if (item.closest('a')) return; // Skip if inside a link (already handled)
+    const icon = item.querySelector('.contact-icon')?.textContent?.trim() || '';
+    const text = item.querySelector('span:not(.contact-icon)')?.textContent?.trim() || '';
+    if (text) contactItems.push({ icon, text });
+  });
+
+  // ========== RENDER NAME (CENTERED) ==========
+  y = addText(name, MARGIN_LEFT, 20, { fontStyle: 'bold', align: 'center' });
+  y += 8;
+
+  // ========== RENDER CONTACT LINE (CENTERED) ==========
+  const contactString = contactItems.map(c => `${c.icon} ${c.text}`).join('   •   ');
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(9);
+  const contactWidth = pdf.getTextWidth(contactString);
+  const contactX = (PAGE_WIDTH - contactWidth) / 2;
+  pdf.text(contactString, contactX, y);
+  
+  // Add clickable links for LinkedIn and Portfolio
+  let linkX = contactX;
+  contactItems.forEach((item, index) => {
+    const itemText = `${item.icon} ${item.text}`;
+    const itemWidth = pdf.getTextWidth(itemText);
+    
+    if (item.url) {
+      pdf.link(linkX, y - 9, itemWidth, 12, { url: item.url });
+    }
+    
+    linkX += itemWidth;
+    if (index < contactItems.length - 1) {
+      linkX += pdf.getTextWidth('   •   ');
     }
   });
+  
+  y += 16;
 
-  // SECTIONS
-  const sections = clone.querySelectorAll('.resume-section') as NodeListOf<HTMLElement>;
-  sections.forEach(section => {
-    section.style.cssText = `
-      margin-top: ${sectionGap};
-      padding: 0;
-    `;
-  });
+  // ========== RENDER SECTIONS ==========
+  const sections = resumeElement.querySelectorAll('.resume-section');
+  
+  sections.forEach((section) => {
+    const sectionTitle = section.querySelector('.section-title')?.textContent?.trim() || '';
+    
+    // Section Title with underline
+    y += 4;
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(sectionTitle, MARGIN_LEFT, y);
+    y += 8;
+    addLine(y);
+    y += 10;
 
-  // SECTION TITLES - Critical: padding-bottom creates gap before underline
-  const sectionTitles = clone.querySelectorAll('.section-title') as NodeListOf<HTMLElement>;
-  sectionTitles.forEach(title => {
-    title.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 10pt;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #000000;
-      padding: 0 0 8px 0;
-      border-bottom: 1.5px solid #000000;
-      margin: 0 0 8px 0;
-      display: block;
-      text-align: left;
-    `;
-  });
-
-  // JOB ENTRIES
-  const jobEntries = clone.querySelectorAll('.job-entry') as NodeListOf<HTMLElement>;
-  jobEntries.forEach((entry, index, arr) => {
-    const isLast = index === arr.length - 1;
-    entry.style.cssText = `
-      margin: 0 0 ${isLast ? '0' : jobGap} 0;
-      padding: 0;
-    `;
-  });
-
-  // JOB HEADERS
-  const jobHeaders = clone.querySelectorAll('.job-header') as NodeListOf<HTMLElement>;
-  jobHeaders.forEach(header => {
-    header.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
-      margin: 0 0 3px 0;
-      padding: 0;
-    `;
-  });
-
-  // JOB TITLE LINES
-  const jobTitleLines = clone.querySelectorAll('.job-title-line') as NodeListOf<HTMLElement>;
-  jobTitleLines.forEach(line => {
-    line.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9.5pt;
-      color: #000000;
-      text-align: left;
-    `;
-  });
-
-  // JOB TITLES (bold)
-  const jobTitles = clone.querySelectorAll('.job-title') as NodeListOf<HTMLElement>;
-  jobTitles.forEach(title => {
-    title.style.fontWeight = 'bold';
-  });
-
-  // JOB DATES
-  const jobDates = clone.querySelectorAll('.job-date') as NodeListOf<HTMLElement>;
-  jobDates.forEach(date => {
-    date.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      color: #333333;
-      font-style: italic;
-      white-space: nowrap;
-      flex-shrink: 0;
-      text-align: right;
-    `;
-  });
-
-  // BULLET LISTS
-  const bulletLists = clone.querySelectorAll('.resume-bullets') as NodeListOf<HTMLElement>;
-  bulletLists.forEach(list => {
-    list.style.cssText = `
-      margin: 3px 0 0 0;
-      padding: 0 0 0 12px;
-      list-style: none;
-    `;
-  });
-
-  // BULLET ITEMS
-  const bulletItems = clone.querySelectorAll('.resume-bullets li') as NodeListOf<HTMLElement>;
-  bulletItems.forEach((bullet, index, arr) => {
-    const parent = bullet.parentElement;
-    const isLast = parent ? bullet === parent.lastElementChild : index === arr.length - 1;
-    bullet.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      line-height: 1.45;
-      margin: 0 0 ${isLast ? '0' : bulletGap} 0;
-      padding: 0 0 0 0;
-      position: relative;
-      color: #000000;
-    `;
-  });
-
-  // EDUCATION HEADERS
-  const eduHeaders = clone.querySelectorAll('.education-header') as NodeListOf<HTMLElement>;
-  eduHeaders.forEach(header => {
-    header.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 10px;
-      margin: 0;
-      padding: 0;
-    `;
-  });
-
-  // EDUCATION SCHOOLS
-  const eduSchools = clone.querySelectorAll('.education-school') as NodeListOf<HTMLElement>;
-  eduSchools.forEach(school => {
-    school.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9.5pt;
-      font-weight: bold;
-      color: #000000;
-      text-align: left;
-    `;
-  });
-
-  // EDUCATION DATES
-  const eduDates = clone.querySelectorAll('.education-date') as NodeListOf<HTMLElement>;
-  eduDates.forEach(date => {
-    date.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      color: #333333;
-      font-style: italic;
-      white-space: nowrap;
-      flex-shrink: 0;
-      text-align: right;
-    `;
-  });
-
-  // EDUCATION DEGREE ROWS
-  const eduDegreeRows = clone.querySelectorAll('.education-degree-row') as NodeListOf<HTMLElement>;
-  eduDegreeRows.forEach(row => {
-    row.style.cssText = `
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin: 4px 0 0 0;
-      padding: 0;
-    `;
-  });
-
-  // EDUCATION DEGREES
-  const eduDegrees = clone.querySelectorAll('.education-degree') as NodeListOf<HTMLElement>;
-  eduDegrees.forEach(degree => {
-    degree.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      line-height: 1.45;
-      color: #000000;
-      text-align: left;
-      flex: 1;
-    `;
-  });
-
-  // EDUCATION GPAs
-  const eduGpas = clone.querySelectorAll('.education-gpa') as NodeListOf<HTMLElement>;
-  eduGpas.forEach(gpa => {
-    gpa.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      line-height: 1.45;
-      color: #000000;
-      text-align: right;
-      white-space: nowrap;
-      flex-shrink: 0;
-    `;
-  });
-
-  // EDUCATION DETAILS
-  const eduDetails = clone.querySelectorAll('.education-detail') as NodeListOf<HTMLElement>;
-  eduDetails.forEach(detail => {
-    detail.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      margin: 3px 0 0 0;
-      padding: 0;
-      line-height: 1.45;
-      color: #000000;
-    `;
-  });
-
-  // STARTUP ENTRIES
-  const startupEntries = clone.querySelectorAll('.startup-entry') as NodeListOf<HTMLElement>;
-  startupEntries.forEach((entry, index, arr) => {
-    const isLast = index === arr.length - 1;
-    entry.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      margin: 0 0 ${isLast ? '0' : '5px'} 0;
-      padding: 0;
-      line-height: 1.45;
-      color: #000000;
-    `;
-  });
-
-  // STARTUP ROLES (bold)
-  const startupRoles = clone.querySelectorAll('.startup-role') as NodeListOf<HTMLElement>;
-  startupRoles.forEach(role => {
-    role.style.fontWeight = 'bold';
-  });
-
-  // SKILL LINES
-  const skillLines = clone.querySelectorAll('.skill-line') as NodeListOf<HTMLElement>;
-  skillLines.forEach((line, index, arr) => {
-    const isLast = index === arr.length - 1;
-    line.style.cssText = `
-      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-      font-size: 9pt;
-      margin: 0 0 ${isLast ? '0' : '5px'} 0;
-      padding: 0;
-      line-height: 1.45;
-      color: #000000;
-    `;
-  });
-
-  // SKILL LABELS (bold)
-  const skillLabels = clone.querySelectorAll('.skill-label') as NodeListOf<HTMLElement>;
-  skillLabels.forEach(label => {
-    label.style.fontWeight = 'bold';
-  });
-
-  // BOLD METRICS
-  const boldElements = clone.querySelectorAll('strong') as NodeListOf<HTMLElement>;
-  boldElements.forEach(el => {
-    el.style.fontWeight = 'bold';
-    el.style.color = '#000000';
-  });
-
-  document.body.appendChild(clone);
-
-  // Wait for styles to apply
-  await new Promise(resolve => setTimeout(resolve, 50));
-
-  try {
-    // Generate canvas at high resolution for sharp text (scale 3 = good balance of quality and speed)
-    const canvas = await html2canvas(clone, {
-      scale: 3,
-      useCORS: true,
-      logging: false,
-      width: 816,
-      height: 1056,
-      backgroundColor: '#ffffff',
+    // ===== EXPERIENCE =====
+    const jobEntries = section.querySelectorAll('.job-entry');
+    jobEntries.forEach((job, jobIndex) => {
+      // Job title line
+      const title = job.querySelector('.job-title')?.textContent?.trim() || '';
+      const company = job.querySelector('.job-company')?.textContent?.trim() || '';
+      const location = job.querySelector('.job-location')?.textContent?.trim() || '';
+      const dateRange = job.querySelector('.job-date')?.textContent?.trim() || '';
+      
+      const jobHeader = [title, company, location].filter(Boolean).join(' | ');
+      
+      // Job header (bold) on left, date (italic) on right
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9.5);
+      pdf.text(jobHeader, MARGIN_LEFT, y);
+      
+      if (dateRange) {
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(9);
+        pdf.setTextColor(51, 51, 51);
+        const dateWidth = pdf.getTextWidth(dateRange);
+        pdf.text(dateRange, PAGE_WIDTH - MARGIN_RIGHT - dateWidth, y);
+      }
+      
+      y += 12;
+      
+      // Bullets
+      const bullets = job.querySelectorAll('.resume-bullets li');
+      bullets.forEach((bullet) => {
+        const bulletText = bullet.textContent?.trim() || '';
+        if (bulletText) {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(9);
+          pdf.setTextColor(0, 0, 0);
+          
+          // Add bullet point
+          pdf.text('•', MARGIN_LEFT, y);
+          
+          // Add text with wrapping
+          const textX = MARGIN_LEFT + 10;
+          const textMaxWidth = CONTENT_WIDTH - 10;
+          const lines = pdf.splitTextToSize(bulletText, textMaxWidth);
+          const lineHeight = 11;
+          
+          lines.forEach((line: string, lineIndex: number) => {
+            pdf.text(line, textX, y + (lineIndex * lineHeight));
+          });
+          
+          y += lines.length * lineHeight + 2;
+        }
+      });
+      
+      // Add space between jobs
+      if (jobIndex < jobEntries.length - 1) {
+        y += 6;
+      }
     });
 
-    // Create PDF with compression enabled
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'in',
-      format: 'letter',
-      compress: true,
+    // ===== STARTUPS =====
+    const startupEntries = section.querySelectorAll('.startup-entry');
+    startupEntries.forEach((startup, index) => {
+      const role = startup.querySelector('.startup-role')?.textContent?.trim() || '';
+      const desc = startup.querySelector('.startup-desc')?.textContent?.trim() || '';
+      
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(role, MARGIN_LEFT, y);
+      
+      if (desc) {
+        const roleWidth = pdf.getTextWidth(role);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(' - ' + desc, MARGIN_LEFT + roleWidth, y);
+      }
+      
+      y += 13;
+      
+      if (index < startupEntries.length - 1) {
+        y += 2;
+      }
     });
 
-    // Use PNG for lossless, sharp text
-    const imgData = canvas.toDataURL('image/png');
-    
-    // Add image with FAST compression (doesn't affect visual quality, just processing speed)
-    pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11, undefined, 'FAST');
+    // ===== SKILLS =====
+    const skillLines = section.querySelectorAll('.skill-line');
+    skillLines.forEach((skill, index) => {
+      const label = skill.querySelector('.skill-label')?.textContent?.trim() || '';
+      const content = skill.querySelector('.skill-content')?.textContent?.trim() || '';
+      
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(label + ':', MARGIN_LEFT, y);
+      
+      const labelWidth = pdf.getTextWidth(label + ': ');
+      pdf.setFont('helvetica', 'normal');
+      
+      // Wrap content if needed
+      const contentMaxWidth = CONTENT_WIDTH - labelWidth;
+      const lines = pdf.splitTextToSize(content, contentMaxWidth);
+      const lineHeight = 11;
+      
+      lines.forEach((line: string, lineIndex: number) => {
+        const xPos = lineIndex === 0 ? MARGIN_LEFT + labelWidth : MARGIN_LEFT;
+        const width = lineIndex === 0 ? contentMaxWidth : CONTENT_WIDTH;
+        pdf.text(line, xPos, y + (lineIndex * lineHeight));
+      });
+      
+      y += lines.length * lineHeight + 2;
+      
+      if (index < skillLines.length - 1) {
+        y += 1;
+      }
+    });
 
-    // Add clickable hyperlinks for LinkedIn and Portfolio
-    // These need to be added as annotations on top of the image
-    const linkedinLink = resumeElement.querySelector('a[href*="linkedin"]') as HTMLAnchorElement;
-    const portfolioLink = resumeElement.querySelector('a[href*="tharunkalluru.com"]') as HTMLAnchorElement;
-    
-    // Page dimensions
-    const PAGE_WIDTH = 8.5; // inches
-    const PAGE_HEIGHT = 11; // inches
-    const DPI = 96;
-    
-    if (linkedinLink) {
-      // Get bounding box of the link
-      const rect = linkedinLink.getBoundingClientRect();
-      const resumeRect = resumeElement.getBoundingClientRect();
+    // ===== EDUCATION =====
+    const eduEntry = section.querySelector('.education-entry');
+    if (eduEntry) {
+      // School line
+      const school = section.querySelector('.education-school')?.textContent?.trim() || '';
+      const eduDate = section.querySelector('.education-date')?.textContent?.trim() || '';
       
-      // Calculate position in pixels relative to resume top-left
-      const xPx = rect.left - resumeRect.left;
-      const yPx = rect.top - resumeRect.top;
-      const widthPx = rect.width;
-      const heightPx = rect.height;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9.5);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(school, MARGIN_LEFT, y);
       
-      // Convert to inches (816px wide = 8.5in, so ratio is 8.5/816)
-      const x = (xPx / 816) * PAGE_WIDTH;
-      const y = (yPx / 1056) * PAGE_HEIGHT;
-      const width = (widthPx / 816) * PAGE_WIDTH;
-      const height = (heightPx / 1056) * PAGE_HEIGHT;
+      if (eduDate) {
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(9);
+        pdf.setTextColor(51, 51, 51);
+        const dateWidth = pdf.getTextWidth(eduDate);
+        pdf.text(eduDate, PAGE_WIDTH - MARGIN_RIGHT - dateWidth, y);
+      }
       
-      // Add clickable link annotation
-      pdf.link(x, y, width, height, { url: linkedinLink.href });
-      console.log('[PDF] Added LinkedIn link:', linkedinLink.href);
-      console.log('  Position (inches):', { x: x.toFixed(3), y: y.toFixed(3), width: width.toFixed(3), height: height.toFixed(3) });
+      y += 12;
+      
+      // Degree and GPA line
+      const degree = section.querySelector('.education-degree')?.textContent?.trim() || '';
+      const gpa = section.querySelector('.education-gpa')?.textContent?.trim() || '';
+      
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(degree, MARGIN_LEFT, y);
+      
+      if (gpa) {
+        const gpaWidth = pdf.getTextWidth(gpa);
+        pdf.text(gpa, PAGE_WIDTH - MARGIN_RIGHT - gpaWidth, y);
+      }
+      
+      y += 12;
+      
+      // Coursework
+      const coursework = section.querySelector('.education-detail')?.textContent?.trim() || '';
+      if (coursework) {
+        const lines = pdf.splitTextToSize(coursework, CONTENT_WIDTH);
+        lines.forEach((line: string, index: number) => {
+          pdf.text(line, MARGIN_LEFT, y + (index * 11));
+        });
+        y += lines.length * 11;
+      }
     }
     
-    if (portfolioLink) {
-      const rect = portfolioLink.getBoundingClientRect();
-      const resumeRect = resumeElement.getBoundingClientRect();
-      
-      const xPx = rect.left - resumeRect.left;
-      const yPx = rect.top - resumeRect.top;
-      const widthPx = rect.width;
-      const heightPx = rect.height;
-      
-      const x = (xPx / 816) * PAGE_WIDTH;
-      const y = (yPx / 1056) * PAGE_HEIGHT;
-      const width = (widthPx / 816) * PAGE_WIDTH;
-      const height = (heightPx / 1056) * PAGE_HEIGHT;
-      
-      pdf.link(x, y, width, height, { url: portfolioLink.href });
-      console.log('[PDF] Added Portfolio link:', portfolioLink.href);
-      console.log('  Position (inches):', { x: x.toFixed(3), y: y.toFixed(3), width: width.toFixed(3), height: height.toFixed(3) });
-    }
+    // Add space after section
+    y += 4;
+  });
 
-    // Save the PDF
-    pdf.save(filename);
-    
-    console.log('[PDF] Generated successfully! Maximum quality with clickable links.');
-  } finally {
-    // Clean up
-    document.body.removeChild(clone);
-  }
+  // Save the PDF
+  pdf.save(filename);
+  console.log('[PDF] Generated native text PDF - fully ATS compatible!');
 }

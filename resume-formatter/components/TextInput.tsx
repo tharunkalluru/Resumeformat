@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Sparkles } from 'lucide-react';
+import { FileText, Sparkles, Info, ChevronRight } from 'lucide-react';
 
 interface TextInputProps {
   onSubmit: (text: string) => void;
@@ -52,6 +52,7 @@ Selected Coursework: Machine Learning, Artificial Intelligence, Databases, Proje
 
 export default function TextInput({ onSubmit }: TextInputProps) {
   const [text, setText] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = () => {
     if (text.trim()) {
@@ -63,65 +64,96 @@ export default function TextInput({ onSubmit }: TextInputProps) {
     setText(SAMPLE_RESUME);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && e.metaKey && text.trim()) {
+      handleSubmit();
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-blue-400" />
-          <h2 className="text-lg font-semibold text-white">Paste Your Resume</h2>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+            <FileText className="w-4.5 h-4.5 text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-white">Paste Your Resume</h2>
+            <p className="text-xs text-zinc-500">GPT-generated text works best</p>
+          </div>
         </div>
         <button
           onClick={handleLoadSample}
-          className="text-sm text-zinc-400 hover:text-blue-400 transition-colors flex items-center gap-1"
+          className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-blue-400 bg-white/5 hover:bg-blue-500/10 border border-white/10 hover:border-blue-500/30 transition-all duration-200"
         >
-          <Sparkles className="w-4 h-4" />
-          Load Sample
+          <Sparkles className="w-3.5 h-3.5" />
+          Try Sample
         </button>
       </div>
-      
-      <p className="text-sm text-zinc-400">
-        Paste the text from your custom GPT. The app will automatically detect sections like 
-        EXPERIENCE, SKILLS, STARTUPS, etc. 
-        <br />
-        <span className="text-blue-400 font-medium">Note:</span> Name, contact info, and education are constant and won't change.
-      </p>
 
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={`Paste your resume text here...
+      {/* Info Banner */}
+      <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
+        <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+        <p className="text-xs text-zinc-400 leading-relaxed">
+          <span className="text-blue-400 font-medium">Note:</span> Name, contact info, and education are pre-configured and won't change from your input. 
+          Only <span className="text-white">EXPERIENCE</span>, <span className="text-white">SKILLS</span>, and <span className="text-white">STARTUPS</span> sections will be parsed.
+        </p>
+      </div>
 
-NOTE: Name, contact info, and education are hardcoded and won't change.
-Only paste EXPERIENCE, SKILLS, and STARTUPS sections.
+      {/* Textarea */}
+      <div className={`relative rounded-xl transition-all duration-300 ${isFocused ? 'ring-2 ring-blue-500/50' : ''}`}>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onKeyDown={handleKeyDown}
+          placeholder={`Paste your resume text here...
 
 Example format:
 
 EXPERIENCE
 
 Product Manager | Company Name | City, State   Jan 2023 - Present
-- Achievement with metrics...
-- Another achievement...
+- Achievement with metrics like 40% improvement...
+- Another achievement with $5M+ impact...
 
 UNIVERSITY STARTUPS
 Founder, Company - Description with metrics...
 
 SKILLS & COMPETENCIES
 Technical Skills: Python, SQL, etc.
-Tools: Figma, Analytics, etc.
-...`}
-        className="w-full h-[400px] bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-white 
-                   placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                   focus:border-transparent resize-none font-mono text-sm"
-      />
+Tools: Figma, Analytics, etc.`}
+          className="w-full h-[340px] bg-black/30 border border-white/10 rounded-xl p-4 text-white text-sm
+                     placeholder:text-zinc-600 focus:outline-none resize-none font-mono leading-relaxed
+                     scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent"
+        />
+        {/* Character count */}
+        <div className="absolute bottom-3 right-3 text-xs text-zinc-600">
+          {text.length > 0 && `${text.length.toLocaleString()} characters`}
+        </div>
+      </div>
 
+      {/* Submit Button */}
       <button
         onClick={handleSubmit}
         disabled={!text.trim()}
-        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed 
-                   flex items-center justify-center gap-2"
+        className="group relative w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm
+                   disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300
+                   bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500
+                   text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-[1.01]
+                   active:scale-[0.99]"
       >
         <Sparkles className="w-4 h-4" />
-        Format Resume
+        <span>Format Resume</span>
+        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+        {/* Keyboard hint */}
+        {text.trim() && (
+          <span className="absolute right-4 text-[10px] text-white/50 font-normal hidden sm:block">
+            <kbd className="px-1.5 py-0.5 bg-white/10 rounded">⌘</kbd> + <kbd className="px-1.5 py-0.5 bg-white/10 rounded">↵</kbd>
+          </span>
+        )}
       </button>
     </div>
   );
