@@ -53,7 +53,7 @@ const MAX_FONT_SCALE = 1.10; // Can expand to 110% for short content
 
 // Constant contact information - never changes
 const CONSTANT_CONTACT = {
-  name: 'THARUN KALLURU',
+  name: 'Tharun Kalluru',
   linkedin: 'tharunkalluru',
   linkedinUrl: 'https://www.linkedin.com/in/tharunkalluru/',
   portfolio: 'tharunkalluru.com',
