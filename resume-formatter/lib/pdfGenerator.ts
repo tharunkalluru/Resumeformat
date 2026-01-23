@@ -1,20 +1,6 @@
 import jsPDF from 'jspdf';
 
 /**
- * Load font file and convert to base64 for jsPDF embedding
- */
-async function loadFontAsBase64(url: string): Promise<string> {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-/**
  * Generates a TEXT-based PDF that matches the preview exactly.
  * 
  * Approach: Measure actual element positions from the DOM and render
@@ -22,9 +8,6 @@ async function loadFontAsBase64(url: string): Promise<string> {
  * 1. Real, selectable, ATS-parseable text
  * 2. Layout that matches the preview exactly
  * 3. No images, no invisible text - just a legitimate text PDF
- * 
- * Uses Carlito font (metrically identical to Calibri) for perfect
- * preview-to-PDF matching.
  */
 export async function generatePDF(elementId: string = 'resume-preview', filename: string = 'resume.pdf'): Promise<void> {
   const resumeElement = document.getElementById(elementId);
@@ -39,39 +22,6 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     format: 'letter',
     compress: true,
   });
-
-  // Load and embed Carlito fonts (metrically identical to Calibri)
-  try {
-    const [regularFont, boldFont, italicFont, boldItalicFont] = await Promise.all([
-      loadFontAsBase64('/fonts/Carlito-Regular.ttf'),
-      loadFontAsBase64('/fonts/Carlito-Bold.ttf'),
-      loadFontAsBase64('/fonts/Carlito-Italic.ttf'),
-      loadFontAsBase64('/fonts/Carlito-BoldItalic.ttf'),
-    ]);
-
-    // Register Carlito Regular
-    pdf.addFileToVFS('Carlito-Regular.ttf', regularFont);
-    pdf.addFont('Carlito-Regular.ttf', 'Carlito', 'normal');
-
-    // Register Carlito Bold
-    pdf.addFileToVFS('Carlito-Bold.ttf', boldFont);
-    pdf.addFont('Carlito-Bold.ttf', 'Carlito', 'bold');
-
-    // Register Carlito Italic
-    pdf.addFileToVFS('Carlito-Italic.ttf', italicFont);
-    pdf.addFont('Carlito-Italic.ttf', 'Carlito', 'italic');
-
-    // Register Carlito Bold Italic
-    pdf.addFileToVFS('Carlito-BoldItalic.ttf', boldItalicFont);
-    pdf.addFont('Carlito-BoldItalic.ttf', 'Carlito', 'bolditalic');
-
-    console.log('Carlito fonts loaded successfully');
-  } catch (error) {
-    console.warn('Failed to load Carlito fonts, falling back to Helvetica:', error);
-  }
-
-  // Use Carlito as the default font (falls back to Helvetica if not loaded)
-  const FONT_FAMILY = pdf.getFontList()['Carlito'] ? 'Carlito' : 'helvetica';
 
   // Get resume element dimensions for coordinate conversion
   const resumeRect = resumeElement.getBoundingClientRect();
@@ -194,7 +144,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     pdf.setTextColor(0, 0, 0);
     
     // Calculate space width using normal font (consistent spacing)
-    pdf.setFont(FONT_FAMILY, 'normal');
+    pdf.setFont('helvetica', 'normal');
     const spaceWidth = pdf.getTextWidth(' ');
     
     // If maxWidth is specified, check if we need to compress
@@ -203,7 +153,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       let totalWidth = 0;
       words.forEach((word, index) => {
         const shouldBold = isMetricWord(word);
-        pdf.setFont(FONT_FAMILY, shouldBold ? 'bold' : 'normal');
+        pdf.setFont('helvetica', shouldBold ? 'bold' : 'normal');
         totalWidth += pdf.getTextWidth(word);
         if (index < words.length - 1) {
           totalWidth += spaceWidth;
@@ -218,7 +168,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         let currentX = startX;
         words.forEach((word, index) => {
           const shouldBold = isMetricWord(word);
-          pdf.setFont(FONT_FAMILY, shouldBold ? 'bold' : 'normal');
+          pdf.setFont('helvetica', shouldBold ? 'bold' : 'normal');
           
           const naturalWidth = pdf.getTextWidth(word);
           const compressedWidth = naturalWidth * compressionRatio;
@@ -250,7 +200,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       const shouldBold = isMetricWord(word);
       
       // Set appropriate font
-      pdf.setFont(FONT_FAMILY, shouldBold ? 'bold' : 'normal');
+      pdf.setFont('helvetica', shouldBold ? 'bold' : 'normal');
       
       // Render the word
       pdf.text(word, currentX, y);
@@ -271,7 +221,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   const getLineWidthWithMetrics = (line: string, fontSize: number): number => {
     const words = line.split(' ');
     pdf.setFontSize(fontSize);
-    pdf.setFont(FONT_FAMILY, 'normal');
+    pdf.setFont('helvetica', 'normal');
     const spaceWidth = pdf.getTextWidth(' ');
     
     let width = 0;
@@ -282,7 +232,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       }
       
       const shouldBold = isMetricWord(word);
-      pdf.setFont(FONT_FAMILY, shouldBold ? 'bold' : 'normal');
+      pdf.setFont('helvetica', shouldBold ? 'bold' : 'normal');
       width += pdf.getTextWidth(word);
       
       if (index < words.length - 1) {
@@ -302,7 +252,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     let currentLine = '';
     
     pdf.setFontSize(fontSize);
-    pdf.setFont(FONT_FAMILY, 'normal');
+    pdf.setFont('helvetica', 'normal');
     const spaceWidth = pdf.getTextWidth(' ');
     
     words.forEach(word => {
@@ -380,7 +330,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     const color = parseColor(style.color);
     
     // Set PDF font properties
-    pdf.setFont(FONT_FAMILY, fontStyle);
+    pdf.setFont('helvetica', fontStyle);
     pdf.setFontSize(fontSize);
     pdf.setTextColor(color[0], color[1], color[2]);
     
@@ -420,7 +370,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     const fontStyle = getFontStyle(style);
     const color = parseColor(style.color);
     
-    pdf.setFont(FONT_FAMILY, fontStyle);
+    pdf.setFont('helvetica', fontStyle);
     pdf.setFontSize(fontSize);
     pdf.setTextColor(color[0], color[1], color[2]);
     
@@ -467,7 +417,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     const text = nameEl.textContent?.trim() || '';
     
     const fontSize = pxToPt(parseFloat(style.fontSize));
-    pdf.setFont(FONT_FAMILY, 'bold');
+    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(fontSize);
     pdf.setTextColor(0, 0, 0);
     
@@ -501,10 +451,10 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     
     // Build contact string with bullet separators (leading bullet only, no trailing)
     const fontSize = pxToPt(parseFloat(style.fontSize));
-    const bulletFontSize = fontSize; // Same size as text
+    const bulletFontSize = fontSize * 1.3; // Larger bullets
     
     // Calculate total width for centering
-    pdf.setFont(FONT_FAMILY, 'normal');
+    pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(bulletFontSize);
     const bulletChar = '•';
     const bulletWidth = pdf.getTextWidth(bulletChar);
@@ -525,13 +475,14 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     // Render centered
     const startX = (PDF_WIDTH - totalWidth) / 2;
     const textY = toPdfY(rect.top) + fontSize * 0.85;
-    // Bullet same size as text, same baseline
-    const bulletY = textY;
+    // Adjust bullet Y position to be vertically centered with text
+    // Larger bullet needs more downward adjustment
+    const bulletY = textY + (bulletFontSize - fontSize) * 0.35;
     let currentX = startX;
     
     pdf.setTextColor(0, 0, 0);
     
-    // Render leading bullet (same size as text)
+    // Render leading bullet (larger, vertically centered)
     pdf.setFontSize(bulletFontSize);
     pdf.text(bulletChar, currentX, bulletY);
     currentX += bulletWidth + spaceAfterBullet; // Small space after leading bullet
@@ -571,7 +522,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       const text = titleEl.textContent?.trim() || '';
       
       const fontSize = pxToPt(parseFloat(style.fontSize));
-      pdf.setFont(FONT_FAMILY, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(fontSize);
       pdf.setTextColor(0, 0, 0);
       
@@ -592,7 +543,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const text = titleLineEl.textContent?.trim() || '';
         const fontSize = pxToPt(parseFloat(style.fontSize));
         
-        pdf.setFont(FONT_FAMILY, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(fontSize);
         pdf.setTextColor(0, 0, 0);
         pdf.text(text, toPdfX(rect.left), toPdfY(rect.top) + fontSize * 0.85);
@@ -606,7 +557,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const text = dateEl.textContent?.trim() || '';
         const fontSize = pxToPt(parseFloat(style.fontSize));
         
-        pdf.setFont(FONT_FAMILY, 'italic');
+        pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(fontSize);
         pdf.setTextColor(51, 51, 51);
         const textWidth = pdf.getTextWidth(text);
@@ -629,16 +580,16 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const lineHeightPx = parseFloat(style.lineHeight) || (parseFloat(style.fontSize) * 1.45);
         const lineHeight = pxToPt(lineHeightPx);
         
-        // Render bullet point (same size as text)
-        const bulletFontSize = fontSize; // Same size as text
-        pdf.setFont(FONT_FAMILY, 'normal');
+        // Render bullet point
+        const bulletFontSize = fontSize * 1.3;
+        pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(bulletFontSize);
         pdf.setTextColor(0, 0, 0);
         const bulletChar = '•';
-        const bulletY = y; // Same baseline as text
+        const bulletY = y + (bulletFontSize - fontSize) * 0.35;
         pdf.text(bulletChar, x, bulletY);
         
-        const bulletWidth = pdf.getTextWidth(bulletChar + '   '); // 3 spaces for more gap
+        const bulletWidth = pdf.getTextWidth(bulletChar + ' ');
         const textStartX = x + bulletWidth;
         const textMaxWidth = (rect.width * scaleX) - bulletWidth;
         
@@ -670,7 +621,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       
       if (roleEl) {
         const role = roleEl.textContent?.trim() || '';
-        pdf.setFont(FONT_FAMILY, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(fontSize);
         pdf.setTextColor(0, 0, 0);
         pdf.text(role, x, y);
@@ -679,7 +630,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       
       if (descEl) {
         const desc = descEl.textContent?.trim() || '';
-        pdf.setFont(FONT_FAMILY, 'normal');
+        pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(fontSize);
         pdf.text(' - ', x, y);
         x += pdf.getTextWidth(' - ');
@@ -709,7 +660,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       
       if (labelEl) {
         const label = labelEl.textContent?.trim() || '';
-        pdf.setFont(FONT_FAMILY, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(baseFontSize);
         pdf.setTextColor(0, 0, 0);
         pdf.text(label + ': ', x, y);
@@ -718,7 +669,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       
       if (contentEl) {
         const content = contentEl.textContent?.trim() || '';
-        pdf.setFont(FONT_FAMILY, 'normal');
+        pdf.setFont('helvetica', 'normal');
         
         const maxWidth = toPdfX(rect.right) - x;
         
@@ -758,7 +709,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const text = schoolEl.textContent?.trim() || '';
         
         const fontSize = pxToPt(parseFloat(style.fontSize));
-        pdf.setFont(FONT_FAMILY, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(fontSize);
         pdf.setTextColor(0, 0, 0);
         
@@ -774,7 +725,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const text = eduDateEl.textContent?.trim() || '';
         
         const fontSize = pxToPt(parseFloat(style.fontSize));
-        pdf.setFont(FONT_FAMILY, 'italic');
+        pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(fontSize);
         pdf.setTextColor(51, 51, 51);
         
@@ -795,7 +746,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const text = degreeEl.textContent?.trim() || '';
         
         const fontSize = pxToPt(parseFloat(style.fontSize));
-        pdf.setFont(FONT_FAMILY, 'normal');
+        pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(fontSize);
         pdf.setTextColor(0, 0, 0);
         
@@ -811,7 +762,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const text = gpaEl.textContent?.trim() || '';
         
         const fontSize = pxToPt(parseFloat(style.fontSize));
-        pdf.setFont(FONT_FAMILY, 'normal');
+        pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(fontSize);
         pdf.setTextColor(0, 0, 0);
         
@@ -830,7 +781,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const text = detailEl.textContent?.trim() || '';
         
         const baseFontSize = pxToPt(parseFloat(style.fontSize));
-        pdf.setFont(FONT_FAMILY, 'normal');
+        pdf.setFont('helvetica', 'normal');
         pdf.setTextColor(0, 0, 0);
         
         const x = toPdfX(rect.left);
