@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Load Carlito font (metrically identical to Calibri) */
+@font-face {
+  font-family: 'Carlito';
+  src: url('/fonts/Carlito-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('/fonts/Carlito-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('/fonts/Carlito-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('/fonts/Carlito-BoldItalic.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   --background: #09090b;
   --foreground: #fafafa;
@@ -120,7 +153,7 @@ body {
   margin: 0 auto;
   
   /* Typography */
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
   font-size: 9pt;
   line-height: 1.45;
   color: #000000;
@@ -146,8 +179,8 @@ body {
 }
 
 .resume-preview .resume-name {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 20pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 2.22em; /* 20pt relative to 9pt base */
   font-weight: bold;
   color: #000000;
   margin: 0 0 6px 0;
@@ -162,8 +195,8 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0;
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
   line-height: 1.2;
   color: #333333;
   align-items: center;
@@ -183,7 +216,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 9pt; /* Match text line height */
+  height: 1em; /* Match text line height, scales with font */
 }
 
 .resume-preview .contact-separator::before {
@@ -212,8 +245,8 @@ body {
 
 /* ===== SECTION TITLES - Left aligned with gap before underline ===== */
 .resume-preview .section-title {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
-  font-size: 10pt !important;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif !important;
+  font-size: 1.111em !important; /* 10pt relative to 9pt base */
   font-weight: bold !important;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -245,8 +278,8 @@ body {
 }
 
 .resume-preview .job-title-line {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9.5pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1.056em; /* 9.5pt relative to 9pt base */
   color: #000000;
   text-align: left;
 }
@@ -265,8 +298,8 @@ body {
 }
 
 .resume-preview .job-date {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
   color: #333333;
   font-style: italic;
   white-space: nowrap;
@@ -277,13 +310,13 @@ body {
 /* ===== BULLET LISTS - Dynamic spacing ===== */
 .resume-preview .resume-bullets {
   margin: 3px 0 0 0;
-  padding: 0 0 0 12px;
+  padding: 0 0 0 16px; /* Increased from 12px to add more space after bullet */
   list-style: none;
 }
 
 .resume-preview .resume-bullets li {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
   line-height: 1.45;
   margin-bottom: var(--bullet-gap, 1px);
   position: relative;
@@ -298,10 +331,10 @@ body {
 .resume-preview .resume-bullets li::before {
   content: "•";
   position: absolute;
-  left: -9px;
+  left: -12px; /* Increased from -9px for more space */
   top: 0;
   color: #000000;
-  font-size: 9pt;
+  font-size: 1em; /* Same size as text */
 }
 
 /* Bold metrics */
@@ -312,8 +345,8 @@ body {
 
 /* ===== STARTUPS ===== */
 .resume-preview .startups-list {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
 }
 
 .resume-preview .startup-entry {
@@ -337,8 +370,8 @@ body {
 
 /* ===== SKILLS ===== */
 .resume-preview .skills-list {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
 }
 
 .resume-preview .skill-line {
@@ -377,16 +410,16 @@ body {
 }
 
 .resume-preview .education-school {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9.5pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1.056em; /* 9.5pt relative to 9pt base */
   font-weight: bold;
   color: #000000;
   text-align: left;
 }
 
 .resume-preview .education-date {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
   color: #333333;
   font-style: italic;
   white-space: nowrap;
@@ -405,8 +438,8 @@ body {
 }
 
 .resume-preview .education-degree {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
   line-height: 1.45;
   color: #000000;
   text-align: left;
@@ -414,8 +447,8 @@ body {
 }
 
 .resume-preview .education-gpa {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
   line-height: 1.45;
   color: #000000;
   text-align: right;
@@ -424,8 +457,8 @@ body {
 }
 
 .resume-preview .education-detail {
-  font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 1em; /* 9pt relative to base */
   margin: 3px 0 0 0;
   padding: 0;
   line-height: 1.45;
