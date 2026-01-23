@@ -89,36 +89,7 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     pdf.addImage(imgData, 'PNG', 0, 0, PAGE_WIDTH_PT, PAGE_HEIGHT_PT, undefined, 'FAST');
 
     // ========== ADD INVISIBLE TEXT LAYER FOR ATS ==========
-    // This text is positioned behind the image but is still parseable by ATS
-    
-    // Extract text content from the resume
-    const textElements = extractTextElements(resumeElement);
-    
-    // Set text to be invisible (render mode 3 = invisible)
-    // We'll use a workaround: very small transparent text at the end
-    // OR position text exactly where it appears and use white color (invisible on white bg)
-    
-    // Actually, let's add the text with opacity 0 using a different approach:
-    // Add text layer BEFORE the image, then the image goes on top
-    // But jsPDF renders in order, so we need to use setGState for transparency
-    
-    // Alternative: Add text as white on white (invisible to eye, readable by ATS)
-    // This is the most reliable method for ATS compatibility
-    
-    pdf.setTextColor(255, 255, 255); // White text (invisible on white background)
-    pdf.setFontSize(1); // Tiny font
-    
-    // Add all extracted text at the bottom of the page (hidden but parseable)
-    const fullText = textElements.join('\n');
-    const lines = pdf.splitTextToSize(fullText, PAGE_WIDTH_PT - 100);
-    
-    // Position at bottom of page (will be "invisible")
-    let yPosition = PAGE_HEIGHT_PT - 10;
-    
-    // Actually, better approach: overlay text at actual positions
-    // Let's add text with transparency instead
-
-    // Reset and use actual positioning with transparency
+    // Add white text at actual positions (invisible on white bg, but parseable by ATS)
     addTextLayerWithPositions(pdf, resumeElement, PAGE_WIDTH_PT, PAGE_HEIGHT_PT);
 
     // ========== ADD CLICKABLE HYPERLINKS ==========
@@ -143,57 +114,8 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
 }
 
 /**
- * Extract all text content from resume elements
- */
-function extractTextElements(element: HTMLElement): string[] {
-  const texts: string[] = [];
-  
-  // Name
-  const name = element.querySelector('.resume-name');
-  if (name) texts.push(name.textContent || '');
-  
-  // Contact info
-  const contactLine = element.querySelector('.contact-line');
-  if (contactLine) texts.push(contactLine.textContent || '');
-  
-  // Sections
-  element.querySelectorAll('.resume-section').forEach(section => {
-    const title = section.querySelector('.section-title');
-    if (title) texts.push(title.textContent || '');
-    
-    // Job entries
-    section.querySelectorAll('.job-entry').forEach(job => {
-      const jobTitle = job.querySelector('.job-title-line');
-      const jobDate = job.querySelector('.job-date');
-      if (jobTitle) texts.push(jobTitle.textContent || '');
-      if (jobDate) texts.push(jobDate.textContent || '');
-      
-      job.querySelectorAll('.resume-bullets li').forEach(bullet => {
-        texts.push('• ' + (bullet.textContent || ''));
-      });
-    });
-    
-    // Skills
-    section.querySelectorAll('.skill-line').forEach(skill => {
-      texts.push(skill.textContent || '');
-    });
-    
-    // Startups
-    section.querySelectorAll('.startup-entry').forEach(startup => {
-      texts.push(startup.textContent || '');
-    });
-    
-    // Education
-    section.querySelectorAll('.education-entry').forEach(edu => {
-      texts.push(edu.textContent || '');
-    });
-  });
-  
-  return texts.filter(t => t.trim());
-}
-
-/**
  * Add text layer with actual positions (invisible but parseable)
+ * This ensures ALL text is captured for ATS parsing
  */
 function addTextLayerWithPositions(pdf: jsPDF, element: HTMLElement, pageWidth: number, pageHeight: number) {
   const resumeRect = element.getBoundingClientRect();
@@ -202,70 +124,251 @@ function addTextLayerWithPositions(pdf: jsPDF, element: HTMLElement, pageWidth: 
   const scaleX = pageWidth / 816;
   const scaleY = pageHeight / 1056;
   
-  // Set invisible text properties
-  pdf.setTextColor(255, 255, 255); // White (invisible on white bg)
+  // Set invisible text properties - white text on white background
+  pdf.setTextColor(255, 255, 255);
   
-  // Helper to add text at position
-  const addText = (el: Element | null, fontSize: number = 9, fontStyle: string = 'normal') => {
+  // Helper to add text at element's position
+  const addTextAtElement = (el: Element | null, fontSize: number = 9, fontStyle: string = 'normal') => {
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const text = el.textContent?.trim() || '';
     if (!text) return;
     
     const x = (rect.left - resumeRect.left) * scaleX;
-    const y = (rect.top - resumeRect.top) * scaleY + fontSize; // Add font size for baseline
+    const y = (rect.top - resumeRect.top) * scaleY + fontSize;
     
     pdf.setFontSize(fontSize);
     pdf.setFont('helvetica', fontStyle);
     
-    // Limit text width to prevent overflow
-    const maxWidth = (rect.width * scaleX) || (pageWidth - x - 40);
+    const maxWidth = Math.max((rect.width * scaleX), 100) || (pageWidth - x - 40);
     const lines = pdf.splitTextToSize(text, maxWidth);
     pdf.text(lines, x, y);
   };
   
-  // Add name
-  addText(element.querySelector('.resume-name'), 20, 'bold');
+  // Helper to add raw text at specific position
+  const addTextAtPosition = (text: string, x: number, y: number, fontSize: number = 9, fontStyle: string = 'normal') => {
+    if (!text.trim()) return;
+    pdf.setFontSize(fontSize);
+    pdf.setFont('helvetica', fontStyle);
+    pdf.text(text, x, y);
+  };
   
-  // Add contact line text (plain text, not the icons)
-  const contactItems = element.querySelectorAll('.contact-item');
-  contactItems.forEach(item => {
-    const textSpan = item.querySelector('span:not(.contact-icon)');
-    if (textSpan) addText(textSpan, 9);
-  });
+  // ========== 1. NAME ==========
+  addTextAtElement(element.querySelector('.resume-name'), 20, 'bold');
   
-  // Add section content
+  // ========== 2. CONTACT INFORMATION ==========
+  // Get all contact items and extract their text (excluding icons)
+  const contactLine = element.querySelector('.contact-line');
+  if (contactLine) {
+    const contactRect = contactLine.getBoundingClientRect();
+    const contactY = (contactRect.top - resumeRect.top) * scaleY + 9;
+    
+    // Build full contact string for ATS
+    const contactTexts: string[] = [];
+    
+    // LinkedIn
+    const linkedinText = element.querySelector('.contact-link[href*="linkedin"] .contact-item span:not(.contact-icon)');
+    if (linkedinText) contactTexts.push('LinkedIn: ' + (linkedinText.textContent?.trim() || ''));
+    
+    // Portfolio
+    const portfolioText = element.querySelector('.contact-link[href*="tharunkalluru"] .contact-item span:not(.contact-icon)');
+    if (portfolioText) contactTexts.push('Portfolio: ' + (portfolioText.textContent?.trim() || ''));
+    
+    // Email - direct contact-item (not in a link)
+    element.querySelectorAll('.contact-item').forEach(item => {
+      const icon = item.querySelector('.contact-icon');
+      const textSpan = item.querySelector('span:not(.contact-icon)');
+      if (icon && textSpan) {
+        const iconText = icon.textContent?.trim() || '';
+        const value = textSpan.textContent?.trim() || '';
+        
+        if (iconText === '@' && value.includes('@')) {
+          contactTexts.push('Email: ' + value);
+        } else if (iconText === '✆' || item.classList.contains('contact-item-phone')) {
+          contactTexts.push('Phone: ' + value);
+        }
+      }
+    });
+    
+    // Add contact info as a single line for better ATS parsing
+    const fullContact = contactTexts.join(' | ');
+    if (fullContact) {
+      addTextAtPosition(fullContact, (contactRect.left - resumeRect.left) * scaleX, contactY, 9);
+    }
+  }
+  
+  // ========== 3. ALL SECTIONS ==========
   element.querySelectorAll('.resume-section').forEach(section => {
     // Section title
-    addText(section.querySelector('.section-title'), 10, 'bold');
+    addTextAtElement(section.querySelector('.section-title'), 10, 'bold');
     
-    // Job entries
+    // ===== JOB ENTRIES =====
     section.querySelectorAll('.job-entry').forEach(job => {
-      addText(job.querySelector('.job-title-line'), 9.5, 'bold');
-      addText(job.querySelector('.job-date'), 9, 'italic');
+      // Job header line (Title | Company | Location)
+      const jobTitleLine = job.querySelector('.job-title-line');
+      if (jobTitleLine) {
+        const titleEl = jobTitleLine.querySelector('.job-title');
+        const companyEl = jobTitleLine.querySelector('.job-company');
+        const locationEl = jobTitleLine.querySelector('.job-location');
+        
+        const parts = [
+          titleEl?.textContent?.trim(),
+          companyEl?.textContent?.trim(),
+          locationEl?.textContent?.trim()
+        ].filter(Boolean);
+        
+        const jobHeaderText = parts.join(' | ');
+        const rect = jobTitleLine.getBoundingClientRect();
+        const x = (rect.left - resumeRect.left) * scaleX;
+        const y = (rect.top - resumeRect.top) * scaleY + 9.5;
+        addTextAtPosition(jobHeaderText, x, y, 9.5, 'bold');
+      }
+      
+      // Job date
+      addTextAtElement(job.querySelector('.job-date'), 9, 'italic');
+      
+      // Bullet points - add each one
+      job.querySelectorAll('.resume-bullets li').forEach(bullet => {
+        const bulletText = '• ' + (bullet.textContent?.trim() || '');
+        const rect = bullet.getBoundingClientRect();
+        const x = (rect.left - resumeRect.left) * scaleX;
+        const y = (rect.top - resumeRect.top) * scaleY + 9;
+        const maxWidth = (rect.width * scaleX) || (pageWidth - x - 20);
+        
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'normal');
+        const lines = pdf.splitTextToSize(bulletText, maxWidth);
+        pdf.text(lines, x, y);
+      });
+    });
+    
+    // ===== SKILLS =====
+    section.querySelectorAll('.skill-line').forEach(skill => {
+      const label = skill.querySelector('.skill-label')?.textContent?.trim() || '';
+      const content = skill.querySelector('.skill-content')?.textContent?.trim() || '';
+      const skillText = label + ': ' + content;
+      
+      const rect = skill.getBoundingClientRect();
+      const x = (rect.left - resumeRect.left) * scaleX;
+      const y = (rect.top - resumeRect.top) * scaleY + 9;
+      const maxWidth = (rect.width * scaleX) || (pageWidth - x - 20);
+      
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      const lines = pdf.splitTextToSize(skillText, maxWidth);
+      pdf.text(lines, x, y);
+    });
+    
+    // ===== STARTUPS =====
+    section.querySelectorAll('.startup-entry').forEach(startup => {
+      const role = startup.querySelector('.startup-role')?.textContent?.trim() || '';
+      const desc = startup.querySelector('.startup-desc')?.textContent?.trim() || '';
+      const startupText = role + (desc ? ' - ' + desc : '');
+      
+      const rect = startup.getBoundingClientRect();
+      const x = (rect.left - resumeRect.left) * scaleX;
+      const y = (rect.top - resumeRect.top) * scaleY + 9;
+      const maxWidth = (rect.width * scaleX) || (pageWidth - x - 20);
+      
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      const lines = pdf.splitTextToSize(startupText, maxWidth);
+      pdf.text(lines, x, y);
+    });
+    
+    // ===== EDUCATION =====
+    const eduEntry = section.querySelector('.education-entry');
+    if (eduEntry) {
+      // School and location
+      addTextAtElement(section.querySelector('.education-school'), 9.5, 'bold');
+      
+      // Date
+      addTextAtElement(section.querySelector('.education-date'), 9, 'italic');
+      
+      // Degree
+      addTextAtElement(section.querySelector('.education-degree'), 9);
+      
+      // GPA
+      addTextAtElement(section.querySelector('.education-gpa'), 9);
+      
+      // Coursework detail
+      addTextAtElement(section.querySelector('.education-detail'), 9);
+    }
+  });
+  
+  // ========== 4. ADD FULL TEXT DUMP AT END (BACKUP FOR ATS) ==========
+  // Some ATS systems work better with a consolidated text block
+  // Add all resume text as a tiny invisible block at the very bottom
+  const allText = extractAllText(element);
+  if (allText) {
+    pdf.setFontSize(0.5); // Extremely small
+    pdf.setFont('helvetica', 'normal');
+    const lines = pdf.splitTextToSize(allText, pageWidth - 40);
+    // Position at very bottom, virtually invisible
+    pdf.text(lines, 20, pageHeight - 5);
+  }
+}
+
+/**
+ * Extract all text content from resume for ATS backup
+ */
+function extractAllText(element: HTMLElement): string {
+  const parts: string[] = [];
+  
+  // Name
+  const name = element.querySelector('.resume-name')?.textContent?.trim();
+  if (name) parts.push(name);
+  
+  // Contact
+  const email = element.querySelector('.icon-email')?.parentElement?.querySelector('span:not(.contact-icon)')?.textContent?.trim();
+  const phone = element.querySelector('.icon-phone')?.parentElement?.querySelector('span:not(.contact-icon)')?.textContent?.trim();
+  const linkedin = element.querySelector('.icon-linkedin')?.parentElement?.querySelector('span:not(.contact-icon)')?.textContent?.trim();
+  const portfolio = element.querySelector('.icon-web')?.parentElement?.querySelector('span:not(.contact-icon)')?.textContent?.trim();
+  
+  if (email) parts.push('Email: ' + email);
+  if (phone) parts.push('Phone: ' + phone);
+  if (linkedin) parts.push('LinkedIn: ' + linkedin);
+  if (portfolio) parts.push('Portfolio: ' + portfolio);
+  
+  // Sections
+  element.querySelectorAll('.resume-section').forEach(section => {
+    const title = section.querySelector('.section-title')?.textContent?.trim();
+    if (title) parts.push('\n' + title);
+    
+    // Jobs
+    section.querySelectorAll('.job-entry').forEach(job => {
+      const titleLine = job.querySelector('.job-title-line')?.textContent?.trim();
+      const date = job.querySelector('.job-date')?.textContent?.trim();
+      if (titleLine) parts.push(titleLine + (date ? ' ' + date : ''));
       
       job.querySelectorAll('.resume-bullets li').forEach(bullet => {
-        addText(bullet, 9);
+        parts.push('• ' + (bullet.textContent?.trim() || ''));
       });
     });
     
     // Skills
     section.querySelectorAll('.skill-line').forEach(skill => {
-      addText(skill, 9);
+      parts.push(skill.textContent?.trim() || '');
     });
     
     // Startups
     section.querySelectorAll('.startup-entry').forEach(startup => {
-      addText(startup, 9);
+      parts.push(startup.textContent?.trim() || '');
     });
     
     // Education
-    addText(section.querySelector('.education-school'), 9.5, 'bold');
-    addText(section.querySelector('.education-date'), 9, 'italic');
-    addText(section.querySelector('.education-degree'), 9);
-    addText(section.querySelector('.education-gpa'), 9);
-    addText(section.querySelector('.education-detail'), 9);
+    const school = section.querySelector('.education-school')?.textContent?.trim();
+    const eduDate = section.querySelector('.education-date')?.textContent?.trim();
+    const degree = section.querySelector('.education-degree')?.textContent?.trim();
+    const gpa = section.querySelector('.education-gpa')?.textContent?.trim();
+    const coursework = section.querySelector('.education-detail')?.textContent?.trim();
+    
+    if (school) parts.push(school + (eduDate ? ' ' + eduDate : ''));
+    if (degree) parts.push(degree + (gpa ? ' ' + gpa : ''));
+    if (coursework) parts.push(coursework);
   });
+  
+  return parts.filter(p => p).join(' ');
 }
 
 /**
