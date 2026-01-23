@@ -46,6 +46,77 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   };
 
   /**
+   * ULTIMATE SOLUTION: Get EXACT line breaks from the ACTUAL rendered element
+   * Uses Range API to measure where each character is positioned in the real DOM
+   * This gives us the EXACT same lines as visible in the preview
+   */
+  const getExactLinesFromDOM = (element: HTMLElement): string[] => {
+    const text = element.textContent || '';
+    if (!text.trim()) return [];
+    
+    // Find all text nodes in the element
+    const textNodes: Text[] = [];
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      textNodes.push(walker.currentNode as Text);
+    }
+    
+    if (textNodes.length === 0) return [text.trim()];
+    
+    // Build a map of character positions
+    const range = document.createRange();
+    const charPositions: { char: string; y: number }[] = [];
+    
+    textNodes.forEach(textNode => {
+      const nodeText = textNode.textContent || '';
+      for (let i = 0; i < nodeText.length; i++) {
+        try {
+          range.setStart(textNode, i);
+          range.setEnd(textNode, i + 1);
+          const rects = range.getClientRects();
+          if (rects.length > 0) {
+            charPositions.push({
+              char: nodeText[i],
+              y: Math.round(rects[0].top) // Round to avoid floating point issues
+            });
+          }
+        } catch (e) {
+          // Skip characters that can't be measured
+          charPositions.push({ char: nodeText[i], y: charPositions.length > 0 ? charPositions[charPositions.length - 1].y : 0 });
+        }
+      }
+    });
+    
+    if (charPositions.length === 0) return [text.trim()];
+    
+    // Group characters by Y position to form lines
+    const lines: string[] = [];
+    let currentLine = '';
+    let currentY = charPositions[0].y;
+    
+    charPositions.forEach(({ char, y }) => {
+      // If Y changed significantly (more than 3px), it's a new line
+      if (Math.abs(y - currentY) > 3) {
+        const trimmedLine = currentLine.trim();
+        if (trimmedLine) {
+          lines.push(trimmedLine);
+        }
+        currentLine = '';
+        currentY = y;
+      }
+      currentLine += char;
+    });
+    
+    // Don't forget the last line
+    const lastLine = currentLine.trim();
+    if (lastLine) {
+      lines.push(lastLine);
+    }
+    
+    return lines;
+  };
+
+  /**
    * Check if a word (without punctuation) is a metric that should be bold
    * Matches: 40%, $5M, 60+, 400k, 2x, 100+, $5M+, etc.
    */
@@ -62,12 +133,12 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
   };
 
   /**
-   * Render a single line with bold metrics using word-by-word approach
-   * This mimics how Word/Docs handle inline bold - spacing stays natural
+   * Render a single line with bold metrics, ensuring it NEVER exceeds maxWidth
+   * Compresses horizontally if needed by reducing character spacing
    */
-  const renderLineWithBoldMetrics = (line: string, startX: number, y: number, fontSize: number) => {
+  const renderLineWithBoldMetrics = (line: string, startX: number, y: number, fontSize: number, maxWidth?: number) => {
     // Split into words, preserving the original structure
-    const words = line.split(' ');
+    const words = line.split(' ').filter(w => w); // Remove empty strings
     
     pdf.setFontSize(fontSize);
     pdf.setTextColor(0, 0, 0);
@@ -76,15 +147,55 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     pdf.setFont('helvetica', 'normal');
     const spaceWidth = pdf.getTextWidth(' ');
     
+    // If maxWidth is specified, check if we need to compress
+    if (maxWidth) {
+      // Calculate actual width with bold metrics
+      let totalWidth = 0;
+      words.forEach((word, index) => {
+        const shouldBold = isMetricWord(word);
+        pdf.setFont('helvetica', shouldBold ? 'bold' : 'normal');
+        totalWidth += pdf.getTextWidth(word);
+        if (index < words.length - 1) {
+          totalWidth += spaceWidth;
+        }
+      });
+      
+      // If text would overflow, use character spacing to compress it
+      if (totalWidth > maxWidth) {
+        const compressionRatio = maxWidth / totalWidth;
+        
+        // Render entire line as one unit with character spacing
+        let currentX = startX;
+        words.forEach((word, index) => {
+          const shouldBold = isMetricWord(word);
+          pdf.setFont('helvetica', shouldBold ? 'bold' : 'normal');
+          
+          const naturalWidth = pdf.getTextWidth(word);
+          const compressedWidth = naturalWidth * compressionRatio;
+          
+          // Calculate character spacing needed for compression
+          const charSpacing = (compressedWidth - naturalWidth) / (word.length || 1);
+          pdf.setCharSpace(charSpacing);
+          
+          pdf.text(word, currentX, y);
+          currentX += compressedWidth;
+          
+          // Add space (also compressed)
+          if (index < words.length - 1) {
+            pdf.setCharSpace(0); // Reset for space
+            currentX += spaceWidth * compressionRatio;
+          }
+        });
+        
+        pdf.setCharSpace(0); // Reset character spacing
+        return;
+      }
+    }
+    
+    // Normal rendering (no compression needed)
     let currentX = startX;
     
     words.forEach((word, index) => {
-      if (!word) {
-        // Empty string from multiple spaces - just add space
-        currentX += spaceWidth;
-        return;
-      }
-      
       // Check if this word contains a metric
       const shouldBold = isMetricWord(word);
       
@@ -98,7 +209,6 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       currentX += pdf.getTextWidth(word);
       
       // Add space after word (except for last word)
-      // Always use normal font space width for consistency
       if (index < words.length - 1) {
         currentX += spaceWidth;
       }
@@ -401,7 +511,8 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     });
   }
 
-  // 3. SECTIONS
+  // 3. SECTIONS - Use DOM positions directly (no manual Y tracking)
+  // The DOM has already laid out everything correctly - trust it completely
   resumeElement.querySelectorAll('.resume-section').forEach(section => {
     // Section Title with underline
     const titleEl = section.querySelector('.section-title');
@@ -419,107 +530,94 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       const y = toPdfY(rect.top) + fontSize * 0.85;
       
       pdf.text(text, x, y);
-      
-      // Draw underline closer to the text
       drawSectionUnderline(titleEl, y, fontSize);
     }
 
-    // JOB ENTRIES
+    // JOB ENTRIES - Use DOM positions exactly
     section.querySelectorAll('.job-entry').forEach(job => {
-      // Job header (title line + date)
-      const headerEl = job.querySelector('.job-header');
-      if (headerEl) {
-        const titleLineEl = job.querySelector('.job-title-line');
-        const dateEl = job.querySelector('.job-date');
+      // Job title
+      const titleLineEl = job.querySelector('.job-title-line');
+      if (titleLineEl) {
+        const rect = titleLineEl.getBoundingClientRect();
+        const style = window.getComputedStyle(titleLineEl);
+        const text = titleLineEl.textContent?.trim() || '';
+        const fontSize = pxToPt(parseFloat(style.fontSize));
         
-        if (titleLineEl) {
-          const rect = titleLineEl.getBoundingClientRect();
-          const style = window.getComputedStyle(titleLineEl);
-          const text = titleLineEl.textContent?.trim() || '';
-          
-          const fontSize = pxToPt(parseFloat(style.fontSize));
-          pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(fontSize);
-          pdf.setTextColor(0, 0, 0);
-          
-          const x = toPdfX(rect.left);
-          const y = toPdfY(rect.top) + fontSize * 0.85;
-          
-          pdf.text(text, x, y);
-        }
-        
-        if (dateEl) {
-          const rect = dateEl.getBoundingClientRect();
-          const style = window.getComputedStyle(dateEl);
-          const text = dateEl.textContent?.trim() || '';
-          
-          const fontSize = pxToPt(parseFloat(style.fontSize));
-          pdf.setFont('helvetica', 'italic');
-          pdf.setFontSize(fontSize);
-          pdf.setTextColor(51, 51, 51);
-          
-          // Right-align the date
-          const textWidth = pdf.getTextWidth(text);
-          const x = toPdfX(rect.right) - textWidth;
-          const y = toPdfY(rect.top) + fontSize * 0.85;
-          
-          pdf.text(text, x, y);
-        }
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(fontSize);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(text, toPdfX(rect.left), toPdfY(rect.top) + fontSize * 0.85);
       }
       
-      // Bullets - with bold metrics (word-by-word rendering for natural spacing)
-      job.querySelectorAll('.resume-bullets li').forEach(bullet => {
-        const rect = bullet.getBoundingClientRect();
-        const style = window.getComputedStyle(bullet);
-        const text = bullet.textContent?.trim() || '';
+      // Job date (right-aligned)
+      const dateEl = job.querySelector('.job-date');
+      if (dateEl) {
+        const rect = dateEl.getBoundingClientRect();
+        const style = window.getComputedStyle(dateEl);
+        const text = dateEl.textContent?.trim() || '';
+        const fontSize = pxToPt(parseFloat(style.fontSize));
         
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(fontSize);
+        pdf.setTextColor(51, 51, 51);
+        const textWidth = pdf.getTextWidth(text);
+        pdf.text(text, toPdfX(rect.right) - textWidth, toPdfY(rect.top) + fontSize * 0.85);
+      }
+      
+      // Bullets - USE BROWSER'S EXACT LINE BREAKS for perfect preview match
+      job.querySelectorAll('.resume-bullets li').forEach(bullet => {
+        const bulletEl = bullet as HTMLElement;
+        const rect = bulletEl.getBoundingClientRect();
+        const style = window.getComputedStyle(bulletEl);
+        const text = bulletEl.textContent?.trim() || '';
         if (!text) return;
         
         const fontSize = pxToPt(parseFloat(style.fontSize));
-        const bulletFontSize = fontSize * 1.3; // Larger bullet point
-        pdf.setTextColor(0, 0, 0);
-        
-        // Get positions
         const x = toPdfX(rect.left);
-        const textY = toPdfY(rect.top) + fontSize * 0.85;
-        // Adjust bullet Y position to be vertically centered with text
-        const bulletY = textY + (bulletFontSize - fontSize) * 0.35;
+        const y = toPdfY(rect.top) + fontSize * 0.85;
         
-        // Render bullet point separately with larger size, vertically centered
+        // Get line height from CSS
+        const lineHeightPx = parseFloat(style.lineHeight) || (parseFloat(style.fontSize) * 1.45);
+        const lineHeight = pxToPt(lineHeightPx);
+        
+        // Render bullet point
+        const bulletFontSize = fontSize * 1.3;
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(bulletFontSize);
+        pdf.setTextColor(0, 0, 0);
         const bulletChar = '•';
+        const bulletY = y + (bulletFontSize - fontSize) * 0.35;
         pdf.text(bulletChar, x, bulletY);
-        const bulletWidth = pdf.getTextWidth(bulletChar + ' ');
         
-        // Calculate text start position after bullet
+        const bulletWidth = pdf.getTextWidth(bulletChar + ' ');
         const textStartX = x + bulletWidth;
         const textMaxWidth = (rect.width * scaleX) - bulletWidth;
         
-        // Split text into lines accounting for mixed font widths
-        const lines = splitTextWithMetrics(text, textMaxWidth, fontSize);
-        const lineHeight = fontSize * 1.35;
+        // ULTIMATE: Get the EXACT line breaks from the ACTUAL rendered element
+        // Uses Range API to measure real character positions - gives EXACT replica
+        const exactLines = getExactLinesFromDOM(bulletEl);
         
-        // Render each line with bold metrics using word-by-word approach
-        lines.forEach((line: string, index: number) => {
-          const lineY = textY + (index * lineHeight);
-          const lineX = index === 0 ? textStartX : x + bulletWidth; // First line after bullet, others indented
-          renderLineWithBoldMetrics(line, lineX, lineY, fontSize);
+        // Render each line EXACTLY as it appears in the preview
+        exactLines.forEach((line: string, i: number) => {
+          const lineY = y + (i * lineHeight);
+          const lineX = i === 0 ? textStartX : x + bulletWidth;
+          
+          // Render with bold metrics, compress horizontally if needed to fit
+          renderLineWithBoldMetrics(line, lineX, lineY, fontSize, textMaxWidth);
         });
       });
     });
 
-    // STARTUP ENTRIES - with bold metrics in description
+    // STARTUP ENTRIES - Single line with role and description, compress if needed
     section.querySelectorAll('.startup-entry').forEach(startup => {
       const rect = startup.getBoundingClientRect();
       const style = window.getComputedStyle(startup);
-      
-      const roleEl = startup.querySelector('.startup-role');
-      const descEl = startup.querySelector('.startup-desc');
-      
       const fontSize = pxToPt(parseFloat(style.fontSize));
       const y = toPdfY(rect.top) + fontSize * 0.85;
       let x = toPdfX(rect.left);
+      
+      const roleEl = startup.querySelector('.startup-role');
+      const descEl = startup.querySelector('.startup-desc');
       
       if (roleEl) {
         const role = roleEl.textContent?.trim() || '';
@@ -532,18 +630,18 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       
       if (descEl) {
         const desc = descEl.textContent?.trim() || '';
-        // Render " - " prefix first
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(fontSize);
         pdf.text(' - ', x, y);
         x += pdf.getTextWidth(' - ');
         
-        // Render description with bold metrics
-        renderLineWithBoldMetrics(desc, x, y, fontSize);
+        // Calculate available width and render with compression if needed
+        const descMaxWidth = (rect.width * scaleX) - (x - toPdfX(rect.left));
+        renderLineWithBoldMetrics(desc, x, y, fontSize, descMaxWidth);
       }
     });
 
-    // SKILL LINES
+    // SKILL LINES - Match DOM's line count, keep natural spacing
     section.querySelectorAll('.skill-line').forEach(skill => {
       const rect = skill.getBoundingClientRect();
       const style = window.getComputedStyle(skill);
@@ -551,14 +649,19 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       const labelEl = skill.querySelector('.skill-label');
       const contentEl = skill.querySelector('.skill-content');
       
-      const fontSize = pxToPt(parseFloat(style.fontSize));
-      const y = toPdfY(rect.top) + fontSize * 0.85;
+      const baseFontSize = pxToPt(parseFloat(style.fontSize));
+      const y = toPdfY(rect.top) + baseFontSize * 0.85;
       let x = toPdfX(rect.left);
+      
+      // Calculate expected line count from DOM
+      const lineHeightPx = parseFloat(style.lineHeight) || (parseFloat(style.fontSize) * 1.35);
+      const expectedLineCount = Math.max(1, Math.round(rect.height / lineHeightPx));
+      const lineHeight = pxToPt(lineHeightPx);
       
       if (labelEl) {
         const label = labelEl.textContent?.trim() || '';
         pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(fontSize);
+        pdf.setFontSize(baseFontSize);
         pdf.setTextColor(0, 0, 0);
         pdf.text(label + ': ', x, y);
         x += pdf.getTextWidth(label + ': ');
@@ -568,16 +671,26 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const content = contentEl.textContent?.trim() || '';
         pdf.setFont('helvetica', 'normal');
         
-        // Handle wrapping for long skill content
         const maxWidth = toPdfX(rect.right) - x;
-        const lines = pdf.splitTextToSize(content, maxWidth);
-        const lineHeight = fontSize * 1.35;
         
+        // Find font size that matches DOM's line count
+        let currentFontSize = baseFontSize;
+        pdf.setFontSize(currentFontSize);
+        let lines = pdf.splitTextToSize(content, maxWidth);
+        
+        while (lines.length > expectedLineCount && currentFontSize > baseFontSize * 0.85) {
+          currentFontSize -= 0.3;
+          pdf.setFontSize(currentFontSize);
+          lines = pdf.splitTextToSize(content, maxWidth);
+        }
+        
+        // Render with natural line spacing
         lines.forEach((line: string, index: number) => {
+          const lineY = y + (index * lineHeight);
           if (index === 0) {
-            pdf.text(line, x, y);
+            pdf.text(line, x, lineY);
           } else {
-            pdf.text(line, toPdfX(rect.left), y + (index * lineHeight));
+            pdf.text(line, toPdfX(rect.left), lineY);
           }
         });
       }
@@ -660,25 +773,38 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         pdf.text(text, x, y);
       }
       
-      // Coursework detail
+      // Coursework detail - Match DOM's line count, keep natural spacing
       const detailEl = section.querySelector('.education-detail');
       if (detailEl) {
         const rect = detailEl.getBoundingClientRect();
         const style = window.getComputedStyle(detailEl);
         const text = detailEl.textContent?.trim() || '';
         
-        const fontSize = pxToPt(parseFloat(style.fontSize));
+        const baseFontSize = pxToPt(parseFloat(style.fontSize));
         pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(fontSize);
         pdf.setTextColor(0, 0, 0);
         
         const x = toPdfX(rect.left);
-        const y = toPdfY(rect.top) + fontSize * 0.85;
+        const y = toPdfY(rect.top) + baseFontSize * 0.85;
         const maxWidth = rect.width * scaleX;
         
-        const lines = pdf.splitTextToSize(text, maxWidth);
-        const lineHeight = fontSize * 1.35;
+        // Calculate expected line count from DOM
+        const lineHeightPx = parseFloat(style.lineHeight) || (parseFloat(style.fontSize) * 1.35);
+        const expectedLineCount = Math.max(1, Math.round(rect.height / lineHeightPx));
+        const lineHeight = pxToPt(lineHeightPx);
         
+        // Find font size that matches DOM's line count
+        let currentFontSize = baseFontSize;
+        pdf.setFontSize(currentFontSize);
+        let lines = pdf.splitTextToSize(text, maxWidth);
+        
+        while (lines.length > expectedLineCount && currentFontSize > baseFontSize * 0.85) {
+          currentFontSize -= 0.3;
+          pdf.setFontSize(currentFontSize);
+          lines = pdf.splitTextToSize(text, maxWidth);
+        }
+        
+        // Render with natural line spacing
         lines.forEach((line: string, index: number) => {
           pdf.text(line, x, y + (index * lineHeight));
         });
