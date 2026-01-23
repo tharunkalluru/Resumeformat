@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, FileText, Loader2, Check } from 'lucide-react';
+import { Download, Loader2, Check, FileDown } from 'lucide-react';
 import { generatePDF } from '@/lib/pdfGenerator';
 
 interface DownloadButtonProps {
@@ -22,7 +22,7 @@ export default function DownloadButton({ filename = 'resume.pdf', disabled }: Do
     try {
       await generatePDF('resume-preview', filename);
       setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 2000);
+      setTimeout(() => setIsSuccess(false), 2500);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Please try again.');
@@ -35,27 +35,32 @@ export default function DownloadButton({ filename = 'resume.pdf', disabled }: Do
     <button
       onClick={handleDownload}
       disabled={disabled || isGenerating}
-      className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+      className={`group relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
         isSuccess
-          ? 'bg-green-600 text-white'
+          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
           : disabled || isGenerating
-          ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
-          : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40'
+          ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+          : 'bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white shadow-lg shadow-blue-500/25 hover:shadow-violet-500/30 hover:scale-[1.02] active:scale-[0.98]'
       }`}
     >
+      {/* Glow effect */}
+      {!disabled && !isGenerating && !isSuccess && (
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 blur-lg opacity-40 group-hover:opacity-60 transition-opacity -z-10" />
+      )}
+      
       {isGenerating ? (
         <>
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin" />
           <span>Generating...</span>
         </>
       ) : isSuccess ? (
         <>
-          <Check className="w-5 h-5" />
+          <Check className="w-4 h-4" />
           <span>Downloaded!</span>
         </>
       ) : (
         <>
-          <Download className="w-5 h-5" />
+          <FileDown className="w-4 h-4 group-hover:animate-bounce" style={{ animationDuration: '0.6s' }} />
           <span>Download PDF</span>
         </>
       )}

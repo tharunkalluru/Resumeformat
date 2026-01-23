@@ -40,6 +40,7 @@ export interface ParsedResume {
   skills: SkillCategory[];
   education: Education[];
   rawSections: Record<string, string>;
+  targetCompany?: string; // Company name for the application (if provided at top)
 }
 
 // Section headers to detect
@@ -80,6 +81,25 @@ function isJobHeader(line: string): boolean {
   return pipeCount >= 2 || (pipeCount >= 1 && /\d{4}/.test(line));
 }
 
+// Helper to check if a line looks like a company name (short, no contact info)
+function looksLikeCompanyName(line: string): boolean {
+  if (!line || line.length > 50) return false;
+  
+  // Should not contain contact info patterns
+  if (/[@|●•]/.test(line)) return false;
+  if (/\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(line)) return false; // phone
+  if (/[\w.-]+@[\w.-]+\.\w+/.test(line)) return false; // email
+  if (/linkedin/i.test(line)) return false;
+  
+  // Should not be a section header
+  if (isSectionHeader(line)) return false;
+  
+  // Should not look like a name (typically 2-3 words, no special chars except spaces)
+  // Company names often have: Inc, LLC, Corp, or are single distinctive words
+  
+  return true;
+}
+
 export function parseResumeText(text: string): ParsedResume {
   // Normalize line endings and clean up
   const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -97,11 +117,41 @@ export function parseResumeText(text: string): ParsedResume {
   // Extract contact info from the beginning
   let currentIndex = 0;
   
-  // First non-empty line is typically the name
+  // Skip empty lines at the start
   while (currentIndex < lines.length && !lines[currentIndex]) {
     currentIndex++;
   }
   
+  // Check if the first line is a target company name
+  // A company name is typically a short line that doesn't look like a person's name
+  // and appears before the actual name + contact info
+  if (currentIndex < lines.length) {
+    const firstLine = lines[currentIndex];
+    const secondLine = lines[currentIndex + 1] || '';
+    
+    // If first line is short and second line looks like it has contact info after it,
+    // the first line is likely the target company
+    const hasContactInfoSoon = lines.slice(currentIndex + 1, currentIndex + 4).some(l => 
+      /[@●•|]/.test(l) || /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(l)
+    );
+    
+    // Check if first line could be a company (not a typical person name pattern)
+    // Person names are usually 2-4 words, all capitalized first letter
+    const looksLikePersonName = /^[A-Z][a-z]+(\s+[A-Z][a-z]+){1,3}$/.test(firstLine);
+    
+    if (hasContactInfoSoon && !looksLikePersonName && firstLine.length <= 40) {
+      // First line is the target company
+      result.targetCompany = firstLine;
+      currentIndex++;
+      
+      // Skip empty lines after company name
+      while (currentIndex < lines.length && !lines[currentIndex]) {
+        currentIndex++;
+      }
+    }
+  }
+  
+  // Now the current line should be the name
   if (currentIndex < lines.length) {
     result.contact.name = lines[currentIndex];
     currentIndex++;

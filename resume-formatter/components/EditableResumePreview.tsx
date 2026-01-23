@@ -58,7 +58,7 @@ const CONSTANT_CONTACT = {
   linkedinUrl: 'https://www.linkedin.com/in/tharunkalluru/',
   portfolio: 'tharunkalluru.com',
   portfolioUrl: 'https://www.tharunkalluru.com/',
-  email: 'tharun99.kalluru@gmail.com',
+  email: 'tharunkalluru99@gmail.com',
   phone: '571-564-8010'
 };
 
