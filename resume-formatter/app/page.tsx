@@ -29,10 +29,11 @@ export default function Home() {
   }, []);
 
   // Generate filename: "Name - Company.pdf" or just "Name.pdf"
+  // Using constant name "Tharun" since contact info is hardcoded
   const pdfFilename = useMemo(() => {
     if (!parsedResume) return 'resume.pdf';
     
-    const name = parsedResume.contact.name?.split(' ')[0] || 'Resume'; // First name only
+    const name = 'Tharun'; // Constant first name (matches CONSTANT_CONTACT)
     const company = parsedResume.targetCompany;
     
     if (company) {
