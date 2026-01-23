@@ -54,12 +54,12 @@ const MAX_FONT_SCALE = 1.10; // Can expand to 110% for short content
 // Constant contact information - never changes
 const CONSTANT_CONTACT = {
   name: 'Tharun Kalluru',
-  linkedin: 'tharunkalluru',
+  linkedin: 'in/tharunkalluru',
   linkedinUrl: 'https://www.linkedin.com/in/tharunkalluru/',
   portfolio: 'tharunkalluru.com',
   portfolioUrl: 'https://www.tharunkalluru.com/',
   email: 'tharunkalluru99@gmail.com',
-  phone: '571-564-8010'
+  phone: '5715648010'
 };
 
 // Constant education information - never changes
@@ -394,26 +394,26 @@ export default function EditableResumePreview({ parsedResume, onResumeChange }: 
             {CONSTANT_CONTACT.name}
           </h1>
           
-          {/* Contact Line - Center Aligned */}
+          {/* Contact Line - Center Aligned with bullet separators */}
           <div className="contact-line">
+            <span className="contact-separator">•</span>
             <a href={CONSTANT_CONTACT.linkedinUrl} target="_blank" rel="noopener noreferrer" className="contact-link">
               <span className="contact-item">
-                <span className="contact-icon icon-linkedin">in</span>
                 <span>{CONSTANT_CONTACT.linkedin}</span>
               </span>
             </a>
+            <span className="contact-separator">•</span>
             <a href={CONSTANT_CONTACT.portfolioUrl} target="_blank" rel="noopener noreferrer" className="contact-link">
               <span className="contact-item">
-                <span className="contact-icon icon-web">◆</span>
                 <span>{CONSTANT_CONTACT.portfolio}</span>
               </span>
             </a>
+            <span className="contact-separator">•</span>
             <span className="contact-item">
-              <span className="contact-icon icon-email">@</span>
               <span>{CONSTANT_CONTACT.email}</span>
             </span>
-            <span className="contact-item contact-item-phone">
-              <span className="contact-icon icon-phone">✆</span>
+            <span className="contact-separator">•</span>
+            <span className="contact-item">
               <span>{CONSTANT_CONTACT.phone}</span>
             </span>
           </div>
