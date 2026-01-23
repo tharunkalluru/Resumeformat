@@ -43,23 +43,26 @@ const BASE_JOB_GAP = 10;
 const BASE_BULLET_GAP = 3;
 
 // Maximum spacing (generous for short content, but safe)
-const MAX_SECTION_GAP = 55;
-const MAX_JOB_GAP = 30;
-const MAX_BULLET_GAP = 10;
+const MAX_SECTION_GAP = 24;
+const MAX_JOB_GAP = 18;
+const MAX_BULLET_GAP = 6;
 
-// Font scale limits (more aggressive for extreme cases)
-const MIN_FONT_SCALE = 0.80; // Can shrink to 80% for very long content
-const MAX_FONT_SCALE = 1.10; // Can expand to 110% for short content
+// Font scale limits - more aggressive to fill the page
+const MIN_FONT_SCALE = 0.85; // Can shrink to 85% for very long content
+const MAX_FONT_SCALE = 1.15; // Can expand to 115% for short content
+
+// Target: Fill 98-100% of the page (leave tiny margin for safety)
+const TARGET_FILL_RATIO = 0.98;
 
 // Constant contact information - never changes
 const CONSTANT_CONTACT = {
-  name: 'Tharun',
-  linkedin: 'tharunkalluru',
+  name: 'Tharun Kalluru',
+  linkedin: 'in/tharunkalluru',
   linkedinUrl: 'https://www.linkedin.com/in/tharunkalluru/',
   portfolio: 'tharunkalluru.com',
   portfolioUrl: 'https://www.tharunkalluru.com/',
-  email: 'tharun99.kalluru@gmail.com',
-  phone: '(571) 564-8010'
+  email: 'tharunkalluru99@gmail.com',
+  phone: '5715648010'
 };
 
 // Constant education information - never changes
@@ -199,25 +202,22 @@ export default function EditableResumePreview({ parsedResume, onResumeChange }: 
     return contentHeight;
   }, []);
 
-  // Dynamic spacing calculation - truly dynamic based on content
+  // Dynamic spacing calculation - SMART algorithm to fill page exactly
   const calculateAndApplySpacing = useCallback(() => {
     if (!resumeRef.current) return;
 
     const element = resumeRef.current;
     
-    // Reset to base state (no transform, minimum spacing)
-    element.style.transform = 'none';
-    element.style.transformOrigin = 'top left';
+    // Reset to base state first
+    element.style.fontSize = '9pt'; // Base font size
     element.style.setProperty('--section-gap', `${BASE_SECTION_GAP}px`);
     element.style.setProperty('--job-gap', `${BASE_JOB_GAP}px`);
     element.style.setProperty('--bullet-gap', `${BASE_BULLET_GAP}px`);
-    element.style.setProperty('--font-scale', '1');
 
     // Wait for reflow
     requestAnimationFrame(() => {
       // Measure TRUE content height (without container constraints)
       const rawContentHeight = measureContentHeight(element);
-      // Subtract padding from measurement
       const contentHeight = rawContentHeight - PADDING_TOP - PADDING_BOTTOM;
       
       // Count elements for distribution
@@ -229,119 +229,86 @@ export default function EditableResumePreview({ parsedResume, onResumeChange }: 
       const jobCount = jobEntries.length;
       const bulletCount = bullets.length;
 
-      console.log('=== Dynamic Spacing Algorithm ===');
-      console.log('Raw Content Height:', rawContentHeight, 'px');
-      console.log('Content (minus padding):', contentHeight, 'px');
-      console.log('Usable Height:', USABLE_HEIGHT, 'px');
-      console.log('Elements:', sectionCount, 'sections,', jobCount, 'jobs,', bulletCount, 'bullets');
+      console.log('=== Smart Page Fill Algorithm ===');
+      console.log('Content Height:', contentHeight.toFixed(0), 'px');
+      console.log('Usable Height:', USABLE_HEIGHT.toFixed(0), 'px');
+      console.log('Gap:', (USABLE_HEIGHT - contentHeight).toFixed(0), 'px');
 
-      // Calculate the ratio of content to available space
-      const ratio = USABLE_HEIGHT / contentHeight;
-      console.log('Ratio (usable/content):', ratio.toFixed(3));
+      // Calculate how much we need to scale to fill the page
+      const fillRatio = USABLE_HEIGHT / contentHeight;
+      console.log('Fill Ratio:', fillRatio.toFixed(3));
 
+      // STRATEGY: First try to fill with font scaling, then fine-tune with spacing
+      let fontScale = 1.0;
       let finalSectionGap = BASE_SECTION_GAP;
       let finalJobGap = BASE_JOB_GAP;
       let finalBulletGap = BASE_BULLET_GAP;
-      let fontScale = 1.0;
 
-      if (ratio < 0.98) {
-        // Content is TOO LARGE - need to shrink
-        console.log('📉 Content overflows - need to shrink');
+      if (fillRatio < 1.0) {
+        // Content is TOO LARGE - shrink font
+        fontScale = Math.max(MIN_FONT_SCALE, fillRatio * 0.98);
+        console.log('📉 Shrinking font to:', fontScale.toFixed(3));
         
-        // Calculate how much we need to shrink - be aggressive
-        fontScale = Math.max(MIN_FONT_SCALE, ratio * 0.97);
+      } else if (fillRatio > 1.02) {
+        // Content is too small - EXPAND to fill page
         
-        // Apply font scale
-        element.style.setProperty('--font-scale', fontScale.toString());
-        element.style.transform = `scale(${fontScale})`;
-        element.style.transformOrigin = 'top center';
-        // Adjust width to compensate for scale
-        element.style.width = `${8.5 / fontScale}in`;
+        // First, calculate ideal font scale to fill ~95% of space (leave room for spacing)
+        const targetFontScale = Math.min(MAX_FONT_SCALE, fillRatio * 0.96);
+        fontScale = targetFontScale;
+        console.log('📈 Expanding font to:', fontScale.toFixed(3));
         
-        // Use minimum spacing when content is too large
-        finalSectionGap = BASE_SECTION_GAP;
-        finalJobGap = BASE_JOB_GAP;
-        finalBulletGap = BASE_BULLET_GAP;
+        // After font scaling, calculate remaining space for spacing distribution
+        const scaledContentHeight = contentHeight * fontScale;
+        const remainingSpace = USABLE_HEIGHT - scaledContentHeight;
         
-        console.log('Applied font scale (shrink):', fontScale.toFixed(3));
-        console.log('⚠️ Using minimum spacing to maximize space');
-        
-      } else if (ratio > 1.03) {
-        // Content is SMALLER than page - distribute extra space
-        console.log('📈 Extra space available - distributing');
-        
-        const extraSpace = USABLE_HEIGHT - contentHeight;
-        console.log('Extra space:', extraSpace.toFixed(1), 'px');
-        
-        // If there's a LOT of extra space (>20%), slightly increase font size first
-        if (ratio > 1.20) {
-          fontScale = Math.min(MAX_FONT_SCALE, 1 + (ratio - 1) * 0.4); // Scale up gradually
-          element.style.setProperty('--font-scale', fontScale.toString());
-          element.style.transform = `scale(${fontScale})`;
-          element.style.transformOrigin = 'top center';
-          element.style.width = `${8.5 / fontScale}in`;
-          console.log('Applied font scale (expand):', fontScale.toFixed(3));
+        if (remainingSpace > 10) {
+          // Distribute remaining space intelligently
+          const totalGapElements = sectionCount + jobCount;
           
-          // Recalculate extra space after scaling
-          const scaledContentHeight = contentHeight * fontScale;
-          const remainingExtra = USABLE_HEIGHT - scaledContentHeight;
-          
-          if (remainingExtra > 0) {
-            // Distribute remaining space
-            distributeSpace(remainingExtra, sectionCount, jobCount, bulletCount);
+          if (totalGapElements > 0) {
+            // Prioritize section gaps (they're more visible)
+            const spacePerSection = sectionCount > 0 ? remainingSpace * 0.6 / sectionCount : 0;
+            const spacePerJob = jobCount > 0 ? remainingSpace * 0.4 / jobCount : 0;
+            
+            finalSectionGap = Math.min(BASE_SECTION_GAP + spacePerSection, MAX_SECTION_GAP);
+            finalJobGap = Math.min(BASE_JOB_GAP + spacePerJob, MAX_JOB_GAP);
+            
+            console.log('Distributing remaining', remainingSpace.toFixed(0), 'px to gaps');
           }
-        } else {
-          // Just distribute the extra space without scaling
-          distributeSpace(extraSpace, sectionCount, jobCount, bulletCount);
         }
-        
       } else {
-        // Perfect fit (within 3%)
-        console.log('✅ Content fits perfectly - no adjustments needed');
+        console.log('✅ Content fits well - minor adjustments only');
       }
 
-      function distributeSpace(extra: number, sections: number, jobs: number, bullets: number) {
-        // Smart distribution based on content structure
-        // More sections = prioritize section gaps, more bullets = prioritize bullet gaps
-        const totalElements = sections + jobs + bullets;
-        
-        if (totalElements === 0) return;
-        
-        // Adaptive weight distribution
-        let sectionWeight = sections > 0 ? (sections / totalElements) * 0.5 : 0;
-        let jobWeight = jobs > 0 ? (jobs / totalElements) * 0.3 : 0;
-        let bulletWeight = bullets > 0 ? (bullets / totalElements) * 0.2 : 0;
-        
-        // Normalize if some elements are missing
-        const totalWeight = sectionWeight + jobWeight + bulletWeight;
-        if (totalWeight > 0) {
-          sectionWeight = sectionWeight / totalWeight;
-          jobWeight = jobWeight / totalWeight;
-          bulletWeight = bulletWeight / totalWeight;
-        }
-        
-        const sectionExtra = sections > 0 ? Math.min((extra * sectionWeight) / sections, MAX_SECTION_GAP - BASE_SECTION_GAP) : 0;
-        const jobExtra = jobs > 0 ? Math.min((extra * jobWeight) / jobs, MAX_JOB_GAP - BASE_JOB_GAP) : 0;
-        const bulletExtra = bullets > 0 ? Math.min((extra * bulletWeight) / bullets, MAX_BULLET_GAP - BASE_BULLET_GAP) : 0;
-        
-        finalSectionGap = BASE_SECTION_GAP + sectionExtra;
-        finalJobGap = BASE_JOB_GAP + jobExtra;
-        finalBulletGap = BASE_BULLET_GAP + bulletExtra;
-        
-        console.log('Space distribution weights - Section:', (sectionWeight * 100).toFixed(1) + '%', 
-                    'Job:', (jobWeight * 100).toFixed(1) + '%', 
-                    'Bullet:', (bulletWeight * 100).toFixed(1) + '%');
-        console.log('Final gaps - Section:', finalSectionGap.toFixed(1) + 'px', 
-                    'Job:', finalJobGap.toFixed(1) + 'px', 
-                    'Bullet:', finalBulletGap.toFixed(1) + 'px');
-      }
-
-      // Apply final spacing
+      // Apply font scale using CSS font-size (not transform - cleaner rendering)
+      const baseFontPt = 9;
+      const newFontPt = baseFontPt * fontScale;
+      element.style.fontSize = `${newFontPt}pt`;
+      
+      // Apply spacing
       element.style.setProperty('--section-gap', `${finalSectionGap}px`);
       element.style.setProperty('--job-gap', `${finalJobGap}px`);
       element.style.setProperty('--bullet-gap', `${finalBulletGap}px`);
 
+      console.log('Final font size:', newFontPt.toFixed(2), 'pt');
+      console.log('Final gaps - Section:', finalSectionGap.toFixed(1), 'Job:', finalJobGap.toFixed(1));
       console.log('=================================');
+
+      // Second pass: verify and fine-tune
+      requestAnimationFrame(() => {
+        const finalHeight = measureContentHeight(element) - PADDING_TOP - PADDING_BOTTOM;
+        const finalGap = USABLE_HEIGHT - finalHeight;
+        
+        console.log('Verification - Final gap:', finalGap.toFixed(0), 'px');
+        
+        // If still too much gap, increase font slightly more
+        if (finalGap > 30 && fontScale < MAX_FONT_SCALE) {
+          const adjustment = Math.min(1 + (finalGap / USABLE_HEIGHT), MAX_FONT_SCALE / fontScale);
+          const adjustedFontPt = newFontPt * adjustment;
+          element.style.fontSize = `${Math.min(adjustedFontPt, baseFontPt * MAX_FONT_SCALE)}pt`;
+          console.log('Fine-tuned font to:', adjustedFontPt.toFixed(2), 'pt');
+        }
+      });
     });
   }, [measureContentHeight]);
 
@@ -394,26 +361,26 @@ export default function EditableResumePreview({ parsedResume, onResumeChange }: 
             {CONSTANT_CONTACT.name}
           </h1>
           
-          {/* Contact Line - Center Aligned */}
+          {/* Contact Line - Center Aligned with bullet separators */}
           <div className="contact-line">
+            <span className="contact-separator">•</span>
             <a href={CONSTANT_CONTACT.linkedinUrl} target="_blank" rel="noopener noreferrer" className="contact-link">
               <span className="contact-item">
-                <span className="contact-icon icon-linkedin">in</span>
                 <span>{CONSTANT_CONTACT.linkedin}</span>
               </span>
             </a>
+            <span className="contact-separator">•</span>
             <a href={CONSTANT_CONTACT.portfolioUrl} target="_blank" rel="noopener noreferrer" className="contact-link">
               <span className="contact-item">
-                <span className="contact-icon icon-web">◆</span>
                 <span>{CONSTANT_CONTACT.portfolio}</span>
               </span>
             </a>
+            <span className="contact-separator">•</span>
             <span className="contact-item">
-              <span className="contact-icon icon-email">@</span>
               <span>{CONSTANT_CONTACT.email}</span>
             </span>
+            <span className="contact-separator">•</span>
             <span className="contact-item">
-              <span className="contact-icon icon-phone">✆</span>
               <span>{CONSTANT_CONTACT.phone}</span>
             </span>
           </div>
