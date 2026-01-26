@@ -327,6 +327,9 @@ body {
   position: relative;
   padding-left: 0;
   color: #000000;
+  text-align: justify; /* Word-style full justification */
+  text-justify: inter-word;
+  hyphens: none; /* Prevent hyphenation - Word doesn't auto-hyphenate by default */
 }
 
 .resume-preview .resume-bullets li:last-child {
@@ -359,6 +362,9 @@ body {
   padding: 0;
   line-height: var(--line-height, 1.45);
   color: #000000;
+  text-align: justify; /* Word-style full justification */
+  text-justify: inter-word;
+  hyphens: none;
 }
 
 .resume-preview .startup-entry:last-child {
@@ -384,6 +390,9 @@ body {
   padding: 0;
   line-height: var(--line-height, 1.45);
   color: #000000;
+  text-align: justify; /* Word-style full justification */
+  text-justify: inter-word;
+  hyphens: none;
 }
 
 .resume-preview .skill-line:last-child {
@@ -468,6 +477,9 @@ body {
   padding: 0;
   line-height: var(--line-height, 1.45);
   color: #000000;
+  text-align: justify; /* Word-style full justification */
+  text-justify: inter-word;
+  hyphens: none;
 }
 
 /* ========================================

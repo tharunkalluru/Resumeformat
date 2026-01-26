@@ -273,24 +273,104 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
     pdf.setFontSize(fontSize);
     pdf.setFont(FONT_FAMILY, 'normal');
     const spaceWidth = pdf.getTextWidth(' ');
-    
+
     let width = 0;
     words.forEach((word, index) => {
       if (!word) {
         width += spaceWidth;
         return;
       }
-      
+
       const shouldBold = isMetricWord(word);
       pdf.setFont(FONT_FAMILY, shouldBold ? 'bold' : 'normal');
       width += pdf.getTextWidth(word);
-      
+
       if (index < words.length - 1) {
         width += spaceWidth;
       }
     });
-    
+
     return width;
+  };
+
+  /**
+   * Render a JUSTIFIED line with bold metrics (Word-style justification)
+   * Distributes extra space evenly between words to fill the maxWidth
+   * @param line - The text line to render
+   * @param startX - Starting X position
+   * @param y - Y position (baseline)
+   * @param fontSize - Font size in points
+   * @param maxWidth - The target width to justify to
+   * @param isLastLine - If true, left-align instead of justify (Word behavior)
+   */
+  const renderJustifiedLineWithBoldMetrics = (
+    line: string,
+    startX: number,
+    y: number,
+    fontSize: number,
+    maxWidth: number,
+    isLastLine: boolean = false
+  ) => {
+    const words = line.split(' ').filter(w => w);
+
+    // If last line, single word, or very few words - use regular rendering (left-aligned)
+    if (isLastLine || words.length <= 1) {
+      renderLineWithBoldMetrics(line, startX, y, fontSize, maxWidth);
+      return;
+    }
+
+    pdf.setFontSize(fontSize);
+    pdf.setTextColor(0, 0, 0);
+
+    // Calculate total width of all words (without spaces)
+    let totalWordWidth = 0;
+    const wordWidths: number[] = [];
+
+    words.forEach(word => {
+      const shouldBold = isMetricWord(word);
+      pdf.setFont(FONT_FAMILY, shouldBold ? 'bold' : 'normal');
+      const wordWidth = pdf.getTextWidth(word);
+      wordWidths.push(wordWidth);
+      totalWordWidth += wordWidth;
+    });
+
+    // Calculate extra space to distribute
+    const numGaps = words.length - 1;
+    const extraSpace = maxWidth - totalWordWidth;
+
+    // If text is too wide for maxWidth, fall back to compressed rendering
+    if (extraSpace < 0) {
+      renderLineWithBoldMetrics(line, startX, y, fontSize, maxWidth);
+      return;
+    }
+
+    // Calculate space between each word for perfect justification
+    const spacePerGap = extraSpace / numGaps;
+
+    // Cap the maximum space to prevent excessive gaps (Word-like behavior)
+    // If space would be more than 3x normal space width, use left-align instead
+    pdf.setFont(FONT_FAMILY, 'normal');
+    const normalSpaceWidth = pdf.getTextWidth(' ');
+    if (spacePerGap > normalSpaceWidth * 3) {
+      renderLineWithBoldMetrics(line, startX, y, fontSize, maxWidth);
+      return;
+    }
+
+    // Render each word with calculated spacing
+    let currentX = startX;
+
+    words.forEach((word, index) => {
+      const shouldBold = isMetricWord(word);
+      pdf.setFont(FONT_FAMILY, shouldBold ? 'bold' : 'normal');
+
+      pdf.text(word, currentX, y);
+      currentX += wordWidths[index];
+
+      // Add justified space after word (except for last word)
+      if (index < words.length - 1) {
+        currentX += spacePerGap;
+      }
+    });
   };
 
   /**
@@ -613,22 +693,22 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         pdf.text(text, toPdfX(rect.right) - textWidth, toPdfY(rect.top) + fontSize * 0.85);
       }
       
-      // Bullets - USE BROWSER'S EXACT LINE BREAKS for perfect preview match
+      // Bullets - USE BROWSER'S EXACT LINE BREAKS with WORD-STYLE JUSTIFICATION
       job.querySelectorAll('.resume-bullets li').forEach(bullet => {
         const bulletEl = bullet as HTMLElement;
         const rect = bulletEl.getBoundingClientRect();
         const style = window.getComputedStyle(bulletEl);
         const text = bulletEl.textContent?.trim() || '';
         if (!text) return;
-        
+
         const fontSize = pxToPt(parseFloat(style.fontSize));
         const x = toPdfX(rect.left);
         const y = toPdfY(rect.top) + fontSize * 0.85;
-        
+
         // Get line height from CSS
         const lineHeightPx = parseFloat(style.lineHeight) || (parseFloat(style.fontSize) * 1.45);
         const lineHeight = pxToPt(lineHeightPx);
-        
+
         // Render bullet point (same size as text)
         const bulletFontSize = fontSize; // Same size as text
         pdf.setFont(FONT_FAMILY, 'normal');
@@ -637,22 +717,24 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         const bulletChar = '•';
         const bulletY = y; // Same baseline as text
         pdf.text(bulletChar, x, bulletY);
-        
+
         const bulletWidth = pdf.getTextWidth(bulletChar + '   '); // 3 spaces for more gap
         const textStartX = x + bulletWidth;
         const textMaxWidth = (rect.width * scaleX) - bulletWidth;
-        
-        // ULTIMATE: Get the EXACT line breaks from the ACTUAL rendered element
-        // Uses Range API to measure real character positions - gives EXACT replica
+
+        // Get the EXACT line breaks from the rendered element
         const exactLines = getExactLinesFromDOM(bulletEl);
-        
-        // Render each line EXACTLY as it appears in the preview
+        const totalLines = exactLines.length;
+
+        // Render each line with WORD-STYLE JUSTIFICATION
+        // All lines except the last are fully justified (text stretched to fill width)
         exactLines.forEach((line: string, i: number) => {
           const lineY = y + (i * lineHeight);
           const lineX = i === 0 ? textStartX : x + bulletWidth;
-          
-          // Render with bold metrics, compress horizontally if needed to fit
-          renderLineWithBoldMetrics(line, lineX, lineY, fontSize, textMaxWidth);
+          const isLastLine = i === totalLines - 1;
+
+          // Use justified rendering for multi-line bullets
+          renderJustifiedLineWithBoldMetrics(line, lineX, lineY, fontSize, textMaxWidth, isLastLine);
         });
       });
     });
@@ -690,23 +772,26 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
       }
     });
 
-    // SKILL LINES - Match DOM's line count, keep natural spacing
+    // SKILL LINES - Match DOM's line count with WORD-STYLE JUSTIFICATION
     section.querySelectorAll('.skill-line').forEach(skill => {
       const rect = skill.getBoundingClientRect();
       const style = window.getComputedStyle(skill);
-      
+
       const labelEl = skill.querySelector('.skill-label');
       const contentEl = skill.querySelector('.skill-content');
-      
+
       const baseFontSize = pxToPt(parseFloat(style.fontSize));
       const y = toPdfY(rect.top) + baseFontSize * 0.85;
       let x = toPdfX(rect.left);
-      
+
       // Calculate expected line count from DOM
       const lineHeightPx = parseFloat(style.lineHeight) || (parseFloat(style.fontSize) * 1.35);
       const expectedLineCount = Math.max(1, Math.round(rect.height / lineHeightPx));
       const lineHeight = pxToPt(lineHeightPx);
-      
+
+      // Get the full width for justification (from left edge to right edge)
+      const fullMaxWidth = rect.width * scaleX;
+
       if (labelEl) {
         const label = labelEl.textContent?.trim() || '';
         pdf.setFont(FONT_FAMILY, 'bold');
@@ -715,31 +800,38 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         pdf.text(label + ': ', x, y);
         x += pdf.getTextWidth(label + ': ');
       }
-      
+
       if (contentEl) {
         const content = contentEl.textContent?.trim() || '';
         pdf.setFont(FONT_FAMILY, 'normal');
-        
-        const maxWidth = toPdfX(rect.right) - x;
-        
+
+        // First line starts after label, subsequent lines use full width
+        const firstLineMaxWidth = toPdfX(rect.right) - x;
+
         // Find font size that matches DOM's line count
         let currentFontSize = baseFontSize;
         pdf.setFontSize(currentFontSize);
-        let lines = pdf.splitTextToSize(content, maxWidth);
-        
+        let lines = pdf.splitTextToSize(content, firstLineMaxWidth);
+
         while (lines.length > expectedLineCount && currentFontSize > baseFontSize * 0.85) {
           currentFontSize -= 0.3;
           pdf.setFontSize(currentFontSize);
-          lines = pdf.splitTextToSize(content, maxWidth);
+          lines = pdf.splitTextToSize(content, firstLineMaxWidth);
         }
-        
-        // Render with natural line spacing
+
+        const totalLines = lines.length;
+
+        // Render with WORD-STYLE JUSTIFICATION
         lines.forEach((line: string, index: number) => {
           const lineY = y + (index * lineHeight);
+          const isLastLine = index === totalLines - 1;
+
           if (index === 0) {
-            pdf.text(line, x, lineY);
+            // First line starts after label, justify to right edge
+            renderJustifiedLineWithBoldMetrics(line, x, lineY, currentFontSize, firstLineMaxWidth, isLastLine);
           } else {
-            pdf.text(line, toPdfX(rect.left), lineY);
+            // Subsequent lines use full width
+            renderJustifiedLineWithBoldMetrics(line, toPdfX(rect.left), lineY, currentFontSize, fullMaxWidth, isLastLine);
           }
         });
       }
@@ -822,40 +914,44 @@ export async function generatePDF(elementId: string = 'resume-preview', filename
         pdf.text(text, x, y);
       }
       
-      // Coursework detail - Match DOM's line count, keep natural spacing
+      // Coursework detail - Match DOM's line count with WORD-STYLE JUSTIFICATION
       const detailEl = section.querySelector('.education-detail');
       if (detailEl) {
         const rect = detailEl.getBoundingClientRect();
         const style = window.getComputedStyle(detailEl);
         const text = detailEl.textContent?.trim() || '';
-        
+
         const baseFontSize = pxToPt(parseFloat(style.fontSize));
         pdf.setFont(FONT_FAMILY, 'normal');
         pdf.setTextColor(0, 0, 0);
-        
+
         const x = toPdfX(rect.left);
         const y = toPdfY(rect.top) + baseFontSize * 0.85;
         const maxWidth = rect.width * scaleX;
-        
+
         // Calculate expected line count from DOM
         const lineHeightPx = parseFloat(style.lineHeight) || (parseFloat(style.fontSize) * 1.35);
         const expectedLineCount = Math.max(1, Math.round(rect.height / lineHeightPx));
         const lineHeight = pxToPt(lineHeightPx);
-        
+
         // Find font size that matches DOM's line count
         let currentFontSize = baseFontSize;
         pdf.setFontSize(currentFontSize);
         let lines = pdf.splitTextToSize(text, maxWidth);
-        
+
         while (lines.length > expectedLineCount && currentFontSize > baseFontSize * 0.85) {
           currentFontSize -= 0.3;
           pdf.setFontSize(currentFontSize);
           lines = pdf.splitTextToSize(text, maxWidth);
         }
-        
-        // Render with natural line spacing
+
+        const totalLines = lines.length;
+
+        // Render with WORD-STYLE JUSTIFICATION
         lines.forEach((line: string, index: number) => {
-          pdf.text(line, x, y + (index * lineHeight));
+          const lineY = y + (index * lineHeight);
+          const isLastLine = index === totalLines - 1;
+          renderJustifiedLineWithBoldMetrics(line, x, lineY, currentFontSize, maxWidth, isLastLine);
         });
       }
     }

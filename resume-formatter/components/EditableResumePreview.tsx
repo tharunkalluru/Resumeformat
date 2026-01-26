@@ -7,6 +7,7 @@ import { boldMetrics, stripHtml } from '@/lib/formatMetrics';
 interface EditableResumePreviewProps {
   parsedResume: ParsedResume;
   onResumeChange: (updated: ParsedResume) => void;
+  overrideEmail?: string; // Email resolved from share link - takes precedence
 }
 
 /**
@@ -183,10 +184,13 @@ function EditableBulletList({
   );
 }
 
-export default function EditableResumePreview({ parsedResume, onResumeChange }: EditableResumePreviewProps) {
+export default function EditableResumePreview({ parsedResume, onResumeChange, overrideEmail }: EditableResumePreviewProps) {
   const [resume, setResume] = useState(parsedResume);
   const resumeRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Use override email if provided (from share link), otherwise use constant
+  const displayEmail = overrideEmail || CONSTANT_CONTACT.email;
 
   useEffect(() => {
     setResume(parsedResume);
@@ -518,7 +522,7 @@ export default function EditableResumePreview({ parsedResume, onResumeChange }: 
             </a>
             <span className="contact-separator">•</span>
             <span className="contact-item">
-              <span>{CONSTANT_CONTACT.email}</span>
+              <span>{displayEmail}</span>
             </span>
             <span className="contact-separator">•</span>
             <span className="contact-item">
