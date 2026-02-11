@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FileText, Sparkles, Info, ChevronRight } from 'lucide-react';
 
 interface TextInputProps {
@@ -53,6 +53,20 @@ Selected Coursework: Machine Learning, Artificial Intelligence, Databases, Proje
 export default function TextInput({ onSubmit }: TextInputProps) {
   const [text, setText] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Focus textarea on mount so user can paste immediately without clicking (reliable after hydration)
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const focus = () => textarea.focus();
+    const id = requestAnimationFrame(focus);
+    const timeoutId = setTimeout(focus, 100); // fallback in case something else steals focus
+    return () => {
+      cancelAnimationFrame(id);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   const handleSubmit = () => {
     if (text.trim()) {
@@ -104,6 +118,7 @@ export default function TextInput({ onSubmit }: TextInputProps) {
       {/* Textarea */}
       <div className={`relative rounded-xl transition-all duration-300 ${isFocused ? 'ring-2 ring-blue-500/50' : ''}`}>
         <textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onFocus={() => setIsFocused(true)}
