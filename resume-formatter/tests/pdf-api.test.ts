@@ -124,6 +124,16 @@ test('canvas PDF continues onto more pages instead of clipping', () => {
   assert.ok((pdfText.match(/\/Type \/Page\b/g) || []).length > 1);
 });
 
+test('canvas PDF keeps visible contact links clickable', () => {
+  const document = { type: 'doc', content: [{ type: 'paragraph', content: [{
+    type: 'text', text: 'alex@example.com https://example.com in/alex',
+  }] }] };
+  const pdfText = new TextDecoder('latin1').decode(generateDocumentPdf(document));
+  assert.match(pdfText, /\/URI \(mailto:alex@example\.com\)/);
+  assert.match(pdfText, /\/URI \(https:\/\/example\.com\)/);
+  assert.match(pdfText, /\/URI \(https:\/\/www\.linkedin\.com\/in\/alex\/\)/);
+});
+
 test('structured renderer rejects content that cannot fit one page', async () => {
   const resume = parseResumeText(textResume);
   resume.experience = Array.from({ length: 8 }, (_, index) => ({

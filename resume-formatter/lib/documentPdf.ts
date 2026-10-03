@@ -3,7 +3,7 @@ import { DocumentNode, validateDocument } from './document';
 
 export type PdfFonts = Record<string, string>;
 type Style = 'normal' | 'bold' | 'italic' | 'bolditalic';
-type Token = { text: string; style: Style; underline: boolean };
+type Token = { text: string; style: Style; underline: boolean; href?: string };
 
 const WIDTH = 612;
 const HEIGHT = 792;
@@ -23,13 +23,24 @@ function styleFor(node: DocumentNode): { style: Style; underline: boolean } {
     underline: !!node.marks?.some(mark => mark.type === 'underline') };
 }
 
+function linkFor(text: string): string | undefined {
+  const value = text.replace(/[),.;!?]+$/, '');
+  if (/^https?:\/\/[^\s]+$/i.test(value)) return value;
+  if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) return `mailto:${value}`;
+  if (/^in\/[a-z0-9-]+$/i.test(value)) return `https://www.linkedin.com/${value}/`;
+  if (/^(?:www\.)?[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}(?:\/[^\s]*)?$/i.test(value)) {
+    return `https://${value}`;
+  }
+  return undefined;
+}
+
 function tokensFor(nodes: DocumentNode[]): Token[] {
   return nodes.flatMap(node => {
-    if (node.type === 'hardBreak') return [{ text: '\n', style: 'normal' as Style, underline: false }];
+    if (node.type === 'hardBreak') return [{ text: '\n', style: 'normal' as Style, underline: false, href: undefined }];
     const { style, underline } = styleFor(node);
     return (node.text || '').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\r\n?/g, '\n')
       .split(/(\n|\s+)/).filter(Boolean)
-      .map(text => ({ text, style, underline }));
+      .map(text => ({ text, style, underline, href: linkFor(text) }));
   });
 }
 
@@ -76,6 +87,7 @@ export function generateDocumentPdf(input: unknown, fonts?: PdfFonts): Uint8Arra
         pdf.setLineWidth(0.5);
         pdf.line(x, baseline + 1.3, x + width, baseline + 1.3);
       }
+      if (token.href) pdf.link(x, baseline - size, width, lineHeight, { url: token.href });
       x += width;
     }
     y += lineHeight;
