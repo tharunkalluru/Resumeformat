@@ -5,13 +5,10 @@
  */
 export function boldMetrics(text: string): string {
   if (!text) return text;
-  
-  // Don't process if already contains HTML bold tags
-  if (/<\/?(?:strong|b)>/i.test(text)) {
-    return text;
-  }
 
-  let result = text;
+  // User-pasted text is rendered with dangerouslySetInnerHTML so it must be
+  // escaped before adding the small amount of markup we control.
+  let result = escapeHtml(text);
 
   // Dollar amounts: $5K, $400K, $1.8M, ~$740K (ONLY the dollar amount)
   result = result.replace(/(\~?\$[\d.,]+[KMB]?\+?)/gi, '<strong>$1</strong>');
@@ -30,6 +27,15 @@ export function boldMetrics(text: string): string {
   result = result.replace(/(\~\d+)(?![%\d])/g, '<strong>$1</strong>');
 
   return result;
+}
+
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**

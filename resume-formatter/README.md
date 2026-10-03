@@ -1,71 +1,38 @@
-# Resume Formatter
+# ResumeForge
 
-A modern web application to transform plain-text resumes into professionally formatted documents with PDF export.
+Paste resume text, then edit the entire formatted document on a rich canvas. The canvas supports paragraphs, headings, bold, italic, underline, bullets, numbered lists, undo/redo, and keyboard shortcuts. Every field, including contact and education, can be edited. Long documents grow in the editor and export across PDF pages without clipping.
 
-## Features
-
-- **Auto-Format**: Paste plain text and automatically detect sections (Experience, Education, Skills, etc.)
-- **Rich Text Editor**: Edit your resume with a Google Docs-like experience using TipTap
-- **Live Preview**: See your formatted resume in real-time
-- **PDF Export**: Download your resume as a perfectly formatted PDF
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
-
-### Installation
+## Run locally
 
 ```bash
 cd resume-formatter
-npm install
-```
-
-### Development
-
-```bash
+npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open http://localhost:3000. `npm run check`, `npm run test`, and `npm run build` are the verification commands.
 
-### Build for Production
+The profile in `lib/profile.ts` supplies this repository's initial contact and education values. Share-link email variants remain in `lib/shareLinks.ts` and the share page.
+
+## PDF API
+
+`POST /api/resume/pdf` accepts JSON containing exactly one of:
+
+- `text`: raw resume text with recognizable section headings.
+- `resume`: structured `experience`, `startups`, and `skills` arrays, plus optional `targetCompany`.
+- `document`: the canvas's TipTap JSON document with paragraphs, headings, bullet/numbered lists, and bold/italic/underline text.
+
+An optional `filename` may accompany any mode. Successful requests return `application/pdf`; `GET /api/resume/pdf` describes the current contract. Example:
 
 ```bash
-npm run build
-npm start
+curl -X POST http://localhost:3000/api/resume/pdf \
+  -H 'Content-Type: application/json' \
+  -d '{"resume":{"experience":[{"title":"Engineer","company":"Acme","bullets":["Improved reliability by 40%."]}]}}' \
+  --output resume.pdf
 ```
 
-## Usage
+Set `RESUME_API_KEY` to require `Authorization: Bearer <key>` or `X-API-Key: <key>` for POST requests. Without it, the API is open. Never put the key in browser code. Browser PDF export runs locally through the same document renderer and works independently of API authentication.
 
-1. **Paste**: Copy your GPT-generated resume text and paste it into the input area
-2. **Format**: Click "Format Resume" to auto-detect sections and structure
-3. **Edit**: Use the rich text editor to make any adjustments
-4. **Preview**: View the live preview of your formatted resume
-5. **Download**: Click "Download PDF" to get your final document
+The API rejects malformed or ambiguous input, non-JSON requests, bodies over 250,000 bytes, text over 100,000 characters, and unsupported canvas nodes. `text` and `resume` use the compact one-page template and return `422 RESUME_TOO_LONG` when the content cannot fit readably. `document` supports multiple PDF pages. Errors have the form `{ "error": { "code": "...", "message": "..." } }`.
 
-## Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Styling**: Tailwind CSS
-- **Rich Text Editor**: TipTap
-- **PDF Generation**: html2canvas + jsPDF
-- **Icons**: Lucide React
-
-## Resume Format Detection
-
-The parser automatically detects these sections:
-- EXPERIENCE
-- EDUCATION
-- SKILLS & COMPETENCIES / SKILLS
-- UNIVERSITY STARTUPS / STARTUPS
-- PROJECTS
-- CERTIFICATIONS
-- SUMMARY
-- OBJECTIVE
-
-## License
-
-MIT
+The PDF contains selectable text. Carlito is embedded in both the browser and API exports from `public/fonts`.

@@ -1,3 +1,5 @@
+import { escapeHtml } from './formatMetrics';
+
 export interface ContactInfo {
   name: string;
   linkedin?: string;
@@ -40,71 +42,183 @@ export interface ParsedResume {
   skills: SkillCategory[];
   education: Education[];
   rawSections: Record<string, string>;
-  targetCompany?: string; // Company name for the application (if provided at top)
+  targetCompany?: string;
+  warnings: string[];
 }
 
-// Section headers to detect
-// Note: These should be standalone section headers, not labels like "Certifications: ..."
-const SECTION_PATTERNS = [
-  'EXPERIENCE',
-  'EDUCATION',
-  'SKILLS & COMPETENCIES',
-  'SKILLS',
-  'UNIVERSITY STARTUPS',
-  'STARTUPS',
-  'PROJECTS',
-  'SUMMARY',
-  'OBJECTIVE',
-];
+type SectionKind = 'EXPERIENCE' | 'EDUCATION' | 'SKILLS' | 'PROJECTS' | 'IGNORE';
+
+const SECTION_ALIASES: Record<string, SectionKind> = {
+  EXPERIENCE: 'EXPERIENCE',
+  'WORK EXPERIENCE': 'EXPERIENCE',
+  'PROFESSIONAL EXPERIENCE': 'EXPERIENCE',
+  'RELEVANT EXPERIENCE': 'EXPERIENCE',
+  'LEADERSHIP EXPERIENCE': 'EXPERIENCE',
+  EMPLOYMENT: 'EXPERIENCE',
+  'EMPLOYMENT HISTORY': 'EXPERIENCE',
+  'EMPLOYMENT EXPERIENCE': 'EXPERIENCE',
+  'WORK HISTORY': 'EXPERIENCE',
+  'CAREER HISTORY': 'EXPERIENCE',
+  EDUCATION: 'EDUCATION',
+  'ACADEMIC BACKGROUND': 'EDUCATION',
+  'ACADEMIC EXPERIENCE': 'EDUCATION',
+  ACADEMICS: 'EDUCATION',
+  'SKILLS & COMPETENCIES': 'SKILLS',
+  SKILLS: 'SKILLS',
+  'TECHNICAL SKILLS': 'SKILLS',
+  'CORE COMPETENCIES': 'SKILLS',
+  COMPETENCIES: 'SKILLS',
+  'TOOLS & TECHNOLOGIES': 'SKILLS',
+  TECHNOLOGIES: 'SKILLS',
+  'TECHNICAL PROFICIENCIES': 'SKILLS',
+  CERTIFICATIONS: 'SKILLS',
+  'SIDE PROJECTS': 'PROJECTS',
+  PROJECTS: 'PROJECTS',
+  'PERSONAL PROJECTS': 'PROJECTS',
+  'SELECTED PROJECTS': 'PROJECTS',
+  'PROJECT EXPERIENCE': 'PROJECTS',
+  'UNIVERSITY STARTUPS': 'PROJECTS',
+  STARTUPS: 'PROJECTS',
+  SUMMARY: 'IGNORE',
+  'PROFESSIONAL SUMMARY': 'IGNORE',
+  PROFILE: 'IGNORE',
+  OBJECTIVE: 'IGNORE',
+  AWARDS: 'IGNORE',
+  HONORS: 'IGNORE',
+  VOLUNTEERING: 'IGNORE',
+  LEADERSHIP: 'IGNORE',
+  ACTIVITIES: 'IGNORE',
+  ACHIEVEMENTS: 'IGNORE',
+  PUBLICATIONS: 'IGNORE',
+  LANGUAGES: 'IGNORE',
+  INTERESTS: 'IGNORE',
+  REFERENCES: 'IGNORE',
+  'ADDITIONAL INFORMATION': 'IGNORE',
+};
+
+const MONTH = '(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\.?';
+const SEASON = '(?:Spring|Summer|Fall|Autumn|Winter)';
+const DATE_VALUE = `(?:${MONTH}\\s+\\d{4}|${SEASON}\\s+\\d{4}|\\d{1,2}[/-]\\d{2,4}|\\d{4})`;
+const DATE_RANGE_PATTERN = new RegExp(`(${DATE_VALUE})\\s*(?:[-–—]|to)\\s*(Present|Current|Now|Ongoing|${DATE_VALUE})`, 'i');
+const BULLET_PATTERN = /^(?:[-–—−*•●▪◦○‣·➤►✓]|\d{1,2}[.)])\s*(.+)$/;
+const TERMINAL_PUNCTUATION = /[.!?]["')\]]?$/;
+
+interface DateMatch {
+  raw: string;
+  value: string;
+}
+
+interface ParsedSection {
+  kind: SectionKind;
+  label: string;
+  startIndex: number;
+  endIndex: number;
+}
+
+function cleanPastedLine(value: string): string {
+  let line = value
+    .normalize('NFKC')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .trim();
+
+  line = line
+    .replace(/^>\s*/, '')
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/\\([@#*_|])/g, '$1')
+    .replace(/\\+\s*$/, '')
+    .trim();
+
+  // Rich-text and AI tools commonly put Markdown emphasis around individual
+  // fields (for example "**Role** | **Company**"). Keep the text, not the
+  // formatting tokens, because the preview supplies its own typography.
+  line = line.replace(/(\*\*|__)(.+?)\1/g, '$2').trim();
+
+  const wrappedEmphasis = line.match(/^(?:\*\*|__)(.+?)(?:\*\*|__)\s*:?[\s]*$/);
+  if (wrappedEmphasis) line = wrappedEmphasis[1].trim();
+
+  return line;
+}
+
+function normalizeSectionLabel(line: string): string {
+  return line
+    .replace(/^(?:\*\*|__)/, '')
+    .replace(/(?:\*\*|__)$/, '')
+    .replace(/:\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
+
+function getSection(line: string): { kind: SectionKind; label: string } | null {
+  const label = normalizeSectionLabel(line);
+  const kind = SECTION_ALIASES[label];
+  return kind ? { kind, label } : null;
+}
 
 function isSectionHeader(line: string): boolean {
-  const upperLine = line.toUpperCase().trim();
-  
-  // A section header should be JUST the section name, possibly followed by a colon
-  // but NOT followed by content on the same line (like "Certifications: Aha! PMP...")
-  return SECTION_PATTERNS.some(pattern => {
-    if (upperLine === pattern) return true;
-    
-    // If it starts with pattern + colon, check there's no content after
-    if (upperLine.startsWith(pattern + ':')) {
-      const afterColon = upperLine.substring(pattern.length + 1).trim();
-      return afterColon === ''; // Only match if nothing after the colon
-    }
-    
-    return false;
-  });
+  return getSection(line) !== null;
 }
 
-function isJobHeader(line: string): boolean {
-  // Pattern: Title | Company | Location with optional date
-  const pipeCount = (line.match(/\|/g) || []).length;
-  return pipeCount >= 2 || (pipeCount >= 1 && /\d{4}/.test(line));
+function findDateRange(line: string): DateMatch | null {
+  const match = line.match(DATE_RANGE_PATTERN);
+  if (!match) return null;
+
+  const end = /^(?:Current|Now|Ongoing)$/i.test(match[2]) ? 'Present' : match[2];
+  return {
+    raw: match[0],
+    value: `${match[1].replace(/\s+/g, ' ').trim()} - ${end.replace(/\s+/g, ' ').trim()}`,
+  };
 }
 
-// Helper to check if a line looks like a company name (short, no contact info)
+function stripDate(line: string, date: DateMatch | null): string {
+  if (!date) return line.trim();
+  return line
+    .replace(date.raw, '')
+    .replace(/[|,;:\s-]+$/, '')
+    .trim();
+}
+
+function isStandaloneDate(line: string, date: DateMatch): boolean {
+  return stripDate(line, date).replace(/[()[\]|,:;\s]/g, '') === '';
+}
+
+function extractBullet(line: string): string | null {
+  const match = line.match(BULLET_PATTERN);
+  return match ? match[1].trim() : null;
+}
+
+function looksLikePersonName(line: string): boolean {
+  const words = line.split(/\s+/).filter(Boolean);
+  if (words.length < 2 || words.length > 5) return false;
+  return words.every(word => /^[\p{L}][\p{L}'’.-]*$/u.test(word));
+}
+
 function looksLikeCompanyName(line: string): boolean {
-  if (!line || line.length > 50) return false;
-  
-  // Should not contain contact info patterns
+  if (!line || line.length > 60 || isSectionHeader(line)) return false;
   if (/[@|●•]/.test(line)) return false;
-  if (/\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(line)) return false; // phone
-  if (/[\w.-]+@[\w.-]+\.\w+/.test(line)) return false; // email
-  if (/linkedin/i.test(line)) return false;
-  
-  // Should not be a section header
-  if (isSectionHeader(line)) return false;
-  
-  // Should not look like a name (typically 2-3 words, no special chars except spaces)
-  // Company names often have: Inc, LLC, Corp, or are single distinctive words
-  
-  return true;
+  if (/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(line)) return false;
+  return !/[\w.-]+@[\w.-]+\.\w+/.test(line);
+}
+
+function mergeSkillCategories(target: SkillCategory[], additions: SkillCategory[]) {
+  for (const addition of additions) {
+    const existing = target.find(item => item.label.toLowerCase() === addition.label.toLowerCase());
+    if (!existing) {
+      target.push(addition);
+    } else if (!existing.skills.toLowerCase().includes(addition.skills.toLowerCase())) {
+      existing.skills = `${existing.skills}, ${addition.skills}`;
+    }
+  }
 }
 
 export function parseResumeText(text: string): ParsedResume {
-  // Normalize line endings and clean up
-  const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  const lines = normalizedText.split('\n').map(line => line.trim());
-  
+  const normalizedText = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/[\u2028\u2029]/g, '\n');
+  const lines = normalizedText.split('\n').map(cleanPastedLine);
+
   const result: ParsedResume = {
     contact: { name: '' },
     experience: [],
@@ -112,483 +226,425 @@ export function parseResumeText(text: string): ParsedResume {
     skills: [],
     education: [],
     rawSections: {},
+    warnings: [],
   };
 
-  // Extract contact info from the beginning
   let currentIndex = 0;
-  
-  // Skip empty lines at the start
-  while (currentIndex < lines.length && !lines[currentIndex]) {
-    currentIndex++;
-  }
-  
-  // Check if the first line is a target company name
-  // A company name is typically a short line that doesn't look like a person's name
-  // and appears before the actual name + contact info
+  while (currentIndex < lines.length && !lines[currentIndex]) currentIndex++;
+
   if (currentIndex < lines.length) {
     const firstLine = lines[currentIndex];
-    const secondLine = lines[currentIndex + 1] || '';
-    
-    // If first line is short and second line looks like it has contact info after it,
-    // the first line is likely the target company
-    const hasContactInfoSoon = lines.slice(currentIndex + 1, currentIndex + 4).some(l => 
-      /[@●•|]/.test(l) || /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(l)
+    const followingLines = lines.slice(currentIndex + 1, currentIndex + 6).filter(Boolean);
+    const nextLine = followingLines[0] || '';
+    const hasContactInfoSoon = followingLines.slice(1).some(line =>
+      /[@●•|]/.test(line) || /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(line)
     );
-    
-    // Check if first line could be a company (not a typical person name pattern)
-    // Person names are usually 2-4 words, all capitalized first letter
-    const looksLikePersonName = /^[A-Z][a-z]+(\s+[A-Z][a-z]+){1,3}$/.test(firstLine);
-    
-    if (hasContactInfoSoon && !looksLikePersonName && firstLine.length <= 40) {
-      // First line is the target company
+
+    if (
+      hasContactInfoSoon &&
+      looksLikeCompanyName(firstLine) &&
+      looksLikePersonName(nextLine)
+    ) {
       result.targetCompany = firstLine;
       currentIndex++;
-      
-      // Skip empty lines after company name
-      while (currentIndex < lines.length && !lines[currentIndex]) {
-        currentIndex++;
-      }
+      while (currentIndex < lines.length && !lines[currentIndex]) currentIndex++;
     }
   }
-  
-  // Now the current line should be the name
-  if (currentIndex < lines.length) {
+
+  if (currentIndex < lines.length && !isSectionHeader(lines[currentIndex])) {
     result.contact.name = lines[currentIndex];
     currentIndex++;
   }
 
-  // Parse contact line that might use ● or - or • as separators
-  for (let i = currentIndex; i < Math.min(currentIndex + 5, lines.length); i++) {
+  for (let i = currentIndex; i < Math.min(currentIndex + 6, lines.length); i++) {
     const line = lines[i];
     if (!line) continue;
-    
-    // Check if this line starts a section
-    if (isSectionHeader(line)) {
-      break;
-    }
+    if (isSectionHeader(line)) break;
 
-    // Split by common separators (●, •, |, multiple spaces)
-    const parts = line.split(/[●•|]\s*|\s{3,}/).map(p => p.trim()).filter(p => p && p !== '-');
-    
+    const parts = line
+      .split(/[●•|]\s*|\s{3,}/)
+      .map(part => part.replace(/^[-•●]\s*/, '').trim())
+      .filter(Boolean);
+
     for (const part of parts) {
-      // LinkedIn
-      if (/linkedin|in\/\w+/i.test(part)) {
-        result.contact.linkedin = part.replace(/^[-•●]\s*/, '').trim();
-      }
-      // Email
-      else if (/[\w.-]+@[\w.-]+\.\w+/.test(part)) {
-        const match = part.match(/[\w.-]+@[\w.-]+\.\w+/);
-        result.contact.email = match ? match[0] : undefined;
-      }
-      // Phone
-      else if (/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(part)) {
-        const match = part.match(/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
-        result.contact.phone = match ? match[0] : undefined;
-      }
-      // Website (not linkedin, not email)
-      else if (/[\w-]+\.(com|io|dev|me|org|net)/i.test(part) && !/linkedin|@/.test(part)) {
-        result.contact.website = part.replace(/^[-•●]\s*/, '').trim();
-      }
-    }
+      const email = part.match(/[\w.+-]+@[\w.-]+\.\w+/)?.[0];
+      const phone = part.match(/(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/)?.[0];
+      const linkedin = part.match(/(?:https?:\/\/(?:www\.)?linkedin\.com\/)?in\/[\w-]+\/?/i)?.[0];
+      const website = part.match(/(?:https?:\/\/)?(?:www\.)?[\w-]+(?:\.[\w-]+)+\/?/i)?.[0];
 
-    // Also check the whole line for patterns if not using separators
-    if (!result.contact.email && /[\w.-]+@[\w.-]+\.\w+/.test(line)) {
-      const match = line.match(/[\w.-]+@[\w.-]+\.\w+/);
-      result.contact.email = match ? match[0] : undefined;
-    }
-    if (!result.contact.phone && /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(line)) {
-      const match = line.match(/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
-      result.contact.phone = match ? match[0] : undefined;
-    }
-    if (!result.contact.linkedin && /in\/[\w-]+/i.test(line)) {
-      const match = line.match(/in\/[\w-]+/i);
-      result.contact.linkedin = match ? match[0] : undefined;
-    }
-    if (!result.contact.website && /[\w-]+\.(com|io|dev|me|org)/i.test(line) && !/linkedin|@/.test(line)) {
-      const match = line.match(/[\w-]+\.(com|io|dev|me|org|net)/i);
-      if (match && !result.contact.linkedin?.includes(match[0])) {
-        result.contact.website = match[0];
-      }
+      if (email) result.contact.email = email;
+      else if (phone) result.contact.phone = phone;
+      else if (linkedin || /linkedin/i.test(part)) result.contact.linkedin = linkedin || part;
+      else if (website && !/@|linkedin/i.test(part)) result.contact.website = website;
     }
   }
 
-  // Find and parse sections
-  const sections: { name: string; startIndex: number; endIndex: number }[] = [];
-  
+  const sections: ParsedSection[] = [];
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].toUpperCase().trim();
-    for (const pattern of SECTION_PATTERNS) {
-      // Match exact pattern or pattern with colon but NO content after
-      if (line === pattern) {
-        sections.push({ name: pattern, startIndex: i, endIndex: lines.length });
-        break;
-      }
-      if (line.startsWith(pattern + ':')) {
-        const afterColon = line.substring(pattern.length + 1).trim();
-        if (afterColon === '') {
-          sections.push({ name: pattern, startIndex: i, endIndex: lines.length });
-          break;
-        }
-      }
+    const section = getSection(lines[i]);
+    if (section) {
+      sections.push({ ...section, startIndex: i, endIndex: lines.length });
     }
   }
-
-  // Set end indices
   for (let i = 0; i < sections.length - 1; i++) {
     sections[i].endIndex = sections[i + 1].startIndex;
   }
 
-  console.log('[Parser] Detected sections:', sections.map(s => `${s.name} (${s.startIndex}-${s.endIndex})`));
-
-  // Parse each section
   for (const section of sections) {
-    const sectionLines = lines.slice(section.startIndex + 1, section.endIndex).filter(l => l);
-    const sectionContent = sectionLines.join('\n');
-    result.rawSections[section.name] = sectionContent;
+    const sectionLines = lines.slice(section.startIndex + 1, section.endIndex);
+    const content = sectionLines.filter(Boolean).join('\n');
+    result.rawSections[section.label] = result.rawSections[section.label]
+      ? `${result.rawSections[section.label]}\n${content}`
+      : content;
 
-    switch (section.name) {
+    switch (section.kind) {
       case 'EXPERIENCE':
-        result.experience = parseExperience(sectionLines);
+        result.experience.push(...parseExperience(sectionLines));
         break;
       case 'EDUCATION':
-        result.education = parseEducation(sectionLines);
+        result.education.push(...parseEducation(sectionLines));
         break;
-      case 'SKILLS & COMPETENCIES':
-      case 'SKILLS':
-        result.skills = parseSkills(sectionLines);
+      case 'SKILLS': {
+        const defaultLabel = section.label === 'CERTIFICATIONS' ? 'Certifications' : 'Skills';
+        mergeSkillCategories(result.skills, parseSkills(sectionLines, defaultLabel));
         break;
-      case 'UNIVERSITY STARTUPS':
-      case 'STARTUPS':
-        result.startups = parseStartups(sectionLines);
+      }
+      case 'PROJECTS':
+        result.startups.push(...parseProjects(sectionLines));
+        break;
+      case 'IGNORE':
         break;
     }
+  }
+
+  const recognizedSections = sections.filter(section => section.kind !== 'IGNORE');
+  if (!recognizedSections.length) {
+    result.warnings.push('No supported section headings were found. Add headings such as EXPERIENCE, SIDE PROJECTS, or SKILLS.');
+  } else if (sections.some(section => section.kind === 'EXPERIENCE') && !result.experience.length) {
+    result.warnings.push('The EXPERIENCE section was found, but no jobs were recognized. Use a header such as “Role | Company | Jan 2023 - Present”.');
   }
 
   return result;
 }
 
-function parseExperience(lines: string[]): JobExperience[] {
-  const experiences: JobExperience[] = [];
-  let current: JobExperience | null = null;
+function parseDelimitedJobHeader(line: string): JobExperience | null {
+  if (extractBullet(line) !== null) return null;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    
-    // Enhanced date patterns - support multiple formats
-    // Pattern 1: Month YYYY - Month YYYY or Present (e.g., "Sep 2024 - Present", "Jan 2023 - Dec 2024")
-    const datePattern1 = /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\s*[-–—]\s*(?:Present|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}))/i;
-    // Pattern 2: Just year ranges (e.g., "2023 - 2024", "2023 - Present")
-    const datePattern2 = /(\d{4}\s*[-–—]\s*(?:Present|\d{4}))/i;
-    // Pattern 3: Month/Year format (e.g., "09/2024 - Present", "01/2023 - 12/2024")
-    const datePattern3 = /(\d{1,2}\/\d{4}\s*[-–—]\s*(?:Present|\d{1,2}\/\d{4}))/i;
-    
-    let dateMatch = line.match(datePattern1) || line.match(datePattern2) || line.match(datePattern3);
-    
-    // Check for job header with pipe separators
-    // Updated regex to capture everything after the last pipe (including dates)
-    const headerMatch = line.match(/^([^|]+)\s*\|\s*([^|]+)\s*\|\s*(.+)$/);
-    
-    if (headerMatch) {
-      if (current) {
-        experiences.push(current);
-      }
-      
-      // Extract location and date from the third part
-      let locationAndDate = headerMatch[3].trim();
-      let location = locationAndDate;
-      let dateRange = '';
-      
-      // Try to find the date in the location+date string
-      if (!dateMatch) {
-        dateMatch = locationAndDate.match(datePattern1) || 
-                   locationAndDate.match(datePattern2) || 
-                   locationAndDate.match(datePattern3);
-      }
-      
-      if (dateMatch) {
-        dateRange = dateMatch[1].trim();
-        // Remove the date from location
-        location = locationAndDate.replace(dateMatch[0], '').trim();
-        // Clean up any trailing tabs/spaces
-        location = location.replace(/\s+$/, '');
-      }
-      
-      console.log('[Parser] Job header found:', {
-        title: headerMatch[1].trim(),
-        company: headerMatch[2].trim(),
-        location: location,
-        dateRange: dateRange,
-        originalLine: line
-      });
-      
-      current = {
-        title: headerMatch[1].trim(),
-        company: headerMatch[2].trim(),
-        location: location,
-        dateRange: dateRange,
-        bullets: [],
-      };
-    } else if (current) {
-      // Check if this line might be a standalone date (if we didn't get it from header)
-      if (!current.dateRange && dateMatch) {
-        current.dateRange = dateMatch[1].trim();
-        console.log('[Parser] Found standalone date:', current.dateRange);
-      } else {
-        // This could be a bullet point
-        const bulletMatch = line.match(/^[-•*●]\s*(.+)$/);
-        
-        if (bulletMatch) {
-          current.bullets.push(bulletMatch[1].trim());
-        } else if (line.length > 20 && !isJobHeader(line) && !isSectionHeader(line)) {
-          // It's a longer line without explicit bullet - treat as achievement
-          current.bullets.push(line);
-        }
-      }
+  const date = findDateRange(line);
+  const hasPipe = line.includes('|');
+  const hasTab = /\t/.test(line);
+  let parts = hasPipe || hasTab
+    ? line.split(hasPipe ? /\s*\|\s*/ : /\t+/).map(part => part.trim()).filter(Boolean)
+    : [];
+
+  if (parts.length >= 2) {
+    parts = parts.map(part => stripDate(part, date)).filter(Boolean);
+    let title = parts[0] || '';
+    let company = parts[1] || '';
+    let location = parts.slice(2).join(' | ');
+
+    // "Title at Company | Date", "Title, Company | Date", and
+    // "Title — Company | Date" are common two-column exports.
+    if (parts.length === 1 && date) {
+      const split = splitTitleAndCompany(parts[0]);
+      if (split) ({ title, company } = split);
+    } else if (!company && date) {
+      const split = splitTitleAndCompany(title);
+      if (split) ({ title, company } = split);
+    }
+
+    if (title && company) {
+      return { title, company, location, dateRange: date?.value || '', bullets: [] };
     }
   }
 
-  if (current) {
-    experiences.push(current);
+  if (date) {
+    const body = stripDate(line, date);
+    const split = splitTitleAndCompany(body);
+    if (split) {
+      return { ...split, location: '', dateRange: date.value, bullets: [] };
+    }
   }
 
-  console.log('[Parser] Total experience entries:', experiences.length);
+  return null;
+}
+
+function splitTitleAndCompany(value: string): { title: string; company: string } | null {
+  const patterns = [
+    /^(.+?)\s+at\s+(.+)$/i,
+    /^(.+?)\s+[–—-]\s+(.+)$/,
+    /^([^,]+),\s*(.+)$/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match?.[1] && match[2]) {
+      return { title: match[1].trim(), company: match[2].trim() };
+    }
+  }
+  return null;
+}
+
+function parseStackedJobHeader(lines: string[], index: number): { job: JobExperience; consumed: number } | null {
+  const title = lines[index]?.trim();
+  const companyLine = lines[index + 1]?.trim();
+  if (!title || !companyLine || title.length > 120 || findDateRange(title) || extractBullet(title)) return null;
+  if (extractBullet(companyLine) || isSectionHeader(companyLine)) return null;
+
+  let date = findDateRange(companyLine);
+  let consumed = 1;
+
+  if (!date) {
+    const candidate = lines[index + 2]?.trim();
+    const candidateDate = candidate ? findDateRange(candidate) : null;
+    if (!candidate || !candidateDate || !isStandaloneDate(candidate, candidateDate)) return null;
+    date = candidateDate;
+    consumed = 2;
+  }
+
+  const delimiter = companyLine.includes('|') ? /\s*\|\s*/ : /\t+/;
+  const parts = (companyLine.includes('|') || /\t/.test(companyLine)
+    ? companyLine.split(delimiter)
+    : [companyLine]
+  )
+    .map(part => stripDate(part.trim(), date))
+    .filter(Boolean);
+  if (!parts.length || !date) return null;
+
+  return {
+    job: {
+      title,
+      company: parts[0],
+      location: parts.slice(1).join(' | '),
+      dateRange: date.value,
+      bullets: [],
+    },
+    consumed,
+  };
+}
+
+function parseExperience(lines: string[]): JobExperience[] {
+  const experiences: JobExperience[] = [];
+  let current: JobExperience | null = null;
+  let lastLineWasBullet = false;
+
+  const commitCurrent = () => {
+    if (current) experiences.push(current);
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) {
+      lastLineWasBullet = false;
+      continue;
+    }
+
+    const stacked = parseStackedJobHeader(lines, i);
+    if (stacked) {
+      commitCurrent();
+      current = stacked.job;
+      i += stacked.consumed;
+      lastLineWasBullet = false;
+      continue;
+    }
+
+    const header = parseDelimitedJobHeader(line);
+    if (header) {
+      commitCurrent();
+      current = header;
+      lastLineWasBullet = false;
+      continue;
+    }
+
+    if (!current) continue;
+
+    const bullet = extractBullet(line);
+    if (bullet !== null) {
+      current.bullets.push(bullet);
+      lastLineWasBullet = true;
+      continue;
+    }
+
+    const date = findDateRange(line);
+    if (date && isStandaloneDate(line, date)) {
+      if (!current.dateRange) current.dateRange = date.value;
+      lastLineWasBullet = false;
+      continue;
+    }
+
+    const previous = current.bullets[current.bullets.length - 1];
+    const looksLikeContinuation = Boolean(
+      previous &&
+      lastLineWasBullet &&
+      (!TERMINAL_PUNCTUATION.test(previous) || /^[a-z(]/.test(line))
+    );
+
+    if (looksLikeContinuation) {
+      current.bullets[current.bullets.length - 1] = `${previous} ${line}`.replace(/\s+/g, ' ').trim();
+    } else {
+      current.bullets.push(line);
+      lastLineWasBullet = false;
+    }
+  }
+
+  commitCurrent();
   return experiences;
+}
+
+function looksLikeSchool(line: string): boolean {
+  return /\b(?:University|College|Institute|School|Academy)\b/i.test(line);
 }
 
 function parseEducation(lines: string[]): Education[] {
   const education: Education[] = [];
   let current: Education | null = null;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    
-    // Enhanced date patterns - same as experience
-    const datePattern1 = /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\s*[-–—]\s*(?:Present|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}))/i;
-    const datePattern2 = /(\d{4}\s*[-–—]\s*(?:Present|\d{4}))/i;
-    const datePattern3 = /(\d{1,2}\/\d{4}\s*[-–—]\s*(?:Present|\d{1,2}\/\d{4}))/i;
-    
-    let dateMatch = line.match(datePattern1) || line.match(datePattern2) || line.match(datePattern3);
-    
-    // Check for school name with location (e.g., "George Mason University, Fairfax, VA")
-    // This line might also have a date at the end
-    const schoolMatch = line.match(/^([^,]+),\s*([^,]+(?:,\s*[A-Z]{2})?)/);
-    
-    if (schoolMatch) {
-      if (current) {
-        education.push(current);
-      }
-      
-      let location = schoolMatch[2].trim();
-      let dateRange = '';
-      
-      // Check if date is in the line
-      if (dateMatch) {
-        dateRange = dateMatch[1].trim();
-        // Remove date from location if it's there
-        location = location.replace(dateMatch[0], '').trim();
-      }
-      
+  const commitCurrent = () => {
+    if (current) education.push(current);
+  };
+
+  for (const line of lines) {
+    if (!line) continue;
+    const date = findDateRange(line);
+
+    if (looksLikeSchool(line)) {
+      commitCurrent();
+      const body = stripDate(line, date);
+      const parts = body.includes('|')
+        ? body.split(/\s*\|\s*/)
+        : body.split(/,\s*/);
       current = {
-        school: schoolMatch[1].trim(),
-        location: location,
-        dateRange: dateRange,
+        school: parts.shift()?.trim() || body,
+        location: parts.join(', ').trim(),
+        dateRange: date?.value || '',
         degree: '',
       };
-      
-      console.log('[Parser] Education entry found:', {
-        school: current.school,
-        location: current.location,
-        dateRange: dateRange
-      });
-    } else if (current) {
-      // Check if this is a standalone date line (if we didn't get it from header)
-      if (!current.dateRange && dateMatch) {
-        current.dateRange = dateMatch[1].trim();
-        console.log('[Parser] Found standalone education date:', current.dateRange);
-      }
-      // Check for degree (handle format: "Master of Science: Computer Science" or with CGPA on same line)
-      else if (/Master|Bachelor|PhD|Doctor|Associate|M\.S\.|B\.S\.|M\.A\.|B\.A\./i.test(line)) {
-        // Extract degree, might have CGPA on same line
-        let degreeLine = line.replace(/^[-•*]\s*/, '').trim();
-        
-        // Check if CGPA is on same line and separate it
-        const cgpaMatch = degreeLine.match(/\s+(?:CGPA|GPA):\s*([\d.]+)/i);
-        if (cgpaMatch) {
-          current.gpa = cgpaMatch[1];
-          degreeLine = degreeLine.replace(/\s+(?:CGPA|GPA):\s*[\d.]+/i, '').trim();
-        }
-        
-        current.degree = degreeLine;
-      }
-      // Check for standalone GPA line
-      else if (/^(?:CGPA|GPA):\s*([\d.]+)/i.test(line)) {
-        const gpaMatch = line.match(/(?:CGPA|GPA):\s*([\d.]+)/i);
-        if (gpaMatch) current.gpa = gpaMatch[1];
-      }
-      // Check for coursework
-      else if (/(?:Selected\s+)?Coursework:/i.test(line)) {
-        const courseworkMatch = line.match(/(?:Selected\s+)?Coursework:\s*(.+)/i);
-        if (courseworkMatch) current.coursework = courseworkMatch[1].trim();
-      }
+      continue;
+    }
+
+    if (!current) continue;
+    if (date && isStandaloneDate(line, date)) {
+      if (!current.dateRange) current.dateRange = date.value;
+      continue;
+    }
+
+    const gpa = line.match(/\b(?:CGPA|GPA)\s*:?\s*([\d.]+(?:\s*\/\s*[\d.]+)?)/i)?.[1];
+    const coursework = line.match(/(?:Selected\s+|Relevant\s+)?Coursework\s*:\s*(.+)/i)?.[1];
+    if (coursework) {
+      current.coursework = coursework.trim();
+      continue;
+    }
+    if (gpa) current.gpa = gpa.replace(/\s+/g, '');
+
+    if (/\b(?:Master|Bachelor|PhD|Doctor|Associate|M\.?S\.?|B\.?S\.?|M\.?A\.?|B\.?A\.?)\b/i.test(line)) {
+      current.degree = line
+        .replace(/^(?:[-*•●▪◦○‣·➤►]|\d{1,2}[.)])\s*/, '')
+        .replace(/\s*\b(?:CGPA|GPA)\s*:?\s*[\d.]+(?:\s*\/\s*[\d.]+)?/i, '')
+        .trim();
     }
   }
 
-  if (current) {
-    education.push(current);
-  }
-
-  console.log('[Parser] Total education entries:', education.length);
+  commitCurrent();
   return education;
 }
 
-function parseSkills(lines: string[]): SkillCategory[] {
+function parseSkills(lines: string[], defaultLabel: string): SkillCategory[] {
   const skills: SkillCategory[] = [];
 
-  console.log('[Parser] Parsing skills from', lines.length, 'lines:', lines);
+  for (const rawLine of lines) {
+    if (!rawLine) continue;
+    const cleanLine = extractBullet(rawLine) ?? rawLine;
+    const segments = cleanLine.split(/;\s*(?=[A-Za-z][^:]{0,40}:)/);
 
-  for (const line of lines) {
-    if (!line || !line.trim()) continue;
-    
-    // Pattern: "Label: skills list" or "- Label: skills list"
-    // Find the FIRST colon that separates label from content
-    const colonIndex = line.indexOf(':');
-    
-    if (colonIndex > 0) {
-      // Get everything before the first colon as label
-      let label = line.substring(0, colonIndex).trim();
-      // Remove bullet markers from label
-      label = label.replace(/^[-•*●]\s*/, '').trim();
-      
-      // Get everything after the first colon as content
-      const content = line.substring(colonIndex + 1).trim();
-      
-      // Skip if label is empty or looks like a time/date
-      if (label && content && !/^\d{1,2}$/.test(label)) {
-        skills.push({
-          label: label,
-          skills: content,
-        });
-        console.log('[Parser] Found skill:', label, '->', content.substring(0, 50) + '...');
+    for (const segment of segments) {
+      const colonIndex = segment.indexOf(':');
+      if (colonIndex > 0) {
+        const label = segment.slice(0, colonIndex).trim();
+        const content = segment.slice(colonIndex + 1).trim();
+        if (label && content && label.length <= 50) {
+          mergeSkillCategories(skills, [{ label, skills: content }]);
+        }
+      } else if (segment.trim()) {
+        const target = skills[skills.length - 1];
+        if (target) target.skills = `${target.skills}, ${segment.trim()}`;
+        else skills.push({ label: defaultLabel, skills: segment.trim() });
       }
     }
   }
 
-  console.log('[Parser] Total skills found:', skills.length);
   return skills;
 }
 
-function parseStartups(lines: string[]): StartupEntry[] {
-  const startups: StartupEntry[] = [];
+function parseProjects(lines: string[]): StartupEntry[] {
+  const projects: StartupEntry[] = [];
 
-  for (const line of lines) {
-    // Clean the line first - remove bullet markers
-    let cleanLine = line.replace(/^[-•*●]\s*/, '').trim();
-    
-    // Fix common issues like "Co - founder" or "Co- founder" -> "Co-founder"
-    cleanLine = cleanLine.replace(/Co\s*[-–]\s*founder/gi, 'Co-founder');
-    
-    // Pattern: "Role, Company - description"
-    // We need to find the FIRST dash that separates role from description
-    // But avoid splitting on dashes within the description
-    // Look for pattern: "Something, Something - rest of text"
-    const match = cleanLine.match(/^([^-–]+?,\s*[^-–]+?)\s*[-–]\s*(.+)$/);
-    
+  for (const rawLine of lines) {
+    if (!rawLine) continue;
+    let line = extractBullet(rawLine) ?? rawLine;
+    line = line.replace(/Co\s*[-–—]\s*founder/gi, 'Co-founder').trim();
+
+    const match = line.match(/^(.+?):\s+(.+)$/) ||
+      line.match(/^(.+?,\s*.+?)\s+[-–—]\s+(.+)$/) ||
+      line.match(/^(.+?)\s+[-–—]\s+(.+)$/);
     if (match) {
-      startups.push({
-        role: match[1].trim(),
-        description: match[2].trim(),
-      });
+      projects.push({ role: match[1].trim(), description: match[2].trim() });
+      continue;
+    }
+
+    const previous = projects[projects.length - 1];
+    if (previous && (!TERMINAL_PUNCTUATION.test(previous.description) || /^[a-z(]/.test(line))) {
+      previous.description = `${previous.description} ${line}`.replace(/\s+/g, ' ').trim();
     } else {
-      // Try simpler pattern without comma requirement
-      const simpleMatch = cleanLine.match(/^(.+?)\s*[-–]\s*(.+)$/);
-      if (simpleMatch) {
-        startups.push({
-          role: simpleMatch[1].trim(),
-          description: simpleMatch[2].trim(),
-        });
-      } else {
-        // No dash separator, treat whole line as description
-        startups.push({
-          role: '',
-          description: cleanLine,
-        });
-      }
+      projects.push({ role: '', description: line });
     }
   }
 
-  return startups;
+  return projects;
 }
 
-// Convert parsed resume back to formatted HTML for editor
 export function resumeToHTML(parsed: ParsedResume): string {
-  let html = '';
+  let html = `<h1>${escapeHtml(parsed.contact.name)}</h1>\n`;
+  const contactParts = [parsed.contact.linkedin, parsed.contact.website, parsed.contact.email, parsed.contact.phone]
+    .filter((part): part is string => Boolean(part))
+    .map(escapeHtml);
+  if (contactParts.length) html += `<p>${contactParts.join(' • ')}</p>\n`;
 
-  // Name
-  html += `<h1>${parsed.contact.name}</h1>\n`;
-
-  // Contact info
-  const contactParts: string[] = [];
-  if (parsed.contact.linkedin) contactParts.push(parsed.contact.linkedin);
-  if (parsed.contact.website) contactParts.push(parsed.contact.website);
-  if (parsed.contact.email) contactParts.push(parsed.contact.email);
-  if (parsed.contact.phone) contactParts.push(parsed.contact.phone);
-  
-  if (contactParts.length > 0) {
-    html += `<p>${contactParts.join(' • ')}</p>\n`;
-  }
-
-  // Experience
-  if (parsed.experience.length > 0) {
-    html += `<h2>EXPERIENCE</h2>\n`;
+  if (parsed.experience.length) {
+    html += '<h2>EXPERIENCE</h2>\n';
     for (const job of parsed.experience) {
-      html += `<h3>${job.title} | ${job.company} | ${job.location}</h3>\n`;
-      if (job.dateRange) {
-        html += `<p><em>${job.dateRange}</em></p>\n`;
-      }
-      if (job.bullets.length > 0) {
-        html += '<ul>\n';
-        for (const bullet of job.bullets) {
-          html += `<li>${bullet}</li>\n`;
-        }
-        html += '</ul>\n';
+      const heading = [job.title, job.company, job.location].filter(Boolean).map(escapeHtml).join(' | ');
+      html += `<h3>${heading}</h3>\n`;
+      if (job.dateRange) html += `<p><em>${escapeHtml(job.dateRange)}</em></p>\n`;
+      if (job.bullets.length) {
+        html += `<ul>\n${job.bullets.map(bullet => `<li>${escapeHtml(bullet)}</li>`).join('\n')}\n</ul>\n`;
       }
     }
   }
 
-  // University Startups
-  if (parsed.startups.length > 0) {
-    html += `<h2>UNIVERSITY STARTUPS</h2>\n`;
-    for (const startup of parsed.startups) {
-      const text = startup.role ? `${startup.role} - ${startup.description}` : startup.description;
-      html += `<p>${text}</p>\n`;
+  if (parsed.startups.length) {
+    html += '<h2>SIDE PROJECTS</h2>\n';
+    for (const project of parsed.startups) {
+      const text = project.role ? `${project.role} - ${project.description}` : project.description;
+      html += `<p>${escapeHtml(text)}</p>\n`;
     }
   }
 
-  // Skills
-  if (parsed.skills.length > 0) {
-    html += `<h2>SKILLS & COMPETENCIES</h2>\n`;
+  if (parsed.skills.length) {
+    html += '<h2>SKILLS & COMPETENCIES</h2>\n';
     for (const category of parsed.skills) {
-      html += `<p><strong>${category.label}:</strong> ${category.skills}</p>\n`;
+      html += `<p><strong>${escapeHtml(category.label)}:</strong> ${escapeHtml(category.skills)}</p>\n`;
     }
   }
 
-  // Education
-  if (parsed.education.length > 0) {
-    html += `<h2>EDUCATION</h2>\n`;
-    for (const edu of parsed.education) {
-      html += `<h3>${edu.school}, ${edu.location}</h3>\n`;
-      if (edu.dateRange) {
-        html += `<p><em>${edu.dateRange}</em></p>\n`;
-      }
-      if (edu.degree) {
-        html += `<p>${edu.degree}</p>\n`;
-      }
-      if (edu.gpa) {
-        html += `<p>CGPA: ${edu.gpa}</p>\n`;
-      }
-      if (edu.coursework) {
-        html += `<p>Selected Coursework: ${edu.coursework}</p>\n`;
-      }
+  if (parsed.education.length) {
+    html += '<h2>EDUCATION</h2>\n';
+    for (const education of parsed.education) {
+      const school = [education.school, education.location].filter(Boolean).map(escapeHtml).join(', ');
+      html += `<h3>${school}</h3>\n`;
+      if (education.dateRange) html += `<p><em>${escapeHtml(education.dateRange)}</em></p>\n`;
+      if (education.degree) html += `<p>${escapeHtml(education.degree)}</p>\n`;
+      if (education.gpa) html += `<p>CGPA: ${escapeHtml(education.gpa)}</p>\n`;
+      if (education.coursework) html += `<p>Selected Coursework: ${escapeHtml(education.coursework)}</p>\n`;
     }
   }
 

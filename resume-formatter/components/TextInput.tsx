@@ -110,8 +110,7 @@ export default function TextInput({ onSubmit }: TextInputProps) {
       <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
         <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
         <p className="text-xs text-zinc-400 leading-relaxed">
-          <span className="text-blue-400 font-medium">Note:</span> Name, contact info, and education are pre-configured and won't change from your input. 
-          Only <span className="text-white">EXPERIENCE</span>, <span className="text-white">SKILLS</span>, and <span className="text-white">STARTUPS</span> sections will be parsed.
+          <span className="text-blue-400 font-medium">Tip:</span> Headings such as <span className="text-white">EXPERIENCE</span>, <span className="text-white">SKILLS</span>, and <span className="text-white">PROJECTS</span> help organize the canvas. You can edit every line after importing, including contact and education.
         </p>
       </div>
 

@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Rich document canvas. Content grows instead of being clipped at one page. */
+.canvas-shell { border: 1px solid #303037; border-radius: 16px; overflow: hidden; background: #18181b; box-shadow: 0 24px 70px rgba(0,0,0,.28); }
+.canvas-toolbar { position: relative; z-index: 20; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 14px; background: #202025; border-bottom: 1px solid #38383f; }
+.canvas-tool-group { display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #44444b; }
+.canvas-tool { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 7px; color: #d4d4d8; transition: background .15s, color .15s; }
+.canvas-tool:hover:not(:disabled), .canvas-tool-active { background: #41415a; color: white; }
+.canvas-tool:disabled { opacity: .35; cursor: not-allowed; }
+.canvas-toolbar-hint { margin-left: auto; color: #a1a1aa; font-size: 11px; }
+.canvas-stage { max-height: calc(100vh - 210px); min-height: 360px; overflow: auto; padding: 28px 18px 42px; background: #2b2b31; }
+.document-canvas { width: min(8.5in, 100%); min-height: 11in; margin: 0 auto; padding: .38in .55in; background: #fff; color: #141820; box-shadow: 0 10px 36px rgba(0,0,0,.25); font: 10pt/1.3 'Carlito', Calibri, Arial, sans-serif; }
+.resume-editor { min-height: 9.8in; outline: none; overflow-wrap: anywhere; }
+.resume-editor:focus { outline: none; }
+.resume-editor h1 { font-size: 19pt; line-height: 1.3; font-weight: 700; text-align: center; margin: 0 0 4pt; }
+.resume-editor > h1 + p { text-align: center; margin: 0 0 11pt; }
+.resume-editor h2 { font-size: 11pt; line-height: 1.3; font-weight: 700; margin: 12pt 0 5pt; padding-bottom: 2pt; border-bottom: .8pt solid #242833; }
+.resume-editor h3 { font-size: 10pt; font-weight: 700; margin: 7pt 0 4pt; }
+.resume-editor p { margin: 0 0 3pt; min-height: 13pt; }
+.resume-editor ul, .resume-editor ol { margin: 2pt 0 5pt; padding-left: 18pt; }
+.resume-editor ul { list-style-type: disc; }
+.resume-editor ol { list-style-type: decimal; }
+.resume-editor li { padding-left: 1pt; margin-bottom: 2pt; }
+.resume-editor li p { margin-bottom: 0; }
+.resume-editor strong { font-weight: 700; }
+.resume-editor em { font-style: italic; }
+.resume-editor u { text-decoration: underline; }
+.resume-editor ::selection { background: #b7c8ff; color: #131722; }
+.canvas-status { padding: 8px 14px; border-top: 1px solid #38383f; color: #a1a1aa; font-size: 11px; }
+@media (max-width: 640px) {
+  .canvas-toolbar-hint { display: none; }
+  .canvas-stage { padding: 10px; }
+  .document-canvas { padding: 24px 22px; }
+}
+
 /* Load Carlito font (metrically identical to Calibri) */
 @font-face {
   font-family: 'Carlito';
@@ -42,11 +75,6 @@
   --border-color: #262626;
   --font-inter: 'Inter', system-ui, sans-serif;
 
-  /* Dynamic layout variables - controlled by Global Layout Engine */
-  --section-gap: 12px;
-  --job-gap: 10px;
-  --bullet-gap: 3px;
-  --line-height: 1.45;
 }
 
 * {
@@ -136,370 +164,6 @@ body {
 :focus-visible {
   outline: 2px solid rgba(99, 102, 241, 0.5);
   outline-offset: 2px;
-}
-
-/* ========================================
-   RESUME PREVIEW - Dynamic Single Page
-   ======================================== */
-
-.resume-preview {
-  /* Exact Letter size - NEVER exceeds this */
-  width: 8.5in;
-  height: 11in;
-  max-height: 11in;
-  min-height: 11in;
-  overflow: hidden; /* Clips any overflow - safety net */
-
-  /* Symmetrical page margins (top = bottom for visual balance) */
-  padding: 0.38in 0.55in;
-  margin: 0 auto;
-
-  /* Typography - base values, dynamically adjusted by layout engine */
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 9pt;
-  line-height: var(--line-height, 1.45);
-  color: #000000;
-  background: #ffffff;
-
-  /* CSS variables for Global Layout Engine */
-  --section-gap: 12px;
-  --job-gap: 10px;
-  --bullet-gap: 3px;
-  --line-height: 1.45;
-
-  /* Enable smooth transitions for layout adjustments */
-  transition: font-size 0.1s ease-out, line-height 0.1s ease-out;
-}
-
-/* Content wrapper for measurement */
-.resume-preview .resume-content {
-  width: 100%;
-}
-
-/* ===== HEADER - CENTER ALIGNED ===== */
-.resume-preview .resume-header {
-  text-align: center;
-  margin: 0 0 10px 0;
-  padding: 0;
-}
-
-.resume-preview .resume-name {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 2.22em; /* 20pt relative to 9pt base */
-  font-weight: bold;
-  color: #000000;
-  margin: 0 0 6px 0;
-  padding: 0;
-  display: block;
-  text-align: center;
-}
-
-/* ===== CONTACT LINE - CENTER ALIGNED ===== */
-.resume-preview .contact-line {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0;
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-  line-height: 1.2;
-  color: #333333;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-}
-
-.resume-preview .contact-item {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1.2;
-}
-
-.resume-preview .contact-separator {
-  margin: 0 6px 0 18px; /* 6 spaces before bullet, 2 spaces after (3:1 ratio) */
-  font-size: 0; /* Hide the bullet text character */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 1em; /* Match text line height, scales with font */
-}
-
-.resume-preview .contact-separator::before {
-  content: '';
-  width: 4px;
-  height: 4px;
-  background-color: #000000;
-  border-radius: 50%;
-  display: block;
-}
-
-.resume-preview .contact-link {
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.resume-preview .contact-link:hover {
-  text-decoration: underline;
-}
-
-/* ===== SECTIONS - Dynamic spacing ===== */
-.resume-preview .resume-section {
-  margin-top: var(--section-gap);
-}
-
-/* ===== SECTION TITLES - Left aligned with gap before underline ===== */
-.resume-preview .section-title {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif !important;
-  font-size: 1.111em !important; /* 10pt relative to 9pt base */
-  font-weight: bold !important;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #000000 !important;
-  /* Underline very close to text - 1px gap to match PDF */
-  padding: 0 0 1px 0;
-  border-bottom: 1.5px solid #000000;
-  margin: 0 0 10px 0;
-  display: block;
-  text-align: left;
-}
-
-/* ===== JOB ENTRIES - Dynamic spacing ===== */
-.resume-preview .job-entry {
-  margin-bottom: var(--job-gap);
-}
-
-.resume-preview .job-entry:last-child {
-  margin-bottom: 0;
-}
-
-.resume-preview .job-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin: 0 0 3px 0;
-  padding: 0;
-}
-
-.resume-preview .job-title-line {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1.056em; /* 9.5pt relative to 9pt base */
-  color: #000000;
-  text-align: left;
-}
-
-.resume-preview .job-title {
-  font-weight: bold;
-}
-
-.resume-preview .job-company,
-.resume-preview .job-location {
-  font-weight: normal;
-}
-
-.resume-preview .separator {
-  color: #000000;
-}
-
-.resume-preview .job-date {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-  color: #333333;
-  font-style: italic;
-  white-space: nowrap;
-  flex-shrink: 0;
-  text-align: right;
-}
-
-/* ===== BULLET LISTS - Dynamic spacing ===== */
-.resume-preview .resume-bullets {
-  margin: 3px 0 0 0;
-  padding: 0 0 0 16px; /* Increased from 12px to add more space after bullet */
-  list-style: none;
-}
-
-.resume-preview .resume-bullets li {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-  line-height: var(--line-height, 1.45);
-  margin-bottom: var(--bullet-gap, 1px);
-  position: relative;
-  padding-left: 0;
-  color: #000000;
-  text-align: justify; /* Word-style full justification */
-  text-justify: inter-word;
-  hyphens: none; /* Prevent hyphenation - Word doesn't auto-hyphenate by default */
-}
-
-.resume-preview .resume-bullets li:last-child {
-  margin-bottom: 0;
-}
-
-.resume-preview .resume-bullets li::before {
-  content: "•";
-  position: absolute;
-  left: -12px; /* Increased from -9px for more space */
-  top: 0;
-  color: #000000;
-  font-size: 1em; /* Same size as text */
-}
-
-/* Bold metrics */
-.resume-preview strong {
-  font-weight: bold;
-  color: #000000;
-}
-
-/* ===== STARTUPS ===== */
-.resume-preview .startups-list {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-}
-
-.resume-preview .startup-entry {
-  margin: 0 0 5px 0;
-  padding: 0;
-  line-height: var(--line-height, 1.45);
-  color: #000000;
-  text-align: justify; /* Word-style full justification */
-  text-justify: inter-word;
-  hyphens: none;
-}
-
-.resume-preview .startup-entry:last-child {
-  margin-bottom: 0;
-}
-
-.resume-preview .startup-role {
-  font-weight: bold;
-}
-
-.resume-preview .startup-desc {
-  font-weight: normal;
-}
-
-/* ===== SKILLS ===== */
-.resume-preview .skills-list {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-}
-
-.resume-preview .skill-line {
-  margin: 0 0 5px 0;
-  padding: 0;
-  line-height: var(--line-height, 1.45);
-  color: #000000;
-  text-align: justify; /* Word-style full justification */
-  text-justify: inter-word;
-  hyphens: none;
-}
-
-.resume-preview .skill-line:last-child {
-  margin-bottom: 0;
-}
-
-.resume-preview .skill-label {
-  font-weight: bold;
-}
-
-.resume-preview .skill-content {
-  font-weight: normal;
-}
-
-/* ===== EDUCATION ===== */
-.resume-preview .education-entry {
-  margin-bottom: 8px;
-}
-
-.resume-preview .education-entry:last-child {
-  margin-bottom: 0;
-}
-
-.resume-preview .education-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.resume-preview .education-school {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1.056em; /* 9.5pt relative to 9pt base */
-  font-weight: bold;
-  color: #000000;
-  text-align: left;
-}
-
-.resume-preview .education-date {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-  color: #333333;
-  font-style: italic;
-  white-space: nowrap;
-  flex-shrink: 0;
-  text-align: right;
-}
-
-/* Education degree row - degree left, CGPA right */
-.resume-preview .education-degree-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center; /* Changed from baseline to center for perfect alignment */
-  gap: 10px;
-  margin: 4px 0 0 0;
-  padding: 0;
-}
-
-.resume-preview .education-degree {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-  line-height: var(--line-height, 1.45);
-  color: #000000;
-  text-align: left;
-  flex: 1; /* Takes available space, pushes CGPA to right */
-}
-
-.resume-preview .education-gpa {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-  line-height: var(--line-height, 1.45);
-  color: #000000;
-  text-align: right;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.resume-preview .education-detail {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 1em; /* 9pt relative to base */
-  margin: 3px 0 0 0;
-  padding: 0;
-  line-height: var(--line-height, 1.45);
-  color: #000000;
-  text-align: justify; /* Word-style full justification */
-  text-justify: inter-word;
-  hyphens: none;
-}
-
-/* ========================================
-   Editable Field Styles
-   ======================================== */
-
-.resume-preview .editable-field {
-  outline: none;
-  border-radius: 2px;
-  transition: background-color 0.15s ease;
-  cursor: text;
-}
-
-.resume-preview .editable-field:hover {
-  background-color: rgba(59, 130, 246, 0.1);
-}
-
-.resume-preview .editable-field:focus {
-  background-color: rgba(59, 130, 246, 0.15);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 /* ========================================

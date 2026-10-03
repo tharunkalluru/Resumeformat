@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { FileText, Edit3, Download, ArrowLeft, Sparkles, Zap, Shield, Clock, AlertTriangle } from 'lucide-react';
 import TextInput from '@/components/TextInput';
-import EditableResumePreview from '@/components/EditableResumePreview';
+import ResumeCanvas from '@/components/ResumeCanvas';
 import DownloadButton from '@/components/DownloadButton';
 import { parseResumeText, ParsedResume } from '@/lib/parser';
+import { DocumentNode, resumeToDocument } from '@/lib/document';
 
 type ViewMode = 'input' | 'preview';
 
@@ -22,6 +23,8 @@ export default function SharePage() {
 
   const [viewMode, setViewMode] = useState<ViewMode>('input');
   const [parsedResume, setParsedResume] = useState<ParsedResume | null>(null);
+  const [document, setDocument] = useState<DocumentNode | null>(null);
+  const [importWarning, setImportWarning] = useState('');
 
   // Resolve email from token - this is the ONLY source of truth
   const resolvedEmail = useMemo(() => {
@@ -31,31 +34,20 @@ export default function SharePage() {
 
   const isValidLink = resolvedEmail !== null;
 
-  // Store resolved email in a way that PDF generator can access
-  useEffect(() => {
-    if (resolvedEmail) {
-      // Set on window for PDF generator to read (not editable by user)
-      (window as any).__RESOLVED_EMAIL__ = resolvedEmail;
-    }
-    return () => {
-      delete (window as any).__RESOLVED_EMAIL__;
-    };
-  }, [resolvedEmail]);
-
   const handleTextSubmit = useCallback((text: string) => {
     if (!isValidLink) return;
     const parsed = parseResumeText(text);
     setParsedResume(parsed);
+    setDocument(resumeToDocument(parsed, resolvedEmail || undefined, text));
+    setImportWarning(parsed.warnings[0] || '');
     setViewMode('preview');
-  }, [isValidLink]);
-
-  const handleResumeChange = useCallback((updated: ParsedResume) => {
-    setParsedResume(updated);
-  }, []);
+  }, [isValidLink, resolvedEmail]);
 
   const handleReset = useCallback(() => {
     setViewMode('input');
     setParsedResume(null);
+    setDocument(null);
+    setImportWarning('');
   }, []);
 
   const pdfFilename = useMemo(() => {
@@ -134,6 +126,7 @@ export default function SharePage() {
                 <DownloadButton
                   filename={pdfFilename}
                   disabled={!parsedResume}
+                  document={document}
                 />
               </div>
             )}
@@ -158,8 +151,7 @@ export default function SharePage() {
                 </span>
               </h2>
               <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
-                Paste your GPT-generated text, edit directly on the formatted preview,
-                and download a pixel-perfect PDF ready for applications.
+                Paste your resume, edit every line on a document canvas, and export a clean PDF.
               </p>
             </div>
 
@@ -183,14 +175,14 @@ export default function SharePage() {
                   <Edit3 className="w-5 h-5 text-violet-400" />
                 </div>
                 <h3 className="font-semibold text-white mb-1">Live Editing</h3>
-                <p className="text-sm text-zinc-500">Click any text to edit directly on preview</p>
+                <p className="text-sm text-zinc-500">Edit the whole document with formatting controls</p>
               </div>
               <div className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all duration-300">
                 <div className="w-10 h-10 mb-4 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                   <Download className="w-5 h-5 text-emerald-400" />
                 </div>
                 <h3 className="font-semibold text-white mb-1">Perfect PDF</h3>
-                <p className="text-sm text-zinc-500">Download ATS-friendly, high-quality PDFs</p>
+                <p className="text-sm text-zinc-500">Download selectable text across as many pages as needed</p>
               </div>
             </div>
 
@@ -213,47 +205,31 @@ export default function SharePage() {
           </div>
         ) : (
           <div className="max-w-5xl mx-auto">
+            {importWarning && <p role="status" className="mb-4 rounded-lg border border-amber-500/25 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">{importWarning} Review the imported layout before exporting.</p>}
             <div className="mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
                   <Edit3 className="w-4 h-4 text-violet-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">Live Editor</p>
-                  <p className="text-xs text-zinc-500">Click any text to edit directly</p>
+                  <p className="text-sm font-medium text-white">Document canvas</p>
+                  <p className="text-xs text-zinc-500">Click anywhere to edit, add sections, or format text</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 text-xs text-zinc-500">
-                <div className="flex items-center gap-1.5">
-                  <kbd className="px-2 py-1 bg-zinc-800 rounded border border-zinc-700 font-mono">Enter</kbd>
-                  <span>save</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <kbd className="px-2 py-1 bg-zinc-800 rounded border border-zinc-700 font-mono">Shift + Enter</kbd>
-                  <span>new line</span>
-                </div>
+                <span>Changes appear in the PDF immediately</span>
               </div>
             </div>
 
-            {parsedResume && (
-              <div className="relative group">
-                <div className="absolute -inset-2 bg-gradient-to-b from-white/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative overflow-auto bg-zinc-900/50 backdrop-blur border border-white/10 rounded-2xl p-4 sm:p-8 shadow-2xl" style={{ maxHeight: 'calc(100vh - 220px)' }}>
-                  <div className="shadow-2xl shadow-black/50 mx-auto" style={{ width: 'fit-content' }}>
-                    <EditableResumePreview
-                      parsedResume={parsedResume}
-                      onResumeChange={handleResumeChange}
-                      overrideEmail={resolvedEmail}
-                    />
-                  </div>
-                </div>
-              </div>
+            {document && (
+              <ResumeCanvas document={document} onDocumentChange={setDocument} />
             )}
 
             <div className="mt-6 flex justify-center sm:hidden">
               <DownloadButton
                 filename={pdfFilename}
                 disabled={!parsedResume}
+                document={document}
               />
             </div>
           </div>
