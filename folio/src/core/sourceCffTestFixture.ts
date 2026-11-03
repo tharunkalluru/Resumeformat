@@ -1,0 +1,12 @@
+import {canonicalJson,hashTextSync,sha256Sync,type SourceFontAssetV2,type Template,type ContentSnapshot,type TextRegion,type LegacySourceTextLayout,type SourceOverlapProof} from './model';
+import {parseSourceProgram,sourceCffDeclaredStyle,sourceEditorStyle} from '../layout/source-fonts';
+/** Neutral generated graph over the existing licensed local Times CFF fixture. */
+export function fictionalCffTemplate(bytes:Uint8Array,text='a b'):{template:Template & {sourceOverlaps?:SourceOverlapProof[]};content:ContentSnapshot;asset:SourceFontAssetV2;region:TextRegion<LegacySourceTextLayout>} {
+ const font=parseSourceProgram(bytes,'opentype-cff'),sourceHash=sha256Sync(new TextEncoder().encode('Wholly fictional CFF source'));
+ const asset:SourceFontAssetV2={id:'owned-cff-font',sourceSha256:sourceHash,sourceResource:'local-cff-resource',sha256:sha256Sync(bytes),bytes:new Uint8Array(bytes),sourceVersion:2,format:'opentype-cff',unitsPerEm:1000,declaredStyle:sourceCffDeclaredStyle(font),glyphMap:[...new Set(Array.from('a bcd'))].map((unicode,i)=>({cid:i+1,glyphId:unicode===' '?0:font.glyphForCodePoint(unicode.codePointAt(0)!).id,fontChar:unicode.codePointAt(0)!,unicode,pdfWidth:unicode===' '?250:font.glyphForCodePoint(unicode.codePointAt(0)!).advanceWidth,nonPainting:unicode===' ',editPolicy:'coveredScalar',widthProvenance:unicode===' '?'sourceEncodingWidths':'sourceGlyph'}))};
+ const style=sourceEditorStyle(asset);let x=40;
+ const glyphs=Array.from(text).map(unicode=>{const m=asset.glyphMap.find(m=>m.unicode===unicode)!;const glyph={fontId:asset.id,cid:m.cid,unicode,x,advance:m.pdfWidth*12/1000,operatorIndex:1};x+=glyph.advance;return glyph;});
+ const content:ContentSnapshot={revision:1,blocks:[{id:'cff-block',runs:[{text,bold:false,italic:style.italic}],sourceFactIds:[]}]};
+ const region:TextRegion<LegacySourceTextLayout>={kind:'text',id:'cff-region',pageId:'cff-page',bounds:{x:40,y:35,width:x-40+.5,height:25},order:0,contentId:'cff-block',role:'body',style:{fontFamily:'sans',fontSize:12,...style,color:'#000000',alignment:'left',lineHeight:15,baselineOffset:17,sourceFontId:asset.id},sourceLocator:'fictional:cff',sourceLayout:{version:2,sourceSha256:sourceHash,baselineRunsHash:hashTextSync(canonicalJson(content.blocks[0].runs)),anchor:'start',startX:40,endX:x,baseline:52,fontSize:12,glyphs,baselineStyle:style,editPolicy:'scalarCovered'}};
+ return {asset,region,content,template:{id:'cff-template',revision:1,importerVersion:'fictional-cff-v2',warnings:[],sourceFonts:[asset],pages:[{id:'cff-page',width:500,height:700,regions:[region]}]}};
+}

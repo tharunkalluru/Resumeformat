@@ -1,0 +1,4 @@
+import {it,expect} from 'vitest';
+import {PDFDocument,PDFName,PDFRef} from 'pdf-lib';
+import {captureCompositeLinks} from './pdf-composite-links';
+it('keeps internal links version-scoped and rejects mixed active or foreign destinations',async()=>{const d=await PDFDocument.create(),p=d.addPage([200,200]),target=d.addPage([200,200]),c=d.context,a=c.obj({Type:'Annot',Subtype:'Link',Rect:[10,10,30,30],Border:[0,0,0],Dest:[target.ref,'Fit']});p.node.addAnnot(c.register(a));expect(()=>captureCompositeLinks(d,1)).toThrow();expect(captureCompositeLinks(d,1,false,true)[0].destination).toEqual({pageNumber:2,mode:'Fit',args:[]});a.set(PDFName.of('A'),c.obj({S:'JavaScript',JS:'evil'}));expect(()=>captureCompositeLinks(d,1,false,true)).toThrow();a.delete(PDFName.of('A'));a.set(PDFName.of('Dest'),c.obj([PDFRef.of(9999),'Fit']));expect(()=>captureCompositeLinks(d,1,false,true)).toThrow();});

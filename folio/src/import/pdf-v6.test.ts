@@ -1,0 +1,119 @@
+import {packScopedMetadata,unpackScopedMetadata} from '../core/source-scoped-codec';
+import {packRecordMetadata,unpackRecordMetadata} from '../core/project-record-codec';
+import {afterAll,beforeAll,describe,expect,it} from 'vitest';
+import 'fake-indexeddb/auto';
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {DOMMatrix,ImageData,Path2D} from '@napi-rs/canvas';
+import {PDFDocument,PDFDict,PDFName,PDFArray,PDFRawStream,decodePDFRawStream} from 'pdf-lib';
+import {OPS,getDocument,GlobalWorkerOptions} from 'pdfjs-dist/legacy/build/pdf.mjs';
+import {setFontLoader} from '../layout/fonts';
+import {loadSourceFont,parseSourceProgram,validateSourceFontAsset} from '../layout/source-fonts';
+import {blockText,sha256Sync,makeProject} from '../core/model';
+import {validateProject} from '../core/schema';
+import {saveProject,loadProjects,backupProject,restoreProject,backupResumeGroup,restoreGroup} from '../storage/projects';
+import JSZip from 'jszip';
+import fontkit from '@pdf-lib/fontkit';
+import {sourceGlyphs} from '../core/source-graph';
+import {browserSourceFontBytes,rewriteTrueTypeUnicodeCmap} from '../ui/sourceFonts';
+import {importResume} from './index';
+import {originalWinAnsiSelectors} from './pdf-winansi';
+import {captureSourceGlyphs,associateSourceItems} from './pdf-source';
+import type {SourceFontAsset} from '../core/model';
+import {validateOriginalPrograms} from './pdf-original-tt';
+import {renderDocument} from '../render/pdf';
+import {fictionalSourceTemplate} from '../core/sourceFontTestFixture';
+import {sourceGlyphAt} from '../core/source-graph';
+
+let program:Uint8Array,restore:()=>void;
+beforeAll(async()=>{program=new Uint8Array(await readFile('public/fonts/DejaVuSans.ttf'));Object.assign(globalThis,{DOMMatrix,ImageData,Path2D,pdfjsWorker:await import('pdfjs-dist/legacy/build/pdf.worker.mjs')});restore=setFontLoader(async file=>new Uint8Array(await readFile(resolve('public/fonts',file))));await import('./pdf');GlobalWorkerOptions.workerSrc=resolve('node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');});
+afterAll(()=>restore?.());
+
+/** Fictional full-program resource; the PDF widths deliberately differ from hmtx. */
+async function original(bytes=program,{semantic,clip,restricted=false}:{semantic?:string;clip?:'curve';restricted?:boolean}={}){
+ const pdf=await PDFDocument.create(),font=parseSourceProgram(bytes),c=pdf.context,selectors=originalWinAnsiSelectors(bytes,32,font.numGlyphs),widths=Array.from({length:91},(_,i)=>{const gid=selectors.get(i+32)?.glyphId;return gid?Math.round(font.getGlyph(gid).advanceWidth*1000/font.unitsPerEm):0;});
+ const descriptor=c.register(c.obj({Type:'FontDescriptor',FontName:'FictionalOwnedWinAnsi',Flags:restricted?4:32,FontBBox:[-1100,-500,2100,1200],ItalicAngle:0,Ascent:font.ascent*1000/font.unitsPerEm,Descent:font.descent*1000/font.unitsPerEm,CapHeight:750,StemV:80,FontFile2:c.register(c.flateStream(bytes,{Length1:bytes.length}))}));
+ const dict=c.obj({Type:'Font',Subtype:'TrueType',BaseFont:'FictionalOwnedWinAnsi',Encoding:'WinAnsiEncoding',FirstChar:32,LastChar:122,Widths:widths,FontDescriptor:descriptor});
+ if(semantic)dict.set(PDFName.of('ToUnicode'),c.register(c.flateStream(new TextEncoder().encode(`1 begincodespacerange <00> <ff> endcodespacerange 1 beginbfchar <61> <${semantic.codePointAt(0)!.toString(16).padStart(4,'0')}> endbfchar`))));
+ const ref=c.register(dict),page=pdf.addPage([500,700]);page.node.set(PDFName.of('Resources'),c.obj({Font:{F1:ref}}));
+ page.node.set(PDFName.of('Contents'),c.register(c.flateStream(new TextEncoder().encode(`q ${clip?'0 0 m 0 700 500 700 500 0 c h W* n ':''}BT /F1 12 Tf 1 0 0 1 40 648 Tm <${semantic?'61':'616263'}> Tj ET Q`))));
+ return {bytes:new Uint8Array(await pdf.save()),ref:ref.toString(),widths};
+}
+function changedMicrosoftCmap(){const bytes=new Uint8Array(program),view=new DataView(bytes.buffer),font=parseSourceProgram(program);let table=0;for(let i=0;i<view.getUint16(4);i++){const p=12+i*16;if(String.fromCharCode(...bytes.subarray(p,p+4))!=='cmap')continue;const base=view.getUint32(p+8);for(let j=0;j<view.getUint16(base+2);j++){const row=base+4+j*8;if(view.getUint16(row)===3&&view.getUint16(row+2)===1)table=base+view.getUint32(row+4);}}
+ const n=view.getUint16(table+6)/2,a=font.glyphForCodePoint(97).id,b=font.glyphForCodePoint(98).id;for(let i=0;i<n;i++){const lo=view.getUint16(table+16+n*2+i*2),hi=view.getUint16(table+14+i*2);if(lo>97||hi<97)continue;const delta=table+16+n*4+i*2,rp=table+16+n*6+i*2,range=view.getUint16(rp);if(range)view.setUint16(rp+range+(97-lo)*2,(b-view.getInt16(delta))&65535);else view.setInt16(delta,view.getInt16(delta)+b-a);break;}return bytes;}
+async function imported(source:Uint8Array){return importResume(new File([new Uint8Array(source).buffer],'fictional-winansi.pdf',{type:'application/pdf'}));}
+
+describe('V6 physical selectors and independent PDF positioning advances',()=>{
+ it('refuses an actual configured optional-content group at the legacy restore seam',async()=>{
+  const bytes=new Uint8Array(await readFile('tests/fixtures/fonts/Carlito-Regular.ttf')),pdf=await PDFDocument.create();pdf.registerFontkit(fontkit);const face=await pdf.embedFont(bytes,{subset:false}),page=pdf.addPage([500,700]);page.drawText('abc',{font:face,x:40,y:648,size:12});const source=new Uint8Array(await pdf.save()),r=await imported(source);expect(r.template.sourceFonts?.every(asset=>asset.format==='truetype'&&!asset.originalProgram)).toBe(true);await validateOriginalPrograms(source,r.template.sourceFonts!,r.template);
+  const group=pdf.context.register(pdf.context.obj({Type:'OCG',Name:'Fictional optional group'}));pdf.catalog.set(PDFName.of('OCProperties'),pdf.context.obj({OCGs:[group],D:{Order:[group],ON:[group]}}));const layered=new Uint8Array(await pdf.save()),task=getDocument({data:new Uint8Array(layered),useSystemFonts:false,isOffscreenCanvasSupported:false,verbosity:0});try{expect(Array.from(await(await task.promise).getOptionalContentConfig())).toHaveLength(1);}finally{await task.destroy();}
+  const sha=sha256Sync(layered);for(const asset of r.template.sourceFonts!)asset.sourceSha256=sha;for(const p of r.template.pages)for(const region of p.regions)if(region.kind==='text'&&region.sourceLayout)region.sourceLayout.sourceSha256=sha;
+  await expect(validateOriginalPrograms(layered,r.template.sourceFonts!,r.template)).rejects.toMatchObject({code:'PDF_ORIGINAL_TT_PROOF'});expect((await imported(layered)).template.warnings.some(w=>w.code==='PDF_OPTIONAL_CONTENT'&&w.severity==='blocking')).toBe(true);
+ });
+ it.each(['selected-unpainted','mixed-header'] as const)('rejects a trusted legacy %s decoy graft at original painted ownership',async mode=>{
+  const trusted=new Uint8Array(await readFile('tests/fixtures/fonts/Carlito-Regular.ttf')),trustedFont=parseSourceProgram(trusted),source=await original(),pdf=await PDFDocument.load(source.bytes),context=pdf.context,page=pdf.getPages()[0];pdf.registerFontkit(fontkit);
+  const carlito=await pdf.embedFont(trusted,{subset:false});await pdf.flush();const dictionary=context.lookup(carlito.ref,PDFDict),owner=dictionary.lookup(PDFName.of('DescendantFonts'),PDFArray).lookup(0,PDFDict);
+  const gids=Array.from('abc').map(char=>trustedFont.glyphForCodePoint(char.codePointAt(0)!).id),hex=(n:number)=>n.toString(16).padStart(4,'0');
+  dictionary.set(PDFName.of('ToUnicode'),context.register(context.flateStream(new TextEncoder().encode(`1 begincodespacerange <0000> <ffff> endcodespacerange 3 beginbfchar ${gids.map((gid,i)=>`<${hex(gid)}> <${hex(97+i)}>`).join(' ')} endbfchar`))));
+  // Both dictionaries declare internally consistent Carlito widths. The body
+  // still physically paints DejaVu; a real Carlito header cannot own its glyphs.
+  owner.set(PDFName.of('W'),context.obj(gids.flatMap(gid=>[gid,[trustedFont.getGlyph(gid).advanceWidth*1000/trustedFont.unitsPerEm]])));
+  const resources=page.node.Resources()!.lookup(PDFName.of('Font'),PDFDict);resources.set(PDFName.of('Decoy'),carlito.ref);
+  const originalDict=resources.lookup(PDFName.of('F1'),PDFDict),widths=originalDict.lookup(PDFName.of('Widths'),PDFArray);for(let i=0;i<3;i++)widths.set(97+i-32,context.obj(trustedFont.getGlyph(gids[i]).advanceWidth*1000/trustedFont.unitsPerEm));
+  page.node.set(PDFName.of('Contents'),context.register(context.flateStream(new TextEncoder().encode(`q BT /Decoy 12 Tf ${mode==='mixed-header'?`1 0 0 1 40 680 Tm <${hex(gids[0])}> Tj`:''} ET BT /F1 12 Tf 1 0 0 1 40 648 Tm <616263> Tj ET Q`))));
+  const bytes=new Uint8Array(await pdf.save()),r=await imported(bytes),owned=r.template.sourceFonts!.find(asset=>asset.format==='truetype'&&asset.originalProgram?.pdfFontRef===source.ref)!;expect(owned?.format).toBe('truetype');
+  const graft=fictionalSourceTemplate(trusted,'abc'),originalRegion=r.template.pages[0].regions.find(region=>region.kind==='text'&&region.sourceLayout&&region.style.sourceFontId===owned.id);if(originalRegion?.kind!=='text'||!originalRegion.sourceLayout)throw Error('The fictional body must have an original graph.');
+  const region=graft.region,graph=region.sourceLayout!;graft.asset.sourceSha256=sha256Sync(bytes);graph.sourceSha256=graft.asset.sourceSha256;graph.baseline=originalRegion.sourceLayout.baseline;graph.fontSize=originalRegion.sourceLayout.fontSize;
+  graph.glyphs.forEach((glyph,i)=>{const actual=sourceGlyphAt(originalRegion,i);glyph.x=actual.x;glyph.advance=actual.advance;glyph.operatorIndex=actual.operatorIndex;});graph.startX=graph.glyphs[0].x;graph.endX=graph.glyphs.at(-1)!.x+graph.glyphs.at(-1)!.advance;
+  graft.asset.glyphMap=graft.asset.glyphMap.filter(map=>'abc'.includes(map.unicode));validateSourceFontAsset(graft.asset);
+  await expect(validateOriginalPrograms(bytes,[graft.asset],graft.template)).rejects.toMatchObject({code:'PDF_ORIGINAL_TT_PROOF'});
+  const project=validateProject(makeProject({...r,template:graft.template,baseline:graft.content},true)),prior=await loadProjects();
+  await expect(saveProject(project)).rejects.toMatchObject({code:'PDF_ORIGINAL_TT_PROOF'});expect(await loadProjects()).toEqual(prior);
+ });
+ it('owns Identity CID selection independently of Unicode cmap and consumes bounded bfrange arrays',async()=>{
+  const pdf=await PDFDocument.create();pdf.registerFontkit(fontkit);const embedded=await pdf.embedFont(program,{subset:false}),font=parseSourceProgram(program),gids=Array.from('abc').map(c=>font.glyphForCodePoint(c.codePointAt(0)!).id),page=pdf.addPage([500,700]);page.drawText('abc',{font:embedded,size:12,x:40,y:648});await pdf.flush();const hex=(n:number)=>n.toString(16).padStart(4,'0');
+  const cmap=`1 begincodespacerange <0000> <ffff> endcodespacerange 1 beginbfrange <${hex(gids[0])}> <${hex(gids[2])}> [<0061> <005a> <0063>] endbfrange`;
+  pdf.context.lookup(embedded.ref,PDFDict).set(PDFName.of('ToUnicode'),pdf.context.register(pdf.context.flateStream(new TextEncoder().encode(cmap))));const source=new Uint8Array(await pdf.save()),r=await imported(source);expect(r.template.warnings.filter(w=>w.severity==='blocking'||w.code==='FONT_SUBSTITUTION')).toEqual([]);expect(r.baseline.blocks.map(blockText).join('')).toBe('aZc');const asset=r.template.sourceFonts![0];if(asset.format!=='truetype')throw Error();expect(asset.sourceVersion).toBe(6);expect(asset.originalProgram!.selectorContract).toBe('identity-h-v1');expect(asset.glyphMap.find(m=>m.unicode==='Z')!.originalGlyphId).toBe(gids[1]);expect(parseSourceProgram(browserSourceFontBytes(asset)).glyphForCodePoint(90).path.toSVG()).toBe(font.getGlyph(gids[1]).path.toSVG());await validateOriginalPrograms(source,[asset]);
+  pdf.context.lookup(embedded.ref,PDFDict).set(PDFName.of('ToUnicode'),pdf.context.register(pdf.context.flateStream(new TextEncoder().encode(cmap.replace('<0063>]','<0063> <0064>]')))));const malformed=await imported(new Uint8Array(await pdf.save()));expect(malformed.template.sourceFonts??[]).toEqual([]);expect(malformed.template.warnings.some(w=>w.code==='PDF_SOURCE_PROOF'&&w.severity==='blocking')).toBe(true);
+ });
+ it('retains immutable hmtx, exact PDF widths and exact positioned selectable output',async()=>{
+  const source=await original(),r=await imported(source.bytes);expect(r.template.warnings.filter(w=>w.severity==='blocking'||w.code==='FONT_SUBSTITUTION')).toEqual([]);expect(r.baseline.blocks.map(blockText).join('')).toBe('abc');
+  if(process.env.FOLIO_R4_FICTIONAL_OUTPUT)await writeFile(`${process.env.FOLIO_R4_FICTIONAL_OUTPUT}/fictional-winansi-original.pdf`,source.bytes,{mode:0o600});
+  const asset=r.template.sourceFonts![0];if(asset.format!=='truetype')throw Error();expect(asset.sourceVersion).toBe(6);expect(asset.originalProgram!.selectorContract).toBe('winansi-3-1-v1');expect(asset.originalProgram!.pdfFontRef).toBe(source.ref);validateSourceFontAsset(asset);await validateOriginalPrograms(source.bytes,[asset]);
+  const face=parseSourceProgram(program);for(const map of asset.glyphMap){expect(map.originalCharCode).toBe(map.unicode.codePointAt(0));expect(map.originalGlyphId).toBe(face.glyphForCodePoint(map.unicode.codePointAt(0)!).id);expect(map.nativeWidth).toBe(face.getGlyph(map.originalGlyphId!).advanceWidth*1000/face.unitsPerEm);expect(map.pdfWidth).toBe(source.widths[map.originalCharCode!-32]);}expect(asset.glyphMap.some(m=>m.nativeWidth!==m.pdfWidth)).toBe(true);
+  const before=new Uint8Array(asset.bytes),native=parseSourceProgram(browserSourceFontBytes(asset));for(const map of asset.glyphMap){const glyph=native.glyphForCodePoint(map.unicode.codePointAt(0)!);expect(glyph.path.toSVG()).toBe(face.getGlyph(map.originalGlyphId!).path.toSVG());expect(glyph.advanceWidth*1000/native.unitsPerEm).toBe(map.nativeWidth);}expect(asset.bytes).toEqual(before);expect(loadSourceFont(asset).measure('abc',12).width).toBe(asset.glyphMap.reduce((sum,m)=>sum+m.pdfWidth*12/1000,0));
+  const glyphs=r.template.pages.flatMap(p=>p.regions.flatMap(region=>region.kind==='text'&&region.sourceLayout?Array.from(sourceGlyphs(region)):[])),rendered=await renderDocument(r.template,r.baseline,r.assets);expect(rendered.layout.overflows).toEqual([]);
+  if(process.env.FOLIO_R4_FICTIONAL_OUTPUT)await writeFile(`${process.env.FOLIO_R4_FICTIONAL_OUTPUT}/fictional-winansi-canonical.pdf`,rendered.bytes,{mode:0o600});
+  const pdf=await PDFDocument.load(rendered.bytes),contents=pdf.getPages()[0].node.Contents()!,streams=contents instanceof PDFArray?contents.asArray().map(ref=>pdf.context.lookup(ref) as PDFRawStream):[pdf.context.lookup(contents) as PDFRawStream],commands=streams.map(s=>new TextDecoder().decode(decodePDFRawStream(s).decode())).join('\n'),matrices=[...commands.matchAll(/1 0 0 1 ([+\-.\d]+) ([+\-.\d]+) Tm/g)];expect(matrices).toHaveLength(3);matrices.forEach((m,i)=>expect(Number(m[1])).toBeCloseTo(glyphs[i].x,12));
+ });
+ it('proves the pinned decoder uses altered Microsoft cmap physical selection rather than preferred cmap or ToUnicode',async()=>{
+  const changed=changedMicrosoftCmap(),source=await original(changed,{semantic:'Z'}),preferred=parseSourceProgram(changed),physical=parseSourceProgram(program).glyphForCodePoint(98);expect(preferred.glyphForCodePoint(97).id).not.toBe(physical.id);
+  const task=getDocument({data:new Uint8Array(source.bytes),useSystemFonts:false,isOffscreenCanvasSupported:false,fontExtraProperties:true,verbosity:0});try{const page=await(await task.promise).getPage(1),ops=await page.getOperatorList(),fontName=ops.argsArray[ops.fnArray.indexOf(OPS.setFont)][0],raw=ops.argsArray[ops.fnArray.indexOf(OPS.showText)][0][0],converted=parseSourceProgram(page.commonObjs.get(fontName).data);expect(raw.unicode).toBe('Z');expect(converted.glyphForCodePoint(raw.fontChar.codePointAt(0)).path.toSVG()).toBe(physical.path.toSVG());}finally{await task.destroy();}
+  const r=await imported(source.bytes);expect(r.template.warnings.filter(w=>w.severity==='blocking'||w.code==='FONT_SUBSTITUTION')).toEqual([]);const asset=r.template.sourceFonts![0];if(asset.format!=='truetype')throw Error();expect(asset.sourceVersion).toBe(6);expect(asset.glyphMap[0].originalCharCode).toBe(97);expect(asset.glyphMap[0].originalGlyphId).toBe(physical.id);expect(asset.glyphMap[0].unicode).toBe('Z');await validateOriginalPrograms(source.bytes,[asset]);expect(parseSourceProgram(browserSourceFontBytes(asset)).glyphForCodePoint(90).path.toSVG()).toBe(physical.path.toSVG());
+ });
+ it('rejects forged original selectors/native advances/semantics and does not waive independent clips',async()=>{
+  const source=await original(),r=await imported(source.bytes),asset=r.template.sourceFonts![0];if(asset.format!=='truetype')throw Error();for(const mode of ['gid','nativeWidth','code','unicode','pdfWidth','contract']){const bad=structuredClone(asset),map=bad.glyphMap[0];if(mode==='gid')map.originalGlyphId=0;else if(mode==='nativeWidth')map.nativeWidth!+=1;else if(mode==='code')map.originalCharCode=98;else if(mode==='unicode')map.unicode='Z';else if(mode==='pdfWidth')map.pdfWidth+=1;else bad.originalProgram!.selectorContract='identity-h-v1';if(mode==='unicode'||mode==='pdfWidth')await expect(validateOriginalPrograms(source.bytes,[bad])).rejects.toThrow();else expect(()=>validateSourceFontAsset(bad)).toThrow();}
+  const clipped=await imported((await original(program,{clip:'curve'})).bytes);expect(clipped.template.sourceFonts?.some(f=>f.format==='truetype'&&f.sourceVersion===6)).toBe(true);expect(clipped.template.warnings.some(w=>w.code==='PDF_COMPLEX_ART'&&w.severity==='blocking')).toBe(true);
+ });
+ it('preserves V6 binary ownership through save/reload and single/group backup while rejecting stripped or tampered proofs',async()=>{
+  const source=await original(),project=validateProject(makeProject(await imported(source.bytes),true));await saveProject(project);const loaded=(await loadProjects()).find(p=>p.id===project.id)!;expect(loaded.template).toEqual(project.template);
+  const backup=await backupProject(project),restored=await restoreProject(new File([backup],'fictional-v6.folio.zip'));expect(restored.template).toEqual(project.template);const group=await restoreGroup(new File([await backupResumeGroup([project])],'fictional-v6-group.folio.zip'));expect(group[0].template).toEqual(project.template);
+  for(const mode of ['stripped','combined','fixtureLabel','renamed','graft','version','nativeWidth','contract','source']){const zip=await JSZip.loadAsync(await backup.arrayBuffer()),metadata=unpackScopedMetadata(unpackRecordMetadata(JSON.parse(await zip.file('project.json')!.async('string')))) as any,asset=metadata.template.sourceFonts[0];
+   if(['stripped','combined','fixtureLabel','renamed','graft'].includes(mode)){
+    delete asset.sourceVersion;delete asset.originalProgram;for(const map of asset.glyphMap){delete map.originalCharCode;delete map.originalGlyphId;delete map.nativeWidth;delete map.selectorProvenance;}if(mode==='combined')metadata.template.importerVersion='folio-import-v12';if(['fixtureLabel','renamed','graft'].includes(mode)){metadata.template.importerVersion='fixture-v1';delete metadata.template.sourceImageContract;}zip.remove('fonts/0.original.bin');
+    if(mode==='graft'){const trusted=new Uint8Array(await readFile('tests/fixtures/fonts/Carlito-Regular.ttf')),font=parseSourceProgram(trusted);zip.file('fonts/0.bin',trusted);asset.sha256=sha256Sync(trusted);for(const map of asset.glyphMap){map.glyphId=font.glyphForCodePoint(map.unicode.codePointAt(0)).id;map.fontChar=map.unicode.codePointAt(0);}expect(sha256Sync(await zip.file('source.pdf')!.async('uint8array'))).toBe(project.source.sha256);}
+    if(mode==='renamed'){const renamed=await zip.file('fonts/0.bin')!.async('uint8array'),v=new DataView(renamed.buffer,renamed.byteOffset,renamed.length);for(let i=0;i<v.getUint16(4);i++){const p=12+i*16;if(String.fromCharCode(...renamed.subarray(p,p+4))!=='name')continue;const base=v.getUint32(p+8),strings=base+v.getUint16(base+4);for(let j=0;j<v.getUint16(base+2);j++){const row=base+6+j*12,id=v.getUint16(row+6);if(id!==1&&id!==16)continue;const unicode=v.getUint16(row)===0||v.getUint16(row)===3,encoded=unicode?Uint8Array.from(Array.from('Carlito').flatMap(c=>[0,c.charCodeAt(0)])):new TextEncoder().encode('Carlito');expect(encoded.length).toBeLessThanOrEqual(v.getUint16(row+8));renamed.set(encoded,strings+v.getUint16(row+10));v.setUint16(row+8,encoded.length);}}const font=parseSourceProgram(renamed),valid=rewriteTrueTypeUnicodeCmap(renamed,new Map(font.characterSet.filter(cp=>font.glyphForCodePoint(cp).id>0).map(cp=>[cp,font.glyphForCodePoint(cp).id])));expect(parseSourceProgram(valid).familyName).toBe('Carlito');zip.file('fonts/0.bin',valid);asset.sha256=sha256Sync(valid);}
+   }else if(mode==='version')metadata.template.importerVersion='folio-import-v12';else if(mode==='nativeWidth')asset.glyphMap[0].nativeWidth+=1;else if(mode==='contract')asset.originalProgram.selectorContract='identity-h-v1';else asset.originalProgram.pdfFontRef='999 0 R';
+   const json=new TextEncoder().encode(JSON.stringify(packRecordMetadata(packScopedMetadata(metadata)))),manifest=JSON.parse(await zip.file('manifest.json')!.async('string'));zip.file('project.json',json);manifest.files=manifest.files.filter((entry:{path:string})=>!!zip.file(entry.path));for(const entry of manifest.files){const bytes=await zip.file(entry.path)!.async('uint8array');entry.size=bytes.length;entry.sha256=sha256Sync(bytes);}zip.file('manifest.json',JSON.stringify(manifest));await expect(restoreProject(new File([new Uint8Array(await zip.generateAsync({type:'uint8array'})).buffer],'fictional-v6-tampered.folio.zip'))).rejects.toThrow();
+  }
+ });
+});
+
+it.runIf(!!process.env.FOLIO_R4_RELEASED_PDF)('records only explicitly released local development selector evidence without qualifying unsupported paint',async()=>{
+ const bytes=new Uint8Array(await readFile(process.env.FOLIO_R4_RELEASED_PDF!)),sha=sha256Sync(bytes);expect(sha).toBe(process.env.FOLIO_R4_RELEASED_SHA);
+ const task=getDocument({data:new Uint8Array(bytes),useSystemFonts:false,isOffscreenCanvasSupported:false,fontExtraProperties:true,verbosity:0}),assets:SourceFontAsset[]=[],pages:unknown[]=[];
+ try{const pdf=await task.promise;for(let n=1;n<=pdf.numPages;n++){const page=await pdf.getPage(n);try{const graph=await captureSourceGlyphs(page,page.getViewport({scale:1}).transform,sha,assets,bytes,n);let association:string|number='No captured graph';if(graph)try{association=associateSourceItems((await page.getTextContent({disableNormalization:true})).items,graph,page.getViewport({scale:1}).transform,assets).length;}catch(error){association=error instanceof Error?error.message:'Unproved association';}pages.push({pageNumber:n,glyphs:graph?.length??0,fontInventory:assets.length,association});}catch(error){pages.push({pageNumber:n,error:error instanceof Error?error.message:'Unproved source'});}}}finally{await task.destroy();}
+ const result=await imported(bytes);const record={sourceSha256:sha,pages,rawFonts:assets.map(a=>({format:a.format,sourceVersion:a.sourceVersion,sha256:a.sha256,mappings:a.glyphMap.length,...(a.format==='truetype'?{originalRef:a.originalProgram?.pdfFontRef,selectorContract:a.originalProgram?.selectorContract,distinctPdfNativeAdvances:a.glyphMap.filter(m=>m.nativeWidth!==undefined&&Math.abs(m.nativeWidth-m.pdfWidth)>.00001).length}: {})})),importedFonts:result.template.sourceFonts?.length??0,importedGlyphs:result.template.pages.flatMap(p=>p.regions.flatMap(r=>r.kind==='text'&&r.sourceLayout?Array.from(sourceGlyphs(r)):[])).length,warnings:result.template.warnings.map(w=>({code:w.code,severity:w.severity})),wholeSourceQualified:false};
+ if(process.env.FOLIO_R4_RELEASED_OUTPUT)await writeFile(process.env.FOLIO_R4_RELEASED_OUTPUT,JSON.stringify(record,null,2),{mode:0o600});
+ expect(result.template.warnings.some(w=>w.severity==='blocking')).toBe(true);for(const asset of assets)if(asset.glyphMap.length)validateSourceFontAsset(asset);
+});

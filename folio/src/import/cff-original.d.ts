@@ -1,0 +1,7 @@
+export interface OriginalCffHandle {readonly programSha256:string;readonly glyphCount:number;readonly cid:boolean;readonly ros?:{readonly registry:string;readonly ordering:string;readonly supplement:number};readonly fdCount:number;readonly matrix:readonly number[];readonly matrixDeclared:boolean;readonly permission:{readonly os2:'not-applicable';readonly fsType:0|4|8|null;readonly postScriptPresent:boolean};readonly widthMetadata:{readonly defaultDeclared:boolean;readonly nominalDeclared:boolean;readonly defaultWidth:number;readonly nominalWidth:number}}
+export interface CffSelector {readonly code:number;readonly originalGID:number;readonly programSha256:string;readonly encoding:string}
+export function parseOriginalCff1(input:Uint8Array,tables:unknown):OriginalCffHandle;
+export function proveOriginalCffSelector(parsed:OriginalCffHandle,code:number,encoding?:'builtIn'|'StandardEncoding'):CffSelector;
+export function proveOriginalCffName(parsed:OriginalCffHandle,code:number,name:string):CffSelector;
+export function readType2Advances(parsed:OriginalCffHandle,gids:number[],sharedBudget?:{remaining:number}):readonly {originalGID:number;fontUnits:number;advanceX:number;advanceY:number;programSha256:string;charstringSha256:string;usedSubroutines:readonly {kind:string;index:number;sha256:string}[];widthSource:string}[];
+export function originalCffCodeName(parsed:OriginalCffHandle,code:number):string;

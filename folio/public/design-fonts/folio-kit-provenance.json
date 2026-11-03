@@ -1,0 +1,13 @@
+{
+  "kit": "Folio Design System.zip",
+  "sha256": "bf5eaf57ccf4ad2f5cdcd3f5460f947a340ef204a4e87fa29f99c51068538b12",
+  "fonts": "All six supplied Inter and Source Serif 4 files match the existing self-hosted design-fonts bytes.",
+  "mono": {
+    "family": "JetBrains Mono",
+    "source": "official pinned upstream",
+    "commit": "19371302b95d218af43299bce79ddbddd0bc364d",
+    "sha256": "3cfafa86e28b87184d592fef82846e8c10cb48653c62efcda34f082da225ec34",
+    "license": "JetBrainsMono-OFL.txt",
+    "loading": "self-hosted; no external font request"
+  }
+}

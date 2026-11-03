@@ -1,0 +1,18 @@
+import {PDFDocument,PDFName,PDFString} from 'pdf-lib';
+import {parseSourceProgram} from '../layout/source-fonts';
+import {originalWinAnsiSelectors} from './pdf-winansi';
+
+/** Authored fictional source only; no private original enters public fixtures. */
+export async function fictionalScopedPdf(program:Uint8Array,options:{identity?:boolean;clip?:string;group?:boolean;before?:string;between?:string;after?:string;second?:boolean;gray?:number;text?:string;gap?:number;link?:boolean;linkBounds?:[number,number,number,number]}={}){
+ const pdf=await PDFDocument.create(),c=pdf.context,font=parseSourceProgram(program),text=options.text??'abc',letters=[...new Set(Array.from(text+(options.second?'cab':'')))],descriptor=c.register(c.obj({Type:'FontDescriptor',FontName:'FictionalScopedOwned',Flags:32,FontBBox:[-1100,-500,2100,1200],ItalicAngle:0,Ascent:font.ascent*1000/font.unitsPerEm,Descent:font.descent*1000/font.unitsPerEm,CapHeight:750,StemV:80,FontFile2:c.register(c.flateStream(program,{Length1:program.length}))}));
+ let dict,encode:(text:string)=>string;
+ if(options.identity){const hex=(n:number)=>n.toString(16).padStart(4,'0'),maps=letters.map(char=>({char,gid:font.glyphForCodePoint(char.codePointAt(0)!).id})),descendant=c.register(c.obj({Type:'Font',Subtype:'CIDFontType2',BaseFont:'FictionalScopedOwned',CIDSystemInfo:{Registry:c.obj('Adobe'),Ordering:c.obj('Identity'),Supplement:0},FontDescriptor:descriptor,CIDToGIDMap:'Identity',DW:1000,W:maps.flatMap(m=>[m.gid,[font.getGlyph(m.gid).advanceWidth*1000/font.unitsPerEm]])}));
+  const cmap=`1 begincodespacerange <0000> <ffff> endcodespacerange ${maps.length} beginbfchar ${maps.map(m=>`<${hex(m.gid)}> <${hex(m.char.codePointAt(0)!)}>`).join(' ')} endbfchar`;
+  dict=c.obj({Type:'Font',Subtype:'Type0',BaseFont:'FictionalScopedOwned',Encoding:'Identity-H',DescendantFonts:[descendant],ToUnicode:c.register(c.flateStream(new TextEncoder().encode(cmap)))});encode=value=>Array.from(value).map(char=>hex(font.glyphForCodePoint(char.codePointAt(0)!).id)).join('');
+ }else{const selectors=originalWinAnsiSelectors(program,32,font.numGlyphs),widths=Array.from({length:95},(_,i)=>{const gid=selectors.get(32+i)?.glyphId;return gid?Math.round(font.getGlyph(gid).advanceWidth*1000/font.unitsPerEm):0;});dict=c.obj({Type:'Font',Subtype:'TrueType',BaseFont:'FictionalScopedOwned',Encoding:'WinAnsiEncoding',FirstChar:32,LastChar:126,Widths:widths,FontDescriptor:descriptor});encode=value=>Array.from(value).map(char=>char.charCodeAt(0).toString(16).padStart(2,'0')).join('');}
+ const fontRef=c.register(dict),page=pdf.addPage([500,700]);page.node.set(PDFName.of('Resources'),c.obj({Font:{F1:fontRef}}));if(options.group)page.node.set(PDFName.of('Group'),c.obj({Type:'Group',S:'Transparency',CS:'DeviceRGB',I:true,K:false}));
+ if(options.link)page.node.set(PDFName.of('Annots'),c.obj([c.register(c.obj({Type:'Annot',Subtype:'Link',Rect:options.linkBounds??[35,630,150,670],Border:[0,0,0],A:{Type:'Action',S:'URI',URI:PDFString.of('https://example.com/fictional')}}))]));
+ const show=(value:string,y:number)=>`BT /F1 12 Tf 1 0 0 1 40 ${y} Tm ${options.gap===undefined?`<${encode(value)}> Tj`:`[<${encode(value[0])}> ${-options.gap} <${encode(value.slice(1))}>] TJ`} ET`;
+ const content=`q ${options.clip??''} ${options.before??''} ${options.gray??.1} g ${show(text,648)} ${options.between??''} ${options.second?`${options.gray??.1} g ${show('cab',625)}`:''} ${options.after??''} Q`;
+ page.node.set(PDFName.of('Contents'),c.register(c.flateStream(new TextEncoder().encode(content))));return {bytes:new Uint8Array(await pdf.save()),fontRef:fontRef.toString(),content};
+}

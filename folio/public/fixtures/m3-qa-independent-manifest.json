@@ -1,0 +1,205 @@
+{
+  "simulated": true,
+  "sourceAuthor": "independent applicant-perspective QA",
+  "createdAt": "2026-10-04T12:00:00.000Z",
+  "productionCodeImported": false,
+  "fictionalOnly": true,
+  "texts": {
+    "typedOriginal": "Led 6 accessibility workshops for the fictional Aurora library project.",
+    "typedCorrected": "Led 4 accessibility workshops for the fictional Aurora library project.",
+    "pdf": [
+      "Facilitated 3 usability sessions for the fictional Harbor library.",
+      "Created keyboard shortcuts for the fictional Harbor catalogue.",
+      "Documented the fictional Harbor design handoff."
+    ],
+    "docx": [
+      "Maintained an accessible component checklist for the fictional Birch project.",
+      "Reviewed Figma prototypes with 2 engineering partners."
+    ],
+    "txt": [
+      "Prototyped a screen-reader friendly search for the fictional Pine archive.",
+      "I did not use Kubernetes in the fictional Pine archive."
+    ],
+    "linkedInPaste": "Applicant-pasted profile detail: Mentored 2 designers in the fictional Willow cohort.",
+    "applicationOnly": "Only Aurora job: prepared a fictional lunar kiosk prototype.",
+    "deferred": "Unconfirmed draft: catalogued 9 fictional maps for the Aspen project."
+  },
+  "fixtures": [
+    {
+      "file": "m3-qa-resume.pdf",
+      "bytes": 12807,
+      "sha256": "6bf0da8b30d1e4be32d022a2293e24e9b80fe2196d3ab09d483a217bb07a7582",
+      "role": "primary",
+      "expectedPages": 1,
+      "expectedGeometry": [
+        {
+          "width": 612,
+          "height": 792
+        }
+      ],
+      "exactFacts": [
+        "AVERY QUINN",
+        "Product Designer",
+        "avery.quinn@example.test",
+        "PROFILE",
+        "Product designer focused on accessible interfaces and clear design systems.",
+        "EXPERIENCE",
+        "Cedar Studio · Product Designer",
+        "2021–Present · Fictional employer",
+        "Built a reusable design system in Figma with engineering partners.",
+        "Designed keyboard navigation for a fictional appointment portal.",
+        "SKILLS",
+        "Figma · Prototyping · Accessibility · Design systems",
+        "EDUCATION",
+        "BA, Interaction Design · Fictional Example Institute · 2019"
+      ],
+      "tool": "PDFKit"
+    },
+    {
+      "file": "m3-qa-support.pdf",
+      "bytes": 9057,
+      "sha256": "49046df166e79ac37aae21785b616a56625337e4e7e9c77905f907bca0b285d0",
+      "role": "support",
+      "expectedPages": 3,
+      "exactFacts": [
+        "Facilitated 3 usability sessions for the fictional Harbor library.",
+        "Created keyboard shortcuts for the fictional Harbor catalogue.",
+        "Documented the fictional Harbor design handoff."
+      ],
+      "expectedLocators": [
+        "page 1",
+        "page 2",
+        "page 3"
+      ],
+      "tool": "PDFKit"
+    },
+    {
+      "file": "m3-qa-eleven-pages.pdf",
+      "bytes": 13834,
+      "sha256": "d68be79a22c8fa40631fb3ef997996de278af241a7fe29228572fb4d2babe601",
+      "role": "reject",
+      "expectedError": "supporting PDF exceeds 10-page cap",
+      "expectedPages": 11,
+      "tool": "PDFKit"
+    },
+    {
+      "file": "m3-qa-encrypted.pdf",
+      "bytes": 7298,
+      "sha256": "e819bf2124bbea823431c93f72687c917392edd8b34671f27a520041dcd95c9e",
+      "role": "reject",
+      "expectedError": "encrypted PDF",
+      "tool": "PDFKit"
+    },
+    {
+      "file": "m3-qa-textless.pdf",
+      "bytes": 1199,
+      "sha256": "8b7381d64d98ad3b3848e2ab61c1a282f252616cbcfe6072833857bbd1e0e5b1",
+      "role": "reject",
+      "expectedError": "no selectable text",
+      "tool": "PDFKit"
+    },
+    {
+      "file": "m3-qa-corrupt.pdf",
+      "bytes": 37,
+      "sha256": "fa989a183291543f8ecc3c8d7f28d793038b6fb0af742b6a980763448012088b",
+      "role": "reject",
+      "expectedError": "corrupt PDF"
+    },
+    {
+      "file": "m3-qa-support.docx",
+      "bytes": 1076,
+      "sha256": "0743e9da990bd597566a6f57dcfa279364815323aa8bf6aefc158f3ff7f06a2f",
+      "role": "support",
+      "exactFacts": [
+        "Maintained an accessible component checklist for the fictional Birch project.",
+        "Reviewed Figma prototypes with 2 engineering partners."
+      ],
+      "expectedLocators": [
+        "paragraph 1",
+        "paragraph 2"
+      ],
+      "nativeWordPagination": "unavailable; never claim page locators",
+      "tool": "direct OOXML + JSZip"
+    },
+    {
+      "file": "m3-qa-support.txt",
+      "bytes": 131,
+      "sha256": "4ccd7e476b425e1a5fef1692f04ebb031de11c8e101d09c10ba7d22113f1f260",
+      "role": "support",
+      "exactFacts": [
+        "Prototyped a screen-reader friendly search for the fictional Pine archive.",
+        "I did not use Kubernetes in the fictional Pine archive."
+      ],
+      "expectedLocators": [
+        "line 1",
+        "line 2"
+      ],
+      "tool": "authored UTF-8"
+    },
+    {
+      "file": "m3-qa-invalid-utf8.txt",
+      "bytes": 6,
+      "sha256": "e0d87e5b0598af1bbdfc6c660fb7769b7364422cef776ecfdf2b0110021a2718",
+      "role": "reject",
+      "expectedError": "strict UTF-8 decode failure"
+    },
+    {
+      "file": "m3-qa-binary.txt",
+      "bytes": 24,
+      "sha256": "94ea399c1f82b0e439a06e51e40097e38389a6a73966e623f3808075c790cf65",
+      "role": "reject",
+      "expectedError": "NUL/binary text rejected"
+    },
+    {
+      "file": "m3-qa-over-limit.txt",
+      "bytes": 1048577,
+      "sha256": "112eeb36480315e03f08c147d8623643d1c8606826f801e490c48ef04ae2f58a",
+      "role": "reject",
+      "expectedError": "text original exceeds 1 MiB"
+    },
+    {
+      "file": "m3-qa-renamed.pdf",
+      "bytes": 38,
+      "sha256": "b3b459c3371a095bca8fdc26758f0528a0b5c4211cbcab4bde8ffb5c37465c60",
+      "role": "reject",
+      "expectedError": "PDF signature mismatch"
+    }
+  ],
+  "independentExpectedPDF": {
+    "primaryGeometry": [
+      612,
+      792
+    ],
+    "exportedContains": [
+      "AVERY QUINN",
+      "Product Designer",
+      "avery.quinn@example.test",
+      "PROFILE",
+      "Product designer focused on accessible interfaces and clear design systems.",
+      "EXPERIENCE",
+      "Cedar Studio · Product Designer",
+      "2021–Present · Fictional employer",
+      "Built a reusable design system in Figma with engineering partners.",
+      "Designed keyboard navigation for a fictional appointment portal.",
+      "SKILLS",
+      "Figma · Prototyping · Accessibility · Design systems",
+      "EDUCATION",
+      "BA, Interaction Design · Fictional Example Institute · 2019"
+    ],
+    "exportedExcludesUnlessDeliberatelyInserted": [
+      "Led 6 accessibility workshops for the fictional Aurora library project.",
+      "Led 4 accessibility workshops for the fictional Aurora library project.",
+      "Facilitated 3 usability sessions for the fictional Harbor library.",
+      "Created keyboard shortcuts for the fictional Harbor catalogue.",
+      "Documented the fictional Harbor design handoff.",
+      "Maintained an accessible component checklist for the fictional Birch project.",
+      "Reviewed Figma prototypes with 2 engineering partners.",
+      "Prototyped a screen-reader friendly search for the fictional Pine archive.",
+      "I did not use Kubernetes in the fictional Pine archive.",
+      "Applicant-pasted profile detail: Mentored 2 designers in the fictional Willow cohort.",
+      "Only Aurora job: prepared a fictional lunar kiosk prototype.",
+      "Unconfirmed draft: catalogued 9 fictional maps for the Aspen project."
+    ],
+    "previewCanonicalRGBA": "compare actual UI canonical preview with the browser-downloaded current PDF rendered separately at matching pixel geometry; no imported source raster equivalence claim"
+  }
+}

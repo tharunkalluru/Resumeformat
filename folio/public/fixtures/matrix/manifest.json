@@ -1,0 +1,721 @@
+{
+  "version": 1,
+  "syntheticOnly": true,
+  "sourceAuthoring": "Independent PDFKit and direct OOXML; never Folio renderer",
+  "cases": [
+    {
+      "id": "01-pdf-classic",
+      "filename": "01-pdf-classic.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "single column",
+        "regular sans",
+        "rules"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "02-pdf-two-pages",
+      "filename": "02-pdf-two-pages.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "two pages",
+        "explicit second page"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020",
+        "RILEY NORTH \u2014 PROJECTS 2",
+        "SELECTED PROJECTS",
+        "Fictional library project 2: prototyped accessible flows with Figma.",
+        "Designed keyboard navigation and documented interaction states."
+      ],
+      "expectedPages": 2,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "03-pdf-sidebar-columns",
+      "filename": "03-pdf-sidebar-columns.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "two columns",
+        "shaded sidebar",
+        "spatial reading order"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer",
+        "SKILLS",
+        "Figma",
+        "Accessibility",
+        "Design systems",
+        "Prototyping",
+        "CONTACT",
+        "riley@example.com",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 Product Designer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 2020"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "04-pdf-tight-dense-a4",
+      "filename": "04-pdf-tight-dense-a4.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "A4",
+        "18pt margins",
+        "dense 8.5pt content"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020",
+        "\u2022 Fictional project 1: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 2: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 3: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 4: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 5: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 6: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 7: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 8: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 9: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 10: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 11: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 12: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 13: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 14: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 15: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 16: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 17: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 18: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 19: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 20: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 21: accessible library flows and documented interface patterns.",
+        "\u2022 Fictional project 22: accessible library flows and documented interface patterns."
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "05-pdf-times-font",
+      "filename": "05-pdf-times-font.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "Times Roman",
+        "known licensed font"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "06-pdf-monospaced",
+      "filename": "06-pdf-monospaced.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "monospaced font",
+        "technical appearance"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "07-pdf-mixed-styles",
+      "filename": "07-pdf-mixed-styles.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "bold heading",
+        "italic subtitle",
+        "style uncertainty"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "08-pdf-unicode",
+      "filename": "08-pdf-unicode.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "Latin accents",
+        "Greek",
+        "Cyrillic"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "ZO\u00cb GARC\u00cdA \u00b7 \u0391\u039b\u0395\u039e \u00b7 \u041c\u0430\u0440\u0438\u044f",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "09-pdf-photo",
+      "filename": "09-pdf-photo.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "embedded photo",
+        "unsupported PDF image"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "10-pdf-multiple-links",
+      "filename": "10-pdf-multiple-links.pdf",
+      "kind": "pdf",
+      "expectation": "complete",
+      "categories": [
+        "email",
+        "two HTTPS links",
+        "partial link ranges"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020",
+        "riley@example.com  |  portfolio.example  |  github.example/riley"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [
+        "mailto:riley@example.com",
+        "https://portfolio.example/",
+        "https://github.example/riley"
+      ],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "11-pdf-three-pages",
+      "filename": "11-pdf-three-pages.pdf",
+      "kind": "pdf",
+      "expectation": "page-capacity",
+      "categories": [
+        "three pages",
+        "page limit"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020",
+        "RILEY NORTH \u2014 PROJECTS 2",
+        "SELECTED PROJECTS",
+        "Fictional library project 2: prototyped accessible flows with Figma.",
+        "Designed keyboard navigation and documented interaction states.",
+        "RILEY NORTH \u2014 PROJECTS 3",
+        "SELECTED PROJECTS",
+        "Fictional library project 3: prototyped accessible flows with Figma.",
+        "Designed keyboard navigation and documented interaction states."
+      ],
+      "expectedPages": 3,
+      "expectedLinks": [],
+      "exactRasterExpected": true
+    },
+    {
+      "id": "12-pdf-scanned",
+      "filename": "12-pdf-scanned.pdf",
+      "kind": "pdf",
+      "expectation": "rejected",
+      "categories": [
+        "image-only scanned page",
+        "no OCR"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": false,
+      "expectedCodes": [
+        "TEXTLESS"
+      ]
+    },
+    {
+      "id": "13-pdf-password",
+      "filename": "13-pdf-password.pdf",
+      "kind": "pdf",
+      "expectation": "rejected",
+      "categories": [
+        "password protection"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": false,
+      "expectedCodes": [
+        "ENCRYPTED_DOCUMENT"
+      ]
+    },
+    {
+      "id": "14-pdf-corrupt",
+      "filename": "14-pdf-corrupt.pdf",
+      "kind": "pdf",
+      "expectation": "rejected",
+      "categories": [
+        "malformed PDF"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "expectedCodes": [
+        "CORRUPT_DOCUMENT"
+      ]
+    },
+    {
+      "id": "15-pdf-rotated",
+      "filename": "15-pdf-rotated.pdf",
+      "kind": "pdf",
+      "expectation": "blocked",
+      "categories": [
+        "rotated text"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "PDFKit",
+      "sourceText": [
+        "RILEY NORTH",
+        "Product Designer \u00b7 Fictional format test",
+        "PROFILE",
+        "Product designer building accessible interfaces.",
+        "EXPERIENCE",
+        "Example Studio \u00b7 2021\u2013Present \u00b7 Fictional employer",
+        "\u2022 Designed accessible interfaces for a fictional library.",
+        "\u2022 Built Figma prototypes with engineering partners.",
+        "\u2022 Documented a reusable design system and keyboard patterns.",
+        "SKILLS",
+        "Figma \u00b7 Accessibility \u00b7 Prototyping \u00b7 Design systems",
+        "EDUCATION",
+        "BA, Interaction Design \u00b7 Example Institute \u00b7 2020",
+        "ROTATED SIDEBAR"
+      ],
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "exactRasterExpected": false,
+      "expectedCodes": [
+        "PDF_ROTATED_OR_RTL_TEXT"
+      ]
+    },
+    {
+      "id": "16-docx-styled",
+      "filename": "16-docx-styled.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "bold headings",
+        "paragraph spacing",
+        "one page"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": []
+    },
+    {
+      "id": "17-docx-two-pages",
+      "filename": "17-docx-two-pages.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "explicit page break",
+        "two pages"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 2,
+      "expectedLinks": []
+    },
+    {
+      "id": "18-docx-simple-table",
+      "filename": "18-docx-simple-table.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "simple two-column table",
+        "borders"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": []
+    },
+    {
+      "id": "19-docx-photo",
+      "filename": "19-docx-photo.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "inline photo",
+        "editable body"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": []
+    },
+    {
+      "id": "20-docx-long-dense",
+      "filename": "20-docx-long-dense.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "long wrapped paragraph",
+        "dense second page"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 2,
+      "expectedLinks": []
+    },
+    {
+      "id": "21-docx-header-footer",
+      "filename": "21-docx-header-footer.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "headers",
+        "footers"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": []
+    },
+    {
+      "id": "22-docx-merged-table",
+      "filename": "22-docx-merged-table.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "merged table",
+        "sidebar layout"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": []
+    },
+    {
+      "id": "23-docx-lists-links",
+      "filename": "23-docx-lists-links.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "bullets",
+        "nested decimal list",
+        "hyperlinks"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": [
+        "mailto:riley@example.com",
+        "https://portfolio.example/"
+      ]
+    },
+    {
+      "id": "24-docx-unicode-serif",
+      "filename": "24-docx-unicode-serif.docx",
+      "kind": "docx",
+      "expectation": "complete",
+      "categories": [
+        "serif",
+        "Unicode name",
+        "varied fonts"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": []
+    },
+    {
+      "id": "25-docx-malformed-xml",
+      "filename": "25-docx-malformed-xml.docx",
+      "kind": "docx",
+      "expectation": "rejected",
+      "categories": [
+        "malformed XML"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "expectedCodes": [
+        "DOCX_XML"
+      ]
+    },
+    {
+      "id": "26-docx-traversal",
+      "filename": "26-docx-traversal.docx",
+      "kind": "docx",
+      "expectation": "rejected",
+      "categories": [
+        "unsafe ZIP path"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": [],
+      "expectedCodes": [
+        "DOCX_ARCHIVE"
+      ]
+    },
+    {
+      "id": "27-docx-unsupported-glyphs",
+      "filename": "27-docx-unsupported-glyphs.docx",
+      "kind": "docx",
+      "expectation": "blocked",
+      "categories": [
+        "CJK missing glyphs",
+        "supported emoji also present",
+        "unsupported script"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 1,
+      "expectedLinks": []
+    },
+    {
+      "id": "28-docx-three-pages",
+      "filename": "28-docx-three-pages.docx",
+      "kind": "docx",
+      "expectation": "page-capacity",
+      "categories": [
+        "three Word pages",
+        "page limit"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedPages": 3,
+      "expectedLinks": []
+    },
+    {
+      "id": "29-legacy-word",
+      "filename": "29-legacy-word.doc",
+      "kind": "doc",
+      "expectation": "rejected",
+      "categories": [
+        "legacy .doc"
+      ],
+      "profileText": "Product designer building accessible interfaces.",
+      "careerNote": "Reviewed accessible interfaces.",
+      "independentlyAuthoredWith": "hand-authored OOXML / ZIP",
+      "expectedCodes": [
+        "UNSUPPORTED_FORMAT"
+      ]
+    }
+  ]
+}

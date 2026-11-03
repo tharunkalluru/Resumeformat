@@ -1,0 +1,24 @@
+@font-face { font-family: 'Folio Sans'; src: url('/fonts/DejaVuSans.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Folio Sans'; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Folio Sans'; src: url('/fonts/DejaVuSans-Oblique.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Folio Sans'; src: url('/fonts/DejaVuSans-BoldOblique.ttf') format('truetype'); font-weight: 700; font-style: italic; font-display: block; }
+@font-face { font-family: 'Folio Serif'; src: url('/fonts/DejaVuSerif.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Folio Serif'; src: url('/fonts/DejaVuSerif-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Folio Serif'; src: url('/fonts/DejaVuSerif-Italic.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Folio Serif'; src: url('/fonts/DejaVuSerif-BoldItalic.ttf') format('truetype'); font-weight: 700; font-style: italic; font-display: block; }
+@font-face { font-family: 'Folio Mono'; src: url('/fonts/DejaVuSansMono.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Folio Mono'; src: url('/fonts/DejaVuSansMono-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Folio Mono'; src: url('/fonts/DejaVuSansMono-Oblique.ttf') format('truetype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Folio Mono'; src: url('/fonts/DejaVuSansMono-BoldOblique.ttf') format('truetype'); font-weight: 700; font-style: italic; font-display: block; }
+
+.folio-document, .folio-document [contenteditable] {
+  font-kerning: none;
+  font-variant-ligatures: none;
+  font-synthesis: none;
+  letter-spacing: 0;
+}
+
+@font-face { font-family: 'Folio Times'; src: url('/fonts/Times-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'Folio Times'; src: url('/fonts/Times-Bold.otf') format('opentype'); font-weight: 700; font-style: normal; font-display: block; }
+@font-face { font-family: 'Folio Times'; src: url('/fonts/Times-Italic.otf') format('opentype'); font-weight: 400; font-style: italic; font-display: block; }
+@font-face { font-family: 'Folio Times'; src: url('/fonts/Times-BoldItalic.otf') format('opentype'); font-weight: 700; font-style: italic; font-display: block; }

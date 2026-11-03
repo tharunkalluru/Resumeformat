@@ -1,0 +1,345 @@
+.application-dialog {
+  width: min(640px, calc(100vw - 40px));
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #dde2d8;
+  border-radius: 15px;
+  background: #fcfcfa;
+  color: var(--ink, #222b35);
+  box-shadow: 0 24px 90px #20302128;
+  font-family: 'Folio Sans', sans-serif;
+}
+
+.application-dialog::backdrop {
+  background: #22312855;
+}
+
+.application-dialog-content {
+  padding: 27px 30px 18px;
+}
+
+.application-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.application-dialog-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.application-dialog-heading > div {
+  min-width: 0;
+}
+
+.application-dialog-mark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border: 1px solid #e0e6da;
+  border-radius: 11px;
+  background: #edf1e8;
+  color: #5a7256;
+}
+
+.application-dialog-eyebrow {
+  display: block;
+  color: #697961;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.application-dialog h2 {
+  margin: 2px 0 0;
+  color: #2f4135;
+  font-family: 'Folio Serif', serif;
+  font-size: 29px;
+  font-weight: 400;
+  letter-spacing: -.65px;
+  line-height: 1.35;
+}
+
+.application-dialog-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0;
+  background: transparent;
+  color: #64725f;
+}
+
+.application-dialog-intro {
+  margin: 19px 0 25px;
+  color: #66735f;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.application-dialog-intro strong {
+  color: #374833;
+  font-weight: 700;
+}
+
+.application-dialog-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.application-dialog-label,
+.application-dialog-field-row label {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: #35452f;
+}
+
+.application-dialog-help {
+  margin: 6px 0 12px;
+  color: #63705d;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.application-dialog textarea,
+.application-dialog input {
+  width: 100%;
+  margin: 0;
+  border: 1px solid #d8ded2;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fff;
+  color: #27352b;
+  font-family: 'Folio Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.application-dialog textarea {
+  min-height: 200px;
+  resize: vertical;
+}
+
+.application-dialog textarea::placeholder,
+.application-dialog input::placeholder {
+  color: #778273;
+  opacity: 1;
+}
+
+.application-dialog textarea:focus-visible,
+.application-dialog input:focus-visible,
+.application-dialog button:focus-visible,
+.application-dialog summary:focus-visible {
+  outline: 2px solid #345cdb;
+  outline-offset: 3px;
+}
+
+.application-dialog-guidance {
+  margin: 9px 0 18px;
+  color: #63705d;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.application-dialog-metadata {
+  border-top: 1px solid #e6e9e0;
+  border-bottom: 1px solid #e6e9e0;
+}
+
+.application-dialog-metadata summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 0;
+  list-style: none;
+  color: #526849;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.application-dialog-metadata summary::-webkit-details-marker {
+  display: none;
+}
+
+.application-dialog-metadata[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.application-dialog-optional {
+  color: #697563;
+  font-weight: 400;
+}
+
+.application-dialog-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  padding-top: 6px;
+}
+
+.application-dialog-field-row input {
+  margin-top: 7px;
+  min-height: 46px;
+  font-weight: 400;
+}
+
+.application-dialog-metadata > .application-dialog-help {
+  margin: 12px 0 17px;
+}
+
+.application-dialog-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 22px;
+}
+
+.application-dialog-prepare,
+.application-dialog-manual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 46px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 11px 15px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.application-dialog-prepare {
+  background: #345cdb;
+  border-color: #345cdb;
+  color: #fff;
+  box-shadow: 0 2px 4px #2346a910;
+}
+
+.application-dialog-manual {
+  background: transparent;
+  color: #53694b;
+}
+
+.application-dialog-manual-help {
+  margin: 1px 12px 0;
+  color: #63705d;
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.application-dialog-error {
+  margin-top: 16px;
+  padding: 11px 13px;
+  border: 1px solid #e7cdbf;
+  border-radius: 7px;
+  background: #fff3ec;
+  color: #8e452d;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.application-dialog-pending {
+  min-height: 21px;
+  margin-top: 11px;
+  color: #4d65a5;
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.application-dialog button:disabled {
+  cursor: not-allowed;
+}
+
+.application-dialog fieldset:disabled textarea,
+.application-dialog fieldset:disabled input {
+  background: #f3f4ef;
+  color: #64735e;
+}
+
+.application-dialog summary[aria-disabled='true'] {
+  cursor: wait;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .application-dialog-close:hover:not(:disabled),
+  .application-dialog-manual:hover:not(:disabled) {
+    background: #edf1e8;
+  }
+
+  .application-dialog-prepare:hover:not(:disabled) {
+    background: #2b50c4;
+    border-color: #2b50c4;
+  }
+}
+
+@media (max-width: 600px) {
+  .application-dialog {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 12px;
+  }
+
+  .application-dialog-content {
+    padding: 21px 20px max(14px, env(safe-area-inset-bottom));
+  }
+
+  .application-dialog-heading {
+    gap: 10px;
+  }
+
+  .application-dialog-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+  }
+
+  .application-dialog h2 {
+    font-size: 25px;
+  }
+
+  .application-dialog-intro {
+    margin: 16px 0 22px;
+  }
+
+  .application-dialog textarea {
+    min-height: 180px;
+    font-size: 16px;
+  }
+
+  .application-dialog input {
+    font-size: 16px;
+  }
+
+  .application-dialog-field-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+  }
+}

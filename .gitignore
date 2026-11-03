@@ -1,0 +1,37 @@
+# Dependencies and generated artifacts
+node_modules/
+.next/
+dist/
+build/
+.build/
+.cache/
+coverage/
+test-results/
+playwright-report/
+output/
+*.tsbuildinfo
+*.log
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+.aws/
+.vercel/
+.claude/
+.cursor/
+.codex/
+.agents/
+.idea/
+.vscode/
+
+# Applicant data and machine-only files
+private-user-cases/
+private-resumes/
+personal-exports/
+backups/
+.DS_Store
+Thumbs.db

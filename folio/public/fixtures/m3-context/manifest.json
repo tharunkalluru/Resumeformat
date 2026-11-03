@@ -1,0 +1,19 @@
+{
+  "fictional": true,
+  "facts": [
+    "Fictional Casey Rowan career context",
+    "Mentored four designers during the 2024 accessibility programme.",
+    "Documented keyboard navigation patterns for a fictional scheduling product."
+  ],
+  "pdfPages": 3,
+  "docxParagraphLocators": [
+    "word/document.xml/paragraph[1]",
+    "word/document.xml/paragraph[3]",
+    "word/document.xml/paragraph[4]"
+  ],
+  "txtLineLocators": [
+    "txt/line[1]",
+    "txt/line[3]",
+    "txt/line[4]"
+  ]
+}

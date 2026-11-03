@@ -1,0 +1,6 @@
+import {it,expect} from 'vitest';
+import {NativeInputPermit,type NativeInputOwner} from './nativeInputPermit';
+const owner=()=>({document:{},project:{},render:{},fontIdentity:'face-A',registrationIdentity:'face-A',geometry:'actual connected surface'} as NativeInputOwner);
+it('uses the event proof exactly once for its original owner',()=>{const p=new NativeInputPermit(),o=owner();p.capture(o,'region-A',10);expect(p.consume(o,11)).toBe('region-A');expect(p.consume(o,12)).toBeUndefined();});
+it('rejects a changed document, project, render, font registration or actual geometry',()=>{for(const key of ['document','project','render','fontIdentity','registrationIdentity','geometry']as const){const p=new NativeInputPermit(),o=owner();p.capture(o,'region-A',10);const next={...o,[key]:typeof o[key]==='string'?'changed':{}};expect(p.consume(next,11)).toBeUndefined();expect(p.consume(o,12)).toBeUndefined();}});
+it('expires or cancels uncommitted input without granting a later transaction',()=>{for(const now of [9,1011,NaN]){const p=new NativeInputPermit(),o=owner();p.capture(o,'region-A',10);expect(p.consume(o,now)).toBeUndefined();}const p=new NativeInputPermit(),o=owner();p.capture(o,'region-A',10);p.clear();expect(p.consume(o,11)).toBeUndefined();});

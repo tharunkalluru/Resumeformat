@@ -1,0 +1,20 @@
+import type {SourceStandardFont,Project,RenderedDocument,TextRegion,SourcePositionedGlyph} from '../core/model';
+import {sourceDocumentFingerprint} from '../core/model';
+import {loadStandardFont,standardFontIdentity,standardStyle} from '../layout/standard-fonts';
+import {standardCurrentPreviewAllows} from '../render/pdf';
+import {sourceNativeDomMatches} from './sourceNativeGeometry';
+export const browserStandardFontFamily=(f:SourceStandardFont)=>`FolioStandard-${standardFontIdentity(f).slice(0,32)}`;
+export async function registerBrowserStandardFonts(fonts:readonly SourceStandardFont[]):Promise<{registrations:Map<string,{status:'editable'|'readOnly';reason?:string}>;dispose:()=>void}>{
+ const faces:FontFace[]=[],registrations=new Map<string,{status:'editable'|'readOnly';reason?:string}>();
+ for(const f of fonts){let face:FontFace|undefined;try{loadStandardFont(f);const style=standardStyle(f.baseFont);face=new FontFace(browserStandardFontFamily(f),new Uint8Array(f.nativeAdapter.bytes).buffer,{weight:String(style.fontWeight),style:style.italic?'italic':'normal',display:'block'});await face.load();document.fonts.add(face);faces.push(face);registrations.set(f.id,{status:'editable'});}catch{if(face)document.fonts.delete(face);registrations.set(f.id,{status:'readOnly',reason:'The local original-standard browser adapter could not be loaded. Its PDF remains readable.'});}}
+ return{registrations,dispose:()=>faces.forEach(f=>document.fonts.delete(f))};
+}
+/** Actual connected editor ranges and carets; no system-font or hidden-probe grant. */
+export function standardNativeAvailability(project:Project,render:RenderedDocument|null,region:TextRegion,element:HTMLElement|undefined,ready:boolean):{editable:boolean;reason?:string}{
+ const refused=(reason:string)=>({editable:false,reason});if(!ready)return refused('Wait for the separately licensed original-standard browser adapter.');if(!standardCurrentPreviewAllows(render,project))return refused('Approve the original template and wait for its current source-bound layout before editing.');const asset=project.template.sourceStandardFonts?.find(f=>f.id===region.style.sourceStandardFontId),g=region.sourceStandardLayout,canonical=render?.layout.regions.find(r=>r.regionId===region.id)?.lines[0],page=element?.closest<HTMLElement>('.folio-page');if(!asset||!g||!canonical||!page||!element||render?.sourceFingerprint!==sourceDocumentFingerprint(project.template,project.draft))return refused('The current original-standard source and native owner are unavailable.');
+ const text=project.draft.blocks.find(b=>b.id===region.contentId)?.runs.map(r=>r.text).join('')??'',glyphs=canonical.runs.flatMap(r=>r.sourceStandardGlyphs??[]);if(!glyphs.length||glyphs.map(v=>v.unicode).join('')!==text||glyphs.some(v=>!asset.glyphMap.find(m=>m.code===v.code&&m.unicode===v.unicode&&m.nativeGlyphId>0)))return refused('The current text has no complete original-standard native selector proof.');
+ const computed=getComputedStyle(element),style=standardStyle(asset.baseFont);if(!computed.fontFamily.includes(browserStandardFontFamily(asset))||Number(computed.fontWeight)!==style.fontWeight||(computed.fontStyle!=='normal')!==style.italic||!document.fonts.check(`${style.italic?'italic ':''}${style.fontWeight} ${region.style.fontSize*16}pt "${browserStandardFontFamily(asset)}"`))return refused('The actual editor has not loaded the exact original-standard adapter face.');
+ const converted:SourcePositionedGlyph[]=glyphs.map(v=>({fontId:asset.id,cid:v.code+1,unicode:v.unicode,x:v.x,advance:v.advance,operatorIndex:v.operatorIndex}));const outerScale=page.getBoundingClientRect().width/(project.template.pages.find(p=>p.id===region.pageId)!.width*4/3);
+ if(!sourceNativeDomMatches(element,page,converted,text,g.characterSpacing,g.startX,outerScale,{baseline:canonical.baseline,ascent:loadStandardFont(asset).ascent(region.style.fontSize)}))return refused('This device has not verified every actual original-standard glyph edge and native caret within the existing 0.06-pixel bound.');
+ return{editable:true};
+}

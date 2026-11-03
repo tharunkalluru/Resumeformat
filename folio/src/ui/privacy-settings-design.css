@@ -1,0 +1,78 @@
+.folio-privacy-screen{flex:1;min-width:0;min-height:0;overflow-y:auto;background:#fff;color:#111317;font-family:FolioUI,Inter,sans-serif;padding:28px 32px max(32px,env(safe-area-inset-bottom));scrollbar-gutter:stable both-edges}
+.folio-privacy-content{width:100%;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
+.folio-privacy-back{display:inline-flex;gap:6px;align-items:center;align-self:flex-start;min-height:18px;padding:0;color:#6b6f76;font-family:inherit;font-size:13px;line-height:18px;font-weight:400;background:none;border:0;border-radius:4px;cursor:pointer}
+.folio-privacy-content>h1{margin:4px 0 8px;font-family:inherit;font-size:30px;line-height:38px;letter-spacing:-.025em;font-weight:600;color:#111317}
+.folio-privacy-content>h1:focus{outline:none}
+.folio-privacy-section{min-width:0;margin:6px 0 0}
+.folio-privacy-section+.folio-privacy-section{margin-top:10px}
+.folio-privacy-section>h2{margin:0;font-family:inherit;font-size:15px;line-height:22px;font-weight:600;color:#111317;letter-spacing:0}
+.folio-privacy-row{display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-top:1px solid #e8e8e5;min-width:0}
+.folio-privacy-row-first{border-top:0;padding-top:8px}
+.folio-privacy-row-icon{flex:0 0 16px;width:16px;height:16px;margin-top:2px;color:#6b6f76}
+.folio-privacy-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.folio-privacy-text>h3{margin:0;font-family:inherit;font-size:14px;line-height:20px;font-weight:500;color:#111317;letter-spacing:0;overflow-wrap:anywhere}
+.folio-privacy-text>p{margin:0;color:#40444b;font-size:14px;line-height:20px;overflow-wrap:anywhere}
+.folio-privacy-text>p.folio-privacy-caption{font-size:12px;line-height:16px;color:#6b6f76}
+.folio-privacy-consent{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:4px;font-size:12px;line-height:16px;color:#6b6f76}
+.folio-privacy-state{font-weight:500;color:#40444b}
+.folio-privacy-inline-actions{display:flex;flex-wrap:wrap;gap:4px 16px}
+.folio-privacy-link{font-family:inherit;font-size:12px;line-height:16px;color:#40444b;border:0;background:none;padding:4px 0;border-radius:4px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;min-height:32px;text-align:left}
+.folio-privacy-sources{list-style:none;margin:0;padding:0}
+.folio-privacy-source{align-items:center}
+.folio-privacy-source>.folio-privacy-row-icon{margin-top:0}
+.folio-privacy-action{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:32px;border-radius:8px;padding:0 12px;font-family:inherit;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;cursor:pointer;box-shadow:none;transition:none;color:#111317}
+.folio-privacy-action-ghost{border:1px solid transparent;background:none}
+.folio-privacy-action-secondary{border:1px solid #e8e8e5;background:#fff}
+.folio-privacy-action:hover:not(:disabled),.folio-privacy-back:hover,.folio-privacy-link:hover{background:rgba(17,19,23,.05)}
+.folio-privacy-action:active:not(:disabled),.folio-privacy-back:active,.folio-privacy-link:active{background:rgba(17,19,23,.09)}
+.folio-privacy-action:disabled{cursor:default;opacity:1;color:#6b6f76;background:#f7f7f6}
+.folio-privacy-action-ghost:disabled{background:none}
+.folio-privacy-screen button:focus-visible,.folio-privacy-screen summary:focus-visible{outline:2px solid #111317;outline-offset:2px}
+.folio-privacy-mobile-chevron,.folio-privacy-mobile-progress{display:none}
+.folio-privacy-operation{align-items:center}
+.folio-privacy-operation>.folio-privacy-row-icon{margin-top:0}
+.folio-privacy-empty{margin:8px 0 16px;color:#6b6f76;font-size:13px;line-height:18px}
+.folio-privacy-storage{margin:-4px 0 12px 32px;font-size:12px;line-height:16px;color:#6b6f76}
+.folio-privacy-storage>span{font-weight:500;color:#40444b}
+.folio-privacy-storage[data-state=error]>span,.folio-privacy-storage[data-state=unavailable]>span{color:#b3382c}
+.folio-privacy-storage p{font-size:12px;line-height:16px;margin:4px 0 0;max-width:650px;overflow-wrap:anywhere}
+.folio-privacy-storage summary{display:list-item;width:fit-content;border-radius:4px;cursor:pointer;margin-top:8px;min-height:24px;line-height:24px;color:#40444b}
+.folio-privacy-storage details>p{margin:8px 0}
+.folio-privacy-destructive>.folio-privacy-row-icon,.folio-privacy-destructive .folio-privacy-text>h3{color:#b3382c}
+.folio-privacy-destructive>.folio-privacy-action:not(:disabled){color:#b3382c}
+.folio-privacy-operation[data-disabled=true] .folio-privacy-text>h3{color:#6b6f76}
+.folio-privacy-unavailable .folio-privacy-text>h3{color:#40444b}
+.folio-privacy-error{margin:8px 0 0;padding:12px 16px;border:1px solid #f0d0cb;border-radius:8px;background:#f9ecea;color:#b3382c;font-size:13px;line-height:18px;overflow-wrap:anywhere}
+@media(max-width:699px){
+  .folio-privacy-screen{padding:12px 20px max(24px,env(safe-area-inset-bottom));scrollbar-gutter:auto}
+  .folio-privacy-back{min-height:44px;padding-right:12px}
+  .folio-privacy-content{gap:0}
+  .folio-privacy-content>h1{font-size:22px;line-height:30px;letter-spacing:-.02em;margin:4px 0 14px}
+  .folio-privacy-section{margin:0}
+  .folio-privacy-section+.folio-privacy-section{margin-top:8px}
+  .folio-privacy-section>h2{font-size:13px;line-height:18px;padding:6px 0}
+  .folio-privacy-row{gap:12px;padding:12px 0}
+  .folio-privacy-row-first{padding-top:8px}
+  .folio-privacy-section:first-of-type .folio-privacy-row-icon{display:none}
+  .folio-privacy-action,.folio-privacy-link{min-height:44px}
+  .folio-privacy-source{padding:4px 0;gap:12px}
+  .folio-privacy-source>.folio-privacy-row-icon{display:none}
+  .folio-privacy-source .folio-privacy-action{padding:0 8px}
+  .folio-privacy-source>.folio-privacy-text>h3{font-size:13px;line-height:18px}
+  .folio-privacy-operation{position:relative;min-height:56px;gap:12px;padding:12px;border:1px solid #e8e8e5;border-radius:12px;margin:4px 0 8px;align-items:flex-start}
+  .folio-privacy-operation>.folio-privacy-row-icon{margin-top:2px}
+  .folio-privacy-operation>.folio-privacy-text{padding-right:20px}
+  .folio-privacy-operation>.folio-privacy-action{position:absolute;inset:0;width:100%;height:100%;justify-content:flex-end;padding:12px;border:0;background:transparent;border-radius:12px;font-size:0;color:#6b6f76}
+  .folio-privacy-operation>.folio-privacy-action:hover:not(:disabled){background:rgba(17,19,23,.05)}
+  .folio-privacy-operation>.folio-privacy-action:disabled{background:transparent}
+  .folio-privacy-mobile-chevron{display:block;width:16px;height:16px}
+  .folio-privacy-mobile-progress{display:inline}
+  .folio-privacy-operation[data-disabled=true] .folio-privacy-mobile-chevron{display:none}
+  .folio-privacy-unavailable>.folio-privacy-text{padding-right:0}
+  .folio-privacy-unavailable>.folio-privacy-action{display:none}
+  .folio-privacy-storage{margin:8px 0 12px}
+  .folio-privacy-storage summary{min-height:44px;line-height:44px;margin-top:0}
+  .folio-privacy-inline-actions{gap:0 16px}
+  .folio-privacy-error{margin-top:12px}
+}
+@media(pointer:coarse){.folio-privacy-action,.folio-privacy-back,.folio-privacy-link{min-height:44px}.folio-privacy-storage summary{min-height:44px;line-height:44px}}

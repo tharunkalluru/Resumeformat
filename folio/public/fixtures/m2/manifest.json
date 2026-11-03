@@ -1,0 +1,3047 @@
+{
+  "schemaVersion": 1,
+  "title": "Folio M2 independently authored synthetic QA corpus",
+  "generatedAt": "2026-10-04T00:00:00.000Z",
+  "generator": "scripts/create-m2-fixtures.mjs",
+  "provenance": "Constructed fictional fixtures and scripted applicant scenarios; no real applicants, participant data, native Word oracle or general-population fidelity claim.",
+  "counts": {
+    "total": 10,
+    "pdf": 9,
+    "docx": 1,
+    "supportedCandidates": 6,
+    "readableRecoveryCandidates": 2,
+    "rejectionCandidates": 2,
+    "knownSourcePdfPages": 11,
+    "unknownNativeWordPageCounts": 1
+  },
+  "fixtures": [
+    {
+      "id": "m2-narrow-four-a4",
+      "file": "m2-narrow-four-a4.pdf",
+      "format": "pdf",
+      "bytes": 14583,
+      "sha256": "a55fe37da8ddb7644f86b26f103a1dd3dad69354830caddd8dde4c149fc0bfb3",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSans.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "narrow-18pt-margins",
+        "four-sections",
+        "four-long-bullets",
+        "one-page",
+        "sans",
+        "safe-link"
+      ],
+      "expected": {
+        "classificationCandidate": "SUPPORTED_REVIEWABLE",
+        "initialBlockingCodes": [],
+        "sourcePageCount": 1,
+        "pageDimensions": [
+          {
+            "width": 595.28,
+            "height": 841.89
+          }
+        ],
+        "sections": [
+          {
+            "heading": "PROFILE",
+            "page": 1
+          },
+          {
+            "heading": "EXPERIENCE",
+            "page": 1
+          },
+          {
+            "heading": "SKILLS",
+            "page": 1
+          },
+          {
+            "heading": "EDUCATION",
+            "page": 1
+          }
+        ],
+        "facts": [
+          {
+            "id": "m2-narrow-four-a4-fact-1",
+            "text": "AVERY CHEN"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-2",
+            "text": "Product Designer · Independently authored fictional resume"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-3",
+            "text": "m2-narrow-four-a4@example.com · https://portfolio.example/m2/m2-narrow-four-a4"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-4",
+            "text": "PROFILE"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-5",
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions."
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-6",
+            "text": "EXPERIENCE"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-7",
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-8",
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens."
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-9",
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent."
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-10",
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation."
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-11",
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes."
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-12",
+            "text": "SKILLS"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-13",
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-14",
+            "text": "EDUCATION"
+          },
+          {
+            "id": "m2-narrow-four-a4-fact-15",
+            "text": "BA, Interaction Design · Example Institute · 2020"
+          }
+        ],
+        "text": [
+          "AVERY CHEN",
+          "Product Designer · Independently authored fictional resume",
+          "m2-narrow-four-a4@example.com · https://portfolio.example/m2/m2-narrow-four-a4",
+          "PROFILE",
+          "Product designer focused on accessible public-service interfaces and documented decisions.",
+          "EXPERIENCE",
+          "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+          "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+          "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+          "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+          "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+          "SKILLS",
+          "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+          "EDUCATION",
+          "BA, Interaction Design · Example Institute · 2020"
+        ],
+        "normalizedText": "AVERY CHEN Product Designer · Independently authored fictional resume m2-narrow-four-a4@example.com · https://portfolio.example/m2/m2-narrow-four-a4 PROFILE Product designer focused on accessible public-service interfaces and documented decisions. EXPERIENCE Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer • Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens. • Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent. • Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation. • Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes. SKILLS Figma · Prototyping · Accessibility · Design systems · Research synthesis EDUCATION BA, Interaction Design · Example Institute · 2020",
+        "links": [
+          "https://portfolio.example/m2/m2-narrow-four-a4"
+        ],
+        "bulletCount": 4,
+        "bulletLineCounts": [
+          3,
+          3,
+          3,
+          2
+        ],
+        "declaredMarginPt": 18,
+        "intentionalWhitespace": null,
+        "authoringGeometry": [
+          {
+            "page": 1,
+            "text": "AVERY CHEN",
+            "kind": "identity",
+            "bounds": {
+              "x": 18,
+              "y": 28,
+              "width": 559.28,
+              "height": 27.109375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product Designer · Independently authored fictional resume",
+            "kind": "identity",
+            "bounds": {
+              "x": 18,
+              "y": 62.109375,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "m2-narrow-four-a4@example.com · https://portfolio.example/m2/m2-narrow-four-a4",
+            "kind": "contact",
+            "bounds": {
+              "x": 18,
+              "y": 80.25,
+              "width": 559.28,
+              "height": 11.743750000000006
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROFILE",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 107.99375,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 130.2984375,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EXPERIENCE",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 161.4390625,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 183.74375,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 202.884375,
+              "width": 559.28,
+              "height": 39.421875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 249.30625,
+              "width": 559.28,
+              "height": 39.42187499999997
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 295.728125,
+              "width": 559.28,
+              "height": 39.421875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 342.15,
+              "width": 559.28,
+              "height": 26.28125
+            },
+            "lineCount": 2
+          },
+          {
+            "page": 1,
+            "text": "SKILLS",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 387.43125,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 409.7359375,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EDUCATION",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 440.8765625,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "BA, Interaction Design · Example Institute · 2020",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 463.18125,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          }
+        ],
+        "sourceRasterFidelity": "Measure source/reconstruction independently at 108 DPI; no predeclared zero-error result.",
+        "requiredRecoveryWarnings": []
+      }
+    },
+    {
+      "id": "m2-narrow-five-letter",
+      "file": "m2-narrow-five-letter.pdf",
+      "format": "pdf",
+      "bytes": 14615,
+      "sha256": "9fb8096063a6e4bff0ccaf1b70a378bc5a46699f42e03c3fef3fb721f49d47ba",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSans.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "narrow-24pt-margins",
+        "five-sections",
+        "five-long-bullets",
+        "one-page",
+        "sans",
+        "safe-link"
+      ],
+      "expected": {
+        "classificationCandidate": "SUPPORTED_REVIEWABLE",
+        "initialBlockingCodes": [],
+        "sourcePageCount": 1,
+        "pageDimensions": [
+          {
+            "width": 612,
+            "height": 792
+          }
+        ],
+        "sections": [
+          {
+            "heading": "PROFILE",
+            "page": 1
+          },
+          {
+            "heading": "EXPERIENCE",
+            "page": 1
+          },
+          {
+            "heading": "SKILLS",
+            "page": 1
+          },
+          {
+            "heading": "EDUCATION",
+            "page": 1
+          },
+          {
+            "heading": "PROJECTS",
+            "page": 1
+          }
+        ],
+        "facts": [
+          {
+            "id": "m2-narrow-five-letter-fact-1",
+            "text": "ELENA BROOKS"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-2",
+            "text": "Product Designer · Independently authored fictional resume"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-3",
+            "text": "m2-narrow-five-letter@example.com · https://portfolio.example/m2/m2-narrow-five-letter"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-4",
+            "text": "PROFILE"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-5",
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions."
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-6",
+            "text": "EXPERIENCE"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-7",
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-8",
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens."
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-9",
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent."
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-10",
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation."
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-11",
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes."
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-12",
+            "text": "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions."
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-13",
+            "text": "SKILLS"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-14",
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-15",
+            "text": "EDUCATION"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-16",
+            "text": "BA, Interaction Design · Example Institute · 2020"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-17",
+            "text": "PROJECTS"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-18",
+            "text": "Community appointment concept · Fictional project · 2024"
+          },
+          {
+            "id": "m2-narrow-five-letter-fact-19",
+            "text": "Prototyped keyboard navigation, readable contrast and clear cancellation states."
+          }
+        ],
+        "text": [
+          "ELENA BROOKS",
+          "Product Designer · Independently authored fictional resume",
+          "m2-narrow-five-letter@example.com · https://portfolio.example/m2/m2-narrow-five-letter",
+          "PROFILE",
+          "Product designer focused on accessible public-service interfaces and documented decisions.",
+          "EXPERIENCE",
+          "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+          "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+          "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+          "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+          "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+          "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions.",
+          "SKILLS",
+          "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+          "EDUCATION",
+          "BA, Interaction Design · Example Institute · 2020",
+          "PROJECTS",
+          "Community appointment concept · Fictional project · 2024",
+          "Prototyped keyboard navigation, readable contrast and clear cancellation states."
+        ],
+        "normalizedText": "ELENA BROOKS Product Designer · Independently authored fictional resume m2-narrow-five-letter@example.com · https://portfolio.example/m2/m2-narrow-five-letter PROFILE Product designer focused on accessible public-service interfaces and documented decisions. EXPERIENCE Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer • Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens. • Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent. • Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation. • Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes. • Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions. SKILLS Figma · Prototyping · Accessibility · Design systems · Research synthesis EDUCATION BA, Interaction Design · Example Institute · 2020 PROJECTS Community appointment concept · Fictional project · 2024 Prototyped keyboard navigation, readable contrast and clear cancellation states.",
+        "links": [
+          "https://portfolio.example/m2/m2-narrow-five-letter"
+        ],
+        "bulletCount": 5,
+        "bulletLineCounts": [
+          3,
+          3,
+          3,
+          2,
+          3
+        ],
+        "declaredMarginPt": 24,
+        "intentionalWhitespace": null,
+        "authoringGeometry": [
+          {
+            "page": 1,
+            "text": "ELENA BROOKS",
+            "kind": "identity",
+            "bounds": {
+              "x": 24,
+              "y": 34,
+              "width": 564,
+              "height": 27.109375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product Designer · Independently authored fictional resume",
+            "kind": "identity",
+            "bounds": {
+              "x": 24,
+              "y": 68.109375,
+              "width": 564,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "m2-narrow-five-letter@example.com · https://portfolio.example/m2/m2-narrow-five-letter",
+            "kind": "contact",
+            "bounds": {
+              "x": 24,
+              "y": 86.25,
+              "width": 564,
+              "height": 11.743750000000006
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROFILE",
+            "kind": "section",
+            "bounds": {
+              "x": 24,
+              "y": 113.99375,
+              "width": 564,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 24,
+              "y": 136.2984375,
+              "width": 564,
+              "height": 12.55859375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EXPERIENCE",
+            "kind": "section",
+            "bounds": {
+              "x": 24,
+              "y": 166.85703125,
+              "width": 564,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+            "kind": "fact",
+            "bounds": {
+              "x": 24,
+              "y": 189.16171875,
+              "width": 564,
+              "height": 12.55859375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 24,
+              "y": 207.7203125,
+              "width": 564,
+              "height": 37.67578125
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 24,
+              "y": 252.39609375,
+              "width": 564,
+              "height": 37.67578124999997
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 24,
+              "y": 297.071875,
+              "width": 564,
+              "height": 37.67578125
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 24,
+              "y": 341.74765625,
+              "width": 564,
+              "height": 25.1171875
+            },
+            "lineCount": 2
+          },
+          {
+            "page": 1,
+            "text": "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 24,
+              "y": 373.86484375,
+              "width": 564,
+              "height": 37.67578125
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "SKILLS",
+            "kind": "section",
+            "bounds": {
+              "x": 24,
+              "y": 430.540625,
+              "width": 564,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+            "kind": "fact",
+            "bounds": {
+              "x": 24,
+              "y": 452.8453125,
+              "width": 564,
+              "height": 12.55859375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EDUCATION",
+            "kind": "section",
+            "bounds": {
+              "x": 24,
+              "y": 483.40390625,
+              "width": 564,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "BA, Interaction Design · Example Institute · 2020",
+            "kind": "fact",
+            "bounds": {
+              "x": 24,
+              "y": 505.70859375,
+              "width": 564,
+              "height": 12.55859375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROJECTS",
+            "kind": "section",
+            "bounds": {
+              "x": 24,
+              "y": 536.2671875,
+              "width": 564,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Community appointment concept · Fictional project · 2024",
+            "kind": "fact",
+            "bounds": {
+              "x": 24,
+              "y": 558.571875,
+              "width": 564,
+              "height": 12.55859375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Prototyped keyboard navigation, readable contrast and clear cancellation states.",
+            "kind": "fact",
+            "bounds": {
+              "x": 24,
+              "y": 577.13046875,
+              "width": 564,
+              "height": 12.55859375
+            },
+            "lineCount": 1
+          }
+        ],
+        "sourceRasterFidelity": "Measure source/reconstruction independently at 108 DPI; no predeclared zero-error result.",
+        "requiredRecoveryWarnings": []
+      }
+    },
+    {
+      "id": "m2-narrow-six-a4-two-pages",
+      "file": "m2-narrow-six-a4-two-pages.pdf",
+      "format": "pdf",
+      "bytes": 16173,
+      "sha256": "8a723b639c5f6f370746e1151c86101dcec8c8bb564c6a0513b636bd0c5b4f93",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSans.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "narrow-18pt-margins",
+        "six-sections",
+        "five-long-bullets",
+        "two-pages",
+        "sans",
+        "safe-link"
+      ],
+      "expected": {
+        "classificationCandidate": "SUPPORTED_REVIEWABLE",
+        "initialBlockingCodes": [],
+        "sourcePageCount": 2,
+        "pageDimensions": [
+          {
+            "width": 595.28,
+            "height": 841.89
+          },
+          {
+            "width": 595.28,
+            "height": 841.89
+          }
+        ],
+        "sections": [
+          {
+            "heading": "PROFILE",
+            "page": 1
+          },
+          {
+            "heading": "EXPERIENCE",
+            "page": 1
+          },
+          {
+            "heading": "SKILLS",
+            "page": 1
+          },
+          {
+            "heading": "EDUCATION",
+            "page": 1
+          },
+          {
+            "heading": "PROJECTS",
+            "page": 2
+          },
+          {
+            "heading": "COMMUNITY",
+            "page": 2
+          }
+        ],
+        "facts": [
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-1",
+            "text": "JONAH REED"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-2",
+            "text": "Product Designer · Independently authored fictional resume"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-3",
+            "text": "m2-narrow-six-a4-two-pages@example.com · https://portfolio.example/m2/m2-narrow-six-a4-two-pages"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-4",
+            "text": "PROFILE"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-5",
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions."
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-6",
+            "text": "EXPERIENCE"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-7",
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-8",
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens."
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-9",
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent."
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-10",
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation."
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-11",
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes."
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-12",
+            "text": "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions."
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-13",
+            "text": "SKILLS"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-14",
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-15",
+            "text": "EDUCATION"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-16",
+            "text": "BA, Interaction Design · Example Institute · 2020"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-17",
+            "text": "PROJECTS"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-18",
+            "text": "Community appointment concept · Fictional project · 2024"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-19",
+            "text": "Prototyped keyboard navigation, readable contrast and clear cancellation states."
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-20",
+            "text": "COMMUNITY"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-21",
+            "text": "Volunteer workshop facilitator · Fictional design group · 2023"
+          },
+          {
+            "id": "m2-narrow-six-a4-two-pages-fact-22",
+            "text": "Led a workshop on writing understandable interface instructions."
+          }
+        ],
+        "text": [
+          "JONAH REED",
+          "Product Designer · Independently authored fictional resume",
+          "m2-narrow-six-a4-two-pages@example.com · https://portfolio.example/m2/m2-narrow-six-a4-two-pages",
+          "PROFILE",
+          "Product designer focused on accessible public-service interfaces and documented decisions.",
+          "EXPERIENCE",
+          "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+          "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+          "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+          "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+          "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+          "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions.",
+          "SKILLS",
+          "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+          "EDUCATION",
+          "BA, Interaction Design · Example Institute · 2020",
+          "PROJECTS",
+          "Community appointment concept · Fictional project · 2024",
+          "Prototyped keyboard navigation, readable contrast and clear cancellation states.",
+          "COMMUNITY",
+          "Volunteer workshop facilitator · Fictional design group · 2023",
+          "Led a workshop on writing understandable interface instructions."
+        ],
+        "normalizedText": "JONAH REED Product Designer · Independently authored fictional resume m2-narrow-six-a4-two-pages@example.com · https://portfolio.example/m2/m2-narrow-six-a4-two-pages PROFILE Product designer focused on accessible public-service interfaces and documented decisions. EXPERIENCE Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer • Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens. • Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent. • Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation. • Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes. • Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions. SKILLS Figma · Prototyping · Accessibility · Design systems · Research synthesis EDUCATION BA, Interaction Design · Example Institute · 2020 PROJECTS Community appointment concept · Fictional project · 2024 Prototyped keyboard navigation, readable contrast and clear cancellation states. COMMUNITY Volunteer workshop facilitator · Fictional design group · 2023 Led a workshop on writing understandable interface instructions.",
+        "links": [
+          "https://portfolio.example/m2/m2-narrow-six-a4-two-pages"
+        ],
+        "bulletCount": 5,
+        "bulletLineCounts": [
+          3,
+          3,
+          3,
+          2,
+          3
+        ],
+        "declaredMarginPt": 18,
+        "intentionalWhitespace": null,
+        "authoringGeometry": [
+          {
+            "page": 1,
+            "text": "JONAH REED",
+            "kind": "identity",
+            "bounds": {
+              "x": 18,
+              "y": 28,
+              "width": 559.28,
+              "height": 27.109375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product Designer · Independently authored fictional resume",
+            "kind": "identity",
+            "bounds": {
+              "x": 18,
+              "y": 62.109375,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "m2-narrow-six-a4-two-pages@example.com · https://portfolio.example/m2/m2-narrow-six-a4-two-pages",
+            "kind": "contact",
+            "bounds": {
+              "x": 18,
+              "y": 80.25,
+              "width": 559.28,
+              "height": 11.743750000000006
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROFILE",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 107.99375,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 130.2984375,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EXPERIENCE",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 161.4390625,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 183.74375,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 202.884375,
+              "width": 559.28,
+              "height": 39.421875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 249.30625,
+              "width": 559.28,
+              "height": 39.42187499999997
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 295.728125,
+              "width": 559.28,
+              "height": 39.421875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 342.15,
+              "width": 559.28,
+              "height": 26.28125
+            },
+            "lineCount": 2
+          },
+          {
+            "page": 1,
+            "text": "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 18,
+              "y": 375.43125,
+              "width": 559.28,
+              "height": 39.421875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "SKILLS",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 433.853125,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 456.1578125,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EDUCATION",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 487.2984375,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "BA, Interaction Design · Example Institute · 2020",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 509.603125,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "PROJECTS",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 36,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "Community appointment concept · Fictional project · 2024",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 58.3046875,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "Prototyped keyboard navigation, readable contrast and clear cancellation states.",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 77.4453125,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "COMMUNITY",
+            "kind": "section",
+            "bounds": {
+              "x": 18,
+              "y": 108.5859375,
+              "width": 559.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "Volunteer workshop facilitator · Fictional design group · 2023",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 130.890625,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "Led a workshop on writing understandable interface instructions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 18,
+              "y": 150.03125,
+              "width": 559.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          }
+        ],
+        "sourceRasterFidelity": "Measure source/reconstruction independently at 108 DPI; no predeclared zero-error result.",
+        "requiredRecoveryWarnings": []
+      }
+    },
+    {
+      "id": "m2-sparse-four-letter",
+      "file": "m2-sparse-four-letter.pdf",
+      "format": "pdf",
+      "bytes": 14043,
+      "sha256": "f4647b30f5cd7c7ada51f23281af8020afde514780dc5facc95cd03c2ffc6df9",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSans.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "sparse-intentional-whitespace",
+        "four-sections",
+        "four-long-bullets",
+        "one-page",
+        "sans",
+        "safe-link"
+      ],
+      "expected": {
+        "classificationCandidate": "SUPPORTED_REVIEWABLE",
+        "initialBlockingCodes": [],
+        "sourcePageCount": 1,
+        "pageDimensions": [
+          {
+            "width": 612,
+            "height": 792
+          }
+        ],
+        "sections": [
+          {
+            "heading": "PROFILE",
+            "page": 1
+          },
+          {
+            "heading": "EXPERIENCE",
+            "page": 1
+          },
+          {
+            "heading": "SKILLS",
+            "page": 1
+          },
+          {
+            "heading": "EDUCATION",
+            "page": 1
+          }
+        ],
+        "facts": [
+          {
+            "id": "m2-sparse-four-letter-fact-1",
+            "text": "NOOR ELLIS"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-2",
+            "text": "Product Designer · Independently authored fictional resume"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-3",
+            "text": "m2-sparse-four-letter@example.com · https://portfolio.example/m2/m2-sparse-four-letter"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-4",
+            "text": "PROFILE"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-5",
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions."
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-6",
+            "text": "EXPERIENCE"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-7",
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-8",
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens."
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-9",
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent."
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-10",
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation."
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-11",
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes."
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-12",
+            "text": "SKILLS"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-13",
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-14",
+            "text": "EDUCATION"
+          },
+          {
+            "id": "m2-sparse-four-letter-fact-15",
+            "text": "BA, Interaction Design · Example Institute · 2020"
+          }
+        ],
+        "text": [
+          "NOOR ELLIS",
+          "Product Designer · Independently authored fictional resume",
+          "m2-sparse-four-letter@example.com · https://portfolio.example/m2/m2-sparse-four-letter",
+          "PROFILE",
+          "Product designer focused on accessible public-service interfaces and documented decisions.",
+          "EXPERIENCE",
+          "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+          "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+          "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+          "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+          "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+          "SKILLS",
+          "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+          "EDUCATION",
+          "BA, Interaction Design · Example Institute · 2020"
+        ],
+        "normalizedText": "NOOR ELLIS Product Designer · Independently authored fictional resume m2-sparse-four-letter@example.com · https://portfolio.example/m2/m2-sparse-four-letter PROFILE Product designer focused on accessible public-service interfaces and documented decisions. EXPERIENCE Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer • Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens. • Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent. • Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation. • Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes. SKILLS Figma · Prototyping · Accessibility · Design systems · Research synthesis EDUCATION BA, Interaction Design · Example Institute · 2020",
+        "links": [
+          "https://portfolio.example/m2/m2-sparse-four-letter"
+        ],
+        "bulletCount": 4,
+        "bulletLineCounts": [
+          3,
+          3,
+          3,
+          2
+        ],
+        "declaredMarginPt": 42,
+        "intentionalWhitespace": {
+          "minimumBottomWhitespacePt": 155,
+          "preserve": true
+        },
+        "authoringGeometry": [
+          {
+            "page": 1,
+            "text": "NOOR ELLIS",
+            "kind": "identity",
+            "bounds": {
+              "x": 42,
+              "y": 52,
+              "width": 528,
+              "height": 27.109375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product Designer · Independently authored fictional resume",
+            "kind": "identity",
+            "bounds": {
+              "x": 42,
+              "y": 86.109375,
+              "width": 528,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "m2-sparse-four-letter@example.com · https://portfolio.example/m2/m2-sparse-four-letter",
+            "kind": "contact",
+            "bounds": {
+              "x": 42,
+              "y": 104.25,
+              "width": 528,
+              "height": 11.743750000000006
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROFILE",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 131.99375,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 166.2984375,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EXPERIENCE",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 213.275,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 247.5796875,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 42,
+              "y": 272.55625,
+              "width": 528,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 42,
+              "y": 320.4859375,
+              "width": 528,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 42,
+              "y": 368.415625,
+              "width": 528,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 42,
+              "y": 416.3453125,
+              "width": 528,
+              "height": 23.953125
+            },
+            "lineCount": 2
+          },
+          {
+            "page": 1,
+            "text": "SKILLS",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 474.2984375,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 508.603125,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EDUCATION",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 555.5796875,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "BA, Interaction Design · Example Institute · 2020",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 589.884375,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          }
+        ],
+        "sourceRasterFidelity": "Measure source/reconstruction independently at 108 DPI; no predeclared zero-error result.",
+        "requiredRecoveryWarnings": []
+      }
+    },
+    {
+      "id": "m2-sparse-six-serif-two-pages",
+      "file": "m2-sparse-six-serif-two-pages.pdf",
+      "format": "pdf",
+      "bytes": 17446,
+      "sha256": "ad331bc6bfcf94b3483940fd79371aa5018e3ab9f6c80b97f4a0012aa6e91186",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSerif.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "sparse-intentional-whitespace",
+        "six-sections",
+        "four-long-bullets",
+        "two-pages",
+        "serif",
+        "safe-link"
+      ],
+      "expected": {
+        "classificationCandidate": "SUPPORTED_REVIEWABLE",
+        "initialBlockingCodes": [],
+        "sourcePageCount": 2,
+        "pageDimensions": [
+          {
+            "width": 612,
+            "height": 792
+          },
+          {
+            "width": 612,
+            "height": 792
+          }
+        ],
+        "sections": [
+          {
+            "heading": "PROFILE",
+            "page": 1
+          },
+          {
+            "heading": "EXPERIENCE",
+            "page": 1
+          },
+          {
+            "heading": "SKILLS",
+            "page": 1
+          },
+          {
+            "heading": "EDUCATION",
+            "page": 1
+          },
+          {
+            "heading": "PROJECTS",
+            "page": 2
+          },
+          {
+            "heading": "COMMUNITY",
+            "page": 2
+          }
+        ],
+        "facts": [
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-1",
+            "text": "MINA PATEL"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-2",
+            "text": "Product Designer · Independently authored fictional resume"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-3",
+            "text": "m2-sparse-six-serif-two-pages@example.com · https://portfolio.example/m2/m2-sparse-six-serif-two-pages"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-4",
+            "text": "PROFILE"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-5",
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions."
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-6",
+            "text": "EXPERIENCE"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-7",
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-8",
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens."
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-9",
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent."
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-10",
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation."
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-11",
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes."
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-12",
+            "text": "SKILLS"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-13",
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-14",
+            "text": "EDUCATION"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-15",
+            "text": "BA, Interaction Design · Example Institute · 2020"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-16",
+            "text": "PROJECTS"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-17",
+            "text": "Community appointment concept · Fictional project · 2024"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-18",
+            "text": "Prototyped keyboard navigation, readable contrast and clear cancellation states."
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-19",
+            "text": "COMMUNITY"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-20",
+            "text": "Volunteer workshop facilitator · Fictional design group · 2023"
+          },
+          {
+            "id": "m2-sparse-six-serif-two-pages-fact-21",
+            "text": "Led a workshop on writing understandable interface instructions."
+          }
+        ],
+        "text": [
+          "MINA PATEL",
+          "Product Designer · Independently authored fictional resume",
+          "m2-sparse-six-serif-two-pages@example.com · https://portfolio.example/m2/m2-sparse-six-serif-two-pages",
+          "PROFILE",
+          "Product designer focused on accessible public-service interfaces and documented decisions.",
+          "EXPERIENCE",
+          "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+          "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+          "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+          "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+          "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+          "SKILLS",
+          "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+          "EDUCATION",
+          "BA, Interaction Design · Example Institute · 2020",
+          "PROJECTS",
+          "Community appointment concept · Fictional project · 2024",
+          "Prototyped keyboard navigation, readable contrast and clear cancellation states.",
+          "COMMUNITY",
+          "Volunteer workshop facilitator · Fictional design group · 2023",
+          "Led a workshop on writing understandable interface instructions."
+        ],
+        "normalizedText": "MINA PATEL Product Designer · Independently authored fictional resume m2-sparse-six-serif-two-pages@example.com · https://portfolio.example/m2/m2-sparse-six-serif-two-pages PROFILE Product designer focused on accessible public-service interfaces and documented decisions. EXPERIENCE Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer • Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens. • Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent. • Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation. • Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes. SKILLS Figma · Prototyping · Accessibility · Design systems · Research synthesis EDUCATION BA, Interaction Design · Example Institute · 2020 PROJECTS Community appointment concept · Fictional project · 2024 Prototyped keyboard navigation, readable contrast and clear cancellation states. COMMUNITY Volunteer workshop facilitator · Fictional design group · 2023 Led a workshop on writing understandable interface instructions.",
+        "links": [
+          "https://portfolio.example/m2/m2-sparse-six-serif-two-pages"
+        ],
+        "bulletCount": 4,
+        "bulletLineCounts": [
+          3,
+          3,
+          3,
+          2
+        ],
+        "declaredMarginPt": 42,
+        "intentionalWhitespace": {
+          "minimumBottomWhitespacePt": 155,
+          "preserve": true
+        },
+        "authoringGeometry": [
+          {
+            "page": 1,
+            "text": "MINA PATEL",
+            "kind": "identity",
+            "bounds": {
+              "x": 42,
+              "y": 52,
+              "width": 528,
+              "height": 27.109375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product Designer · Independently authored fictional resume",
+            "kind": "identity",
+            "bounds": {
+              "x": 42,
+              "y": 86.109375,
+              "width": 528,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "m2-sparse-six-serif-two-pages@example.com · https://portfolio.example/m2/m2-sparse-six-serif-two-pages",
+            "kind": "contact",
+            "bounds": {
+              "x": 42,
+              "y": 104.25,
+              "width": 528,
+              "height": 11.743750000000006
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROFILE",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 131.99375,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 166.2984375,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EXPERIENCE",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 213.275,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 247.5796875,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 42,
+              "y": 272.55625,
+              "width": 528,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 42,
+              "y": 320.4859375,
+              "width": 528,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 42,
+              "y": 368.415625,
+              "width": 528,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 42,
+              "y": 416.3453125,
+              "width": 528,
+              "height": 23.953125
+            },
+            "lineCount": 2
+          },
+          {
+            "page": 1,
+            "text": "SKILLS",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 474.2984375,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 508.603125,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EDUCATION",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 555.5796875,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "BA, Interaction Design · Example Institute · 2020",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 589.884375,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "PROJECTS",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 60,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "Community appointment concept · Fictional project · 2024",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 94.3046875,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "Prototyped keyboard navigation, readable contrast and clear cancellation states.",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 119.28125,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "COMMUNITY",
+            "kind": "section",
+            "bounds": {
+              "x": 42,
+              "y": 166.2578125,
+              "width": 528,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "Volunteer workshop facilitator · Fictional design group · 2023",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 200.5625,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 2,
+            "text": "Led a workshop on writing understandable interface instructions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 42,
+              "y": 225.5390625,
+              "width": 528,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          }
+        ],
+        "sourceRasterFidelity": "Measure source/reconstruction independently at 108 DPI; no predeclared zero-error result.",
+        "requiredRecoveryWarnings": []
+      }
+    },
+    {
+      "id": "m2-narrow-five-mono",
+      "file": "m2-narrow-five-mono.pdf",
+      "format": "pdf",
+      "bytes": 13952,
+      "sha256": "2fe96327dbca99da32113be9347037e05ec18a247952ce7f0b0099ae9824c79d",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSansMono.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "narrow-30pt-margins",
+        "five-sections",
+        "five-long-bullets",
+        "one-page",
+        "mono",
+        "safe-link"
+      ],
+      "expected": {
+        "classificationCandidate": "SUPPORTED_REVIEWABLE",
+        "initialBlockingCodes": [],
+        "sourcePageCount": 1,
+        "pageDimensions": [
+          {
+            "width": 595.28,
+            "height": 841.89
+          }
+        ],
+        "sections": [
+          {
+            "heading": "PROFILE",
+            "page": 1
+          },
+          {
+            "heading": "EXPERIENCE",
+            "page": 1
+          },
+          {
+            "heading": "SKILLS",
+            "page": 1
+          },
+          {
+            "heading": "EDUCATION",
+            "page": 1
+          },
+          {
+            "heading": "PROJECTS",
+            "page": 1
+          }
+        ],
+        "facts": [
+          {
+            "id": "m2-narrow-five-mono-fact-1",
+            "text": "DEVON PARK"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-2",
+            "text": "Product Designer · Independently authored fictional resume"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-3",
+            "text": "m2-narrow-five-mono@example.com · https://portfolio.example/m2/m2-narrow-five-mono"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-4",
+            "text": "PROFILE"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-5",
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions."
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-6",
+            "text": "EXPERIENCE"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-7",
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-8",
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens."
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-9",
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent."
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-10",
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation."
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-11",
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes."
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-12",
+            "text": "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions."
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-13",
+            "text": "SKILLS"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-14",
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-15",
+            "text": "EDUCATION"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-16",
+            "text": "BA, Interaction Design · Example Institute · 2020"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-17",
+            "text": "PROJECTS"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-18",
+            "text": "Community appointment concept · Fictional project · 2024"
+          },
+          {
+            "id": "m2-narrow-five-mono-fact-19",
+            "text": "Prototyped keyboard navigation, readable contrast and clear cancellation states."
+          }
+        ],
+        "text": [
+          "DEVON PARK",
+          "Product Designer · Independently authored fictional resume",
+          "m2-narrow-five-mono@example.com · https://portfolio.example/m2/m2-narrow-five-mono",
+          "PROFILE",
+          "Product designer focused on accessible public-service interfaces and documented decisions.",
+          "EXPERIENCE",
+          "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+          "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+          "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+          "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+          "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+          "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions.",
+          "SKILLS",
+          "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+          "EDUCATION",
+          "BA, Interaction Design · Example Institute · 2020",
+          "PROJECTS",
+          "Community appointment concept · Fictional project · 2024",
+          "Prototyped keyboard navigation, readable contrast and clear cancellation states."
+        ],
+        "normalizedText": "DEVON PARK Product Designer · Independently authored fictional resume m2-narrow-five-mono@example.com · https://portfolio.example/m2/m2-narrow-five-mono PROFILE Product designer focused on accessible public-service interfaces and documented decisions. EXPERIENCE Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer • Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens. • Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent. • Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation. • Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes. • Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions. SKILLS Figma · Prototyping · Accessibility · Design systems · Research synthesis EDUCATION BA, Interaction Design · Example Institute · 2020 PROJECTS Community appointment concept · Fictional project · 2024 Prototyped keyboard navigation, readable contrast and clear cancellation states.",
+        "links": [
+          "https://portfolio.example/m2/m2-narrow-five-mono"
+        ],
+        "bulletCount": 5,
+        "bulletLineCounts": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "declaredMarginPt": 30,
+        "intentionalWhitespace": null,
+        "authoringGeometry": [
+          {
+            "page": 1,
+            "text": "DEVON PARK",
+            "kind": "identity",
+            "bounds": {
+              "x": 30,
+              "y": 40,
+              "width": 535.28,
+              "height": 27.109375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product Designer · Independently authored fictional resume",
+            "kind": "identity",
+            "bounds": {
+              "x": 30,
+              "y": 74.109375,
+              "width": 535.28,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "m2-narrow-five-mono@example.com · https://portfolio.example/m2/m2-narrow-five-mono",
+            "kind": "contact",
+            "bounds": {
+              "x": 30,
+              "y": 92.25,
+              "width": 535.28,
+              "height": 11.743750000000006
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROFILE",
+            "kind": "section",
+            "bounds": {
+              "x": 30,
+              "y": 119.99375,
+              "width": 535.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 30,
+              "y": 142.2984375,
+              "width": 535.28,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EXPERIENCE",
+            "kind": "section",
+            "bounds": {
+              "x": 30,
+              "y": 172.275,
+              "width": 535.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+            "kind": "fact",
+            "bounds": {
+              "x": 30,
+              "y": 194.5796875,
+              "width": 535.28,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 30,
+              "y": 212.55625,
+              "width": 535.28,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 30,
+              "y": 255.4859375,
+              "width": 535.28,
+              "height": 35.92968749999997
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 30,
+              "y": 298.415625,
+              "width": 535.28,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 30,
+              "y": 341.3453125,
+              "width": 535.28,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Documented a fictional service workflow with operations partners, mapping handoffs and exception states in plain language, then created a small prototype to test whether applicants could locate the next action without depending on color or hover-only instructions.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 30,
+              "y": 384.275,
+              "width": 535.28,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "SKILLS",
+            "kind": "section",
+            "bounds": {
+              "x": 30,
+              "y": 439.2046875,
+              "width": 535.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+            "kind": "fact",
+            "bounds": {
+              "x": 30,
+              "y": 461.509375,
+              "width": 535.28,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EDUCATION",
+            "kind": "section",
+            "bounds": {
+              "x": 30,
+              "y": 491.4859375,
+              "width": 535.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "BA, Interaction Design · Example Institute · 2020",
+            "kind": "fact",
+            "bounds": {
+              "x": 30,
+              "y": 513.790625,
+              "width": 535.28,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROJECTS",
+            "kind": "section",
+            "bounds": {
+              "x": 30,
+              "y": 543.7671875,
+              "width": 535.28,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Community appointment concept · Fictional project · 2024",
+            "kind": "fact",
+            "bounds": {
+              "x": 30,
+              "y": 566.071875,
+              "width": 535.28,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Prototyped keyboard navigation, readable contrast and clear cancellation states.",
+            "kind": "fact",
+            "bounds": {
+              "x": 30,
+              "y": 584.0484375,
+              "width": 535.28,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          }
+        ],
+        "sourceRasterFidelity": "Measure source/reconstruction independently at 108 DPI; no predeclared zero-error result.",
+        "requiredRecoveryWarnings": []
+      }
+    },
+    {
+      "id": "m2-readable-rotated-text",
+      "file": "m2-readable-rotated-text.pdf",
+      "format": "pdf",
+      "bytes": 13775,
+      "sha256": "b591e93662f88cd6f54c5ad9e188ad2d90379a5730aa10a7cfad921a8bc8db2d",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSans.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "recoverable-ltr-rotation",
+        "seven-degree-text-rotation",
+        "four-sections",
+        "four-long-bullets",
+        "one-page"
+      ],
+      "expected": {
+        "classificationCandidate": "APPROXIMATE_AFTER_EXPLICIT_RECOVERY",
+        "initialBlockingCodes": [
+          "PDF_ROTATED_OR_RTL_TEXT"
+        ],
+        "sourcePageCount": 1,
+        "pageDimensions": [
+          {
+            "width": 612,
+            "height": 792
+          }
+        ],
+        "sections": [
+          {
+            "heading": "PROFILE",
+            "page": 1
+          },
+          {
+            "heading": "EXPERIENCE",
+            "page": 1
+          },
+          {
+            "heading": "SKILLS",
+            "page": 1
+          },
+          {
+            "heading": "EDUCATION",
+            "page": 1
+          }
+        ],
+        "facts": [
+          {
+            "id": "m2-readable-rotated-text-fact-1",
+            "text": "RAFA SOTO"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-2",
+            "text": "Product Designer · Independently authored fictional resume"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-3",
+            "text": "m2-readable-rotated-text@example.com · https://portfolio.example/m2/m2-readable-rotated-text"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-4",
+            "text": "PROFILE"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-5",
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions."
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-6",
+            "text": "EXPERIENCE"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-7",
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-8",
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens."
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-9",
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent."
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-10",
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation."
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-11",
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes."
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-12",
+            "text": "SKILLS"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-13",
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-14",
+            "text": "EDUCATION"
+          },
+          {
+            "id": "m2-readable-rotated-text-fact-15",
+            "text": "BA, Interaction Design · Example Institute · 2020"
+          }
+        ],
+        "text": [
+          "RAFA SOTO",
+          "Product Designer · Independently authored fictional resume",
+          "m2-readable-rotated-text@example.com · https://portfolio.example/m2/m2-readable-rotated-text",
+          "PROFILE",
+          "Product designer focused on accessible public-service interfaces and documented decisions.",
+          "EXPERIENCE",
+          "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+          "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+          "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+          "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+          "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+          "SKILLS",
+          "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+          "EDUCATION",
+          "BA, Interaction Design · Example Institute · 2020"
+        ],
+        "normalizedText": "RAFA SOTO Product Designer · Independently authored fictional resume m2-readable-rotated-text@example.com · https://portfolio.example/m2/m2-readable-rotated-text PROFILE Product designer focused on accessible public-service interfaces and documented decisions. EXPERIENCE Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer • Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens. • Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent. • Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation. • Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes. SKILLS Figma · Prototyping · Accessibility · Design systems · Research synthesis EDUCATION BA, Interaction Design · Example Institute · 2020",
+        "links": [],
+        "bulletCount": 4,
+        "bulletLineCounts": [
+          3,
+          3,
+          3,
+          3
+        ],
+        "declaredMarginPt": 72,
+        "intentionalWhitespace": null,
+        "authoringGeometry": [
+          {
+            "page": 1,
+            "text": "RAFA SOTO",
+            "kind": "identity",
+            "bounds": {
+              "x": 72,
+              "y": 82,
+              "width": 468,
+              "height": 27.109375
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product Designer · Independently authored fictional resume",
+            "kind": "identity",
+            "bounds": {
+              "x": 72,
+              "y": 116.109375,
+              "width": 468,
+              "height": 13.140625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "m2-readable-rotated-text@example.com · https://portfolio.example/m2/m2-readable-rotated-text",
+            "kind": "contact",
+            "bounds": {
+              "x": 72,
+              "y": 134.25,
+              "width": 468,
+              "height": 11.743750000000006
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "PROFILE",
+            "kind": "section",
+            "bounds": {
+              "x": 72,
+              "y": 161.99375,
+              "width": 468,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions.",
+            "kind": "fact",
+            "bounds": {
+              "x": 72,
+              "y": 184.2984375,
+              "width": 468,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EXPERIENCE",
+            "kind": "section",
+            "bounds": {
+              "x": 72,
+              "y": 214.275,
+              "width": 468,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+            "kind": "fact",
+            "bounds": {
+              "x": 72,
+              "y": 236.5796875,
+              "width": 468,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 72,
+              "y": 254.55625,
+              "width": 468,
+              "height": 35.92968749999997
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 72,
+              "y": 297.4859375,
+              "width": 468,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 72,
+              "y": 340.415625,
+              "width": 468,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+            "kind": "bullet",
+            "bounds": {
+              "x": 72,
+              "y": 383.3453125,
+              "width": 468,
+              "height": 35.9296875
+            },
+            "lineCount": 3
+          },
+          {
+            "page": 1,
+            "text": "SKILLS",
+            "kind": "section",
+            "bounds": {
+              "x": 72,
+              "y": 438.275,
+              "width": 468,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+            "kind": "fact",
+            "bounds": {
+              "x": 72,
+              "y": 460.5796875,
+              "width": 468,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "EDUCATION",
+            "kind": "section",
+            "bounds": {
+              "x": 72,
+              "y": 490.55625,
+              "width": 468,
+              "height": 14.3046875
+            },
+            "lineCount": 1
+          },
+          {
+            "page": 1,
+            "text": "BA, Interaction Design · Example Institute · 2020",
+            "kind": "fact",
+            "bounds": {
+              "x": 72,
+              "y": 512.8609375,
+              "width": 468,
+              "height": 11.9765625
+            },
+            "lineCount": 1
+          }
+        ],
+        "sourceRasterFidelity": "Not an exact-match candidate; any recovery must disclose reflow and lost rotation.",
+        "requiredRecoveryWarnings": [
+          "Original text rotation is not preserved.",
+          "Text and sections were reflowed; pagination and placement may differ."
+        ]
+      }
+    },
+    {
+      "id": "m2-readable-complex-word",
+      "file": "m2-readable-complex-word.docx",
+      "format": "docx",
+      "bytes": 2729,
+      "sha256": "75b5cba29679403f6b1a6edea855128d864665c0821f031938f9d6d2cad63763",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "direct OOXML + JSZip 3.10.2",
+        "sourceFonts": [
+          "DejaVu Sans",
+          "DejaVu Serif"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "recoverable-complex-docx",
+        "two-column-source-flow",
+        "mixed-run-size-and-font",
+        "narrow-24pt-margins",
+        "four-sections",
+        "long-bullets",
+        "safe-link"
+      ],
+      "expected": {
+        "classificationCandidate": "APPROXIMATE_AFTER_EXPLICIT_RECOVERY",
+        "initialBlockingCodes": [
+          "DOCX_COLUMNS",
+          "DOCX_MIXED_RUN_STYLE"
+        ],
+        "sourcePageCount": null,
+        "authoredIntendedPageCount": 1,
+        "nativeWordPagination": "unverified; no native Word/office source reference",
+        "pageDimensions": [
+          {
+            "width": 612,
+            "height": 792
+          }
+        ],
+        "sections": [
+          {
+            "heading": "PROFILE",
+            "page": null
+          },
+          {
+            "heading": "EXPERIENCE",
+            "page": null
+          },
+          {
+            "heading": "SKILLS",
+            "page": null
+          },
+          {
+            "heading": "EDUCATION",
+            "page": null
+          }
+        ],
+        "facts": [
+          {
+            "id": "m2-readable-complex-word-fact-1",
+            "text": "SAMIRA LANE"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-2",
+            "text": "Product Designer · Independently authored fictional resume"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-3",
+            "text": "PROFILE"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-4",
+            "text": "Product designer focused on accessible public-service interfaces and documented decisions."
+          },
+          {
+            "id": "m2-readable-complex-word-fact-5",
+            "text": "EXPERIENCE"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-6",
+            "text": "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-7",
+            "text": "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens."
+          },
+          {
+            "id": "m2-readable-complex-word-fact-8",
+            "text": "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent."
+          },
+          {
+            "id": "m2-readable-complex-word-fact-9",
+            "text": "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation."
+          },
+          {
+            "id": "m2-readable-complex-word-fact-10",
+            "text": "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes."
+          },
+          {
+            "id": "m2-readable-complex-word-fact-11",
+            "text": "SKILLS"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-12",
+            "text": "Figma · Prototyping · Accessibility · Design systems · Research synthesis"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-13",
+            "text": "EDUCATION"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-14",
+            "text": "BA, Interaction Design · Example Institute · 2020"
+          },
+          {
+            "id": "m2-readable-complex-word-fact-15",
+            "text": "portfolio.example/m2/samira"
+          }
+        ],
+        "text": [
+          "SAMIRA LANE",
+          "Product Designer · Independently authored fictional resume",
+          "PROFILE",
+          "Product designer focused on accessible public-service interfaces and documented decisions.",
+          "EXPERIENCE",
+          "Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer",
+          "• Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens.",
+          "• Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent.",
+          "• Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation.",
+          "• Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes.",
+          "SKILLS",
+          "Figma · Prototyping · Accessibility · Design systems · Research synthesis",
+          "EDUCATION",
+          "BA, Interaction Design · Example Institute · 2020",
+          "portfolio.example/m2/samira"
+        ],
+        "normalizedText": "SAMIRA LANE Product Designer · Independently authored fictional resume PROFILE Product designer focused on accessible public-service interfaces and documented decisions. EXPERIENCE Juniper Library Studio · Product Designer · 2021–2025 · Fictional employer • Designed accessible appointment flows for the fictional Juniper Library, testing keyboard navigation and clear error recovery with staff, then documented the interaction decisions so engineering could implement consistent states across desktop and mobile screens. • Built a reusable component inventory with engineering partners, recording focus order, contrast checks and content guidance for forms and tables, and used the inventory during weekly design reviews to keep the library scheduling interface consistent. • Facilitated moderated research sessions for a fictional service portal, organized observations into a shared evidence log and separated reported needs from assumptions, then used prototypes to clarify confusing renewal and appointment tasks before implementation. • Reviewed responsive prototypes with developers and support staff, checking tasks on narrow and wide viewports, documenting unresolved usability issues and comparing changes with supplied research notes. SKILLS Figma · Prototyping · Accessibility · Design systems · Research synthesis EDUCATION BA, Interaction Design · Example Institute · 2020 portfolio.example/m2/samira",
+        "links": [
+          "https://portfolio.example/m2/samira"
+        ],
+        "bulletCount": 4,
+        "bulletLineCounts": null,
+        "declaredMarginPt": 24,
+        "requiredRecoveryWarnings": [
+          "Original two-column flow is not preserved.",
+          "Mixed source font and size styling differs.",
+          "Native Word pagination remains unverified."
+        ],
+        "sourceRasterFidelity": "Unverified. Direct OOXML is not an independent native Word raster oracle."
+      }
+    },
+    {
+      "id": "m2-scanned-image-only",
+      "file": "m2-scanned-image-only.pdf",
+      "format": "pdf",
+      "bytes": 40587,
+      "sha256": "0958c0dc4a2e845a32e4783b5ff6e0e96380c02ab233ce6df4130d30391506ca",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSans.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "image-only-scanned-pdf",
+        "human-readable-image",
+        "no-ocr"
+      ],
+      "expected": {
+        "classificationCandidate": "REJECTED",
+        "sourcePageCount": 1,
+        "pageDimensions": [
+          {
+            "width": 612,
+            "height": 792
+          }
+        ],
+        "rejectionCode": "TEXTLESS",
+        "text": [],
+        "facts": [],
+        "sections": [],
+        "links": [],
+        "humanReadableImage": true,
+        "requiredRemedy": "Export a selectable-text PDF or run OCR outside Folio; Folio has no OCR.",
+        "existingProjectMustRemainUnchanged": true
+      }
+    },
+    {
+      "id": "m2-unreadable-obliterated",
+      "file": "m2-unreadable-obliterated.pdf",
+      "format": "pdf",
+      "bytes": 8778,
+      "sha256": "725574162df6627ebab75fe18e154a327146b8cacf5b53d86ccf034b2fb28ec8",
+      "provenance": {
+        "synthetic": true,
+        "participantData": false,
+        "sourceAuthor": "independent QA",
+        "sourceTool": "PDFKit 0.20.2",
+        "sourceFonts": [
+          "DejaVuSans.ttf"
+        ],
+        "generatedAt": "2026-10-04T00:00:00.000Z",
+        "nativeWordReferenceAvailable": false
+      },
+      "categories": [
+        "truly-unreadable-pdf",
+        "no-recoverable-facts",
+        "no-text-layer"
+      ],
+      "expected": {
+        "classificationCandidate": "REJECTED",
+        "sourcePageCount": 1,
+        "pageDimensions": [
+          {
+            "width": 612,
+            "height": 792
+          }
+        ],
+        "rejectionCode": "TEXTLESS",
+        "text": [],
+        "facts": [],
+        "sections": [],
+        "links": [],
+        "humanReadableImage": false,
+        "requiredRemedy": "Obtain a fresh legible source; no facts may be guessed from the image.",
+        "existingProjectMustRemainUnchanged": true
+      }
+    }
+  ],
+  "scenarios": {
+    "applicationIsolation": {
+      "fixtureId": "m2-narrow-four-a4",
+      "templateName": "Avery approved reusable resume",
+      "jobA": {
+        "title": "",
+        "company": "",
+        "description": "Accessibility designer for a fictional public-service team. Use documented keyboard navigation, accessible forms, prototypes and design-system experience. Cloud deployment is not required.",
+        "confirmedNotes": "Confirmed career note A: Facilitated the fictional Cypress keyboard-navigation workshop in 2024.",
+        "uniqueNoteText": "Cypress keyboard-navigation workshop",
+        "draftEdit": "Product designer focused on keyboard navigation and clear service instructions.",
+        "expectedFilenameLabel": "Application A"
+      },
+      "jobB": {
+        "title": "Research Designer",
+        "company": "Fictional Harbor Services",
+        "description": "Research designer for a fictional service team. Prioritize moderated research, synthesis of supplied observations, operations handoffs and understandable exception states.",
+        "confirmedNotes": "Confirmed career note B: Mapped the fictional Harbor appointment handoff workshop in 2023.",
+        "uniqueNoteText": "Harbor appointment handoff workshop",
+        "draftEdit": "Product designer focused on research synthesis and understandable service handoffs.",
+        "expectedFilenameLabel": "Research Designer"
+      },
+      "checks": [
+        "No reimport or repeated template approval for unchanged pinned snapshot.",
+        "A/B draft, job, notes, selected facts, accept/dismiss decisions, current review and export state are independent.",
+        "Undo/redo stays with the selected application; switching cannot apply history from the other application.",
+        "Source bytes, immutable baseline and reusable resume remain unchanged.",
+        "A and B independently survive save/reload and portable backup/restore.",
+        "Downloaded PDF text and filename correspond to the selected application and reviewed revision.",
+        "Repair creates a future resume revision; pinned older applications preserve their snapshot and show older-revision status."
+      ]
+    },
+    "layoutRepair": {
+      "fixtureIds": [
+        "m2-narrow-four-a4",
+        "m2-narrow-five-letter",
+        "m2-narrow-six-a4-two-pages",
+        "m2-sparse-four-letter",
+        "m2-sparse-six-serif-two-pages",
+        "m2-narrow-five-mono"
+      ],
+      "checks": [
+        "Inspect equal-scale source/reconstruction before approving.",
+        "Select a text region; bounded position/size/typography changes update fit visibly.",
+        "Undo restores exact template geometry and content.",
+        "Out-of-bounds or overflow changes cannot approve/download.",
+        "Sparse whitespace and section/page counts are intentional; no silent compacting or added page."
+      ]
+    },
+    "fallback": {
+      "fixtureIds": [
+        "m2-readable-rotated-text",
+        "m2-readable-complex-word"
+      ],
+      "checks": [
+        "Initial layout warning is precise; explicit recovery action is required.",
+        "All authored expected text and headings survive recovery in order, including safe hyperlink.",
+        "APPROXIMATE badge and reflow/font/column/rotation warnings persist through review, save/reload and backup/restore.",
+        "Original bytes and SHA-256 remain unchanged.",
+        "Fit and unsupported glyphs remain blocking; acknowledgment cannot waive content loss.",
+        "Approval/export only after explicit comparison and fresh review; exact visual match never claimed."
+      ]
+    },
+    "honestRejection": {
+      "fixtureIds": [
+        "m2-scanned-image-only",
+        "m2-unreadable-obliterated"
+      ],
+      "checks": [
+        "No guessed text, invented facts or approvable empty draft.",
+        "Specific TEXTLESS message and external remedy.",
+        "Existing open and stored projects remain byte/state identical."
+      ]
+    }
+  }
+}

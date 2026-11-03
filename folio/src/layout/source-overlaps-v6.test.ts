@@ -1,0 +1,10 @@
+import {beforeAll,it,expect} from 'vitest';
+import {readFile} from 'node:fs/promises';
+import {fictionalSourceTemplate} from '../core/sourceFontTestFixture';
+import {buildSourceOverlapManifest,currentSourceOverlapKeys} from './source-overlaps';
+import {prepareFonts,layoutDocument} from './engine';
+let bytes:Uint8Array;beforeAll(async()=>{bytes=new Uint8Array(await readFile('public/fonts/DejaVuSans.ttf'));});
+function fixture(){const f=fictionalSourceTemplate(bytes,'a'),second=structuredClone(f.region),block=structuredClone(f.content.blocks[0]);second.id='second';second.contentId=block.id='second-block';second.order=1;second.bounds.x+=1;const g=second.sourceLayout!;g.startX+=1;g.endX+=1;for(const glyph of g.glyphs){if(Array.isArray(glyph))throw Error('FIXTURE');glyph.x+=1;}f.template.pages[0].regions.push(second);f.content.blocks.push(block);f.template.importerVersion='folio-import-v24';f.template.sourceCompositePages={version:'original-native-composite-v6',sourceSha256:g.sourceSha256,pages:[]};return f;}
+it('limits the native V1 overlap inventory to its distinct source class',()=>{const f=fixture();expect(buildSourceOverlapManifest(f.template)).toHaveLength(1);f.template.importerVersion='folio-import-v21';f.template.sourceCompositePages!.version='original-native-composite-v3';expect(buildSourceOverlapManifest(f.template)).toHaveLength(0);});
+it('invalidates original pair exemptions when an owned origin changes',()=>{const f=fixture();f.template.sourceOverlaps=buildSourceOverlapManifest(f.template);expect(currentSourceOverlapKeys(f.template).size).toBe(1);const g=f.region.sourceLayout!.glyphs[0];if(Array.isArray(g))throw Error('FIXTURE');g.x+=.1;expect(currentSourceOverlapKeys(f.template).size).toBe(0);});
+it('retains original collisions but rejects newly changed glyph ink',async()=>{const f=fixture();f.template.sourceOverlaps=buildSourceOverlapManifest(f.template);const fonts=await prepareFonts(f.template,f.content);expect(layoutDocument(f.template,f.content,fonts).overflows).toEqual([]);f.content.blocks[0].runs[0].text='aa';expect(layoutDocument(f.template,f.content,fonts).overflows.some(o=>o.code==='collision')).toBe(true);});

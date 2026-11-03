@@ -1,0 +1,84 @@
+/* Pass A O1/C1/C3/N1/N9: product chrome only; document geometry is unchanged. */
+.intake-design-open,
+.intake-design-open.global-rail-mode { grid-template-columns: minmax(0, 1fr); }
+.intake-design-open > .main-workspace { grid-column: 1; }
+.intake-design-open > .sidebar,
+.intake-design-open > .memory-history-rail,
+.intake-design-open .header-project > .mobile-menu,
+.intake-design-open .header-actions > .save-status,
+.intake-design-open .workspace-footer { display: none !important; }
+.intake-design-open .workspace-header { padding: 0 20px; }
+.intake-design-open .header-project strong { font-size: 18px; font-weight: 600; letter-spacing: -.03em; }
+.intake-privacy-link { min-height: 40px; font-size: 13px; color: #6b6f76; text-decoration: underline; text-underline-offset: 2px; }
+.intake-design-open .welcome-workspace {
+  width: 100%; max-width: 544px; margin: 0 auto; flex: 1;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 24px 32px 70px; text-align: left;
+}
+.intake-design-open .welcome-copy h1 { margin: 0; }
+.intake-design-open .welcome-copy > p { margin: 6px 0 20px; font-size: 15px; line-height: 22px; }
+.intake-design-open .upload-card {
+  width: 100%; max-width: none; margin: 0; padding: 40px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  border: 1.5px dashed #d3d3cf; border-radius: 16px;
+}
+.intake-design-open .upload-card > svg { color: #111317; flex: none; }
+.intake-design-open .upload-card h2 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 500; }
+.intake-design-open .upload-card > .button { min-height: 40px; height: 40px; padding: 0 16px; font-size: 14px; font-weight: 500; }
+.intake-design-open .file-support { margin: 0; font-size: 12px; line-height: 16px; text-align: center; }
+.intake-storage-note { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 12px 0 0; font-size: 12px; line-height: 18px; color: #6b6f76; text-align: center; }
+.intake-storage-note > svg { flex: none; }
+.intake-design-open .sample-link { align-self: center; flex-wrap: wrap; margin: 8px 0 0; min-height: 40px; font-size: 13px; }
+.composer-design-open .workspace-footer { display: none; }
+.composer-design-open .folio-compose {
+  flex: 1;
+  /* Center the heading and input using the actual bounded input height. Consent remains below. */
+  padding: max(24px, calc((100dvh - 56px - 96px - 44px - 28px - var(--composer-input-height, 84px) - 64px) / 2)) 40px 64px;
+}
+.composer-design-open .folio-compose-copy { margin-bottom: 28px; }
+.composer-design-open .folio-compose h1 { margin: 0; }
+.composer-design-open .folio-composer textarea { display: block; min-height: 84px; padding: 20px 22px 8px; }
+.composer-design-open .folio-composer:focus-within { border-color: #111317; box-shadow: 0 0 0 2px #11131712, 0 1px 2px #1113170a, 0 8px 28px #1113170d; }
+.composer-design-open .folio-composer.has-long-input .folio-composer-footer { border-top: 1px solid #e8e8e5; }
+.composer-design-open .folio-source-chip { gap: 6px; max-width: 330px; font-size: 13px; min-height: 40px; }
+.composer-design-open .folio-compose-submit > .button { font-size: 14px; min-height: 40px; height: 40px; padding: 0 16px; }
+.composer-design-open .folio-compose-submit kbd { font-size: 12px; }
+.composer-design-open .folio-transfer-consent { color: #40444b; }
+@media (min-width: 700px) {
+  .composer-design-open .folio-compose:has(.folio-composer.has-long-input) {
+    padding-top: max(24px, calc((100dvh - 56px - 56px - 44px - 24px - var(--composer-input-height, 400px) - 65px) / 2));
+  }
+  .composer-design-open .folio-compose:has(.folio-composer.has-long-input) .folio-compose-copy { margin-bottom: 24px; }
+}
+@media (max-width: 699px) {
+  .intake-design-open .workspace-header { padding: 0 16px; }
+  .intake-design-open .intake-privacy-link { min-height: 44px; }
+  .intake-design-open .welcome-workspace { max-width: 512px; padding: 40px 16px 48px; justify-content: flex-start; }
+  .intake-design-open .welcome-copy h1 { font-size: 26px; line-height: 32px; }
+  .intake-design-open .upload-card { padding: 32px 16px; }
+  .intake-design-open .upload-card > .button { min-height: 44px; height: 44px; }
+  .intake-design-open .sample-link { min-height: 44px; }
+  .composer-design-open .folio-compose {
+    width: 100%; flex: none; min-height: 0;
+    height: calc(100dvh - 120px - env(safe-area-inset-bottom));
+    overflow-y: auto; overscroll-behavior: contain; scroll-padding-block: 16px 24px;
+    padding: 24px 16px;
+  }
+  .composer-design-open .folio-compose-copy { text-align: left; margin-bottom: 16px; }
+  .composer-design-open .folio-compose h1 { font-size: 26px; line-height: 32px; }
+  .composer-design-open .folio-composer { border-radius: 16px; }
+  .composer-design-open .folio-composer textarea { min-height: 96px; max-height: min(400px, 38dvh); padding: 14px 16px 8px; font-size: 16px; line-height: 24px; }
+  .composer-design-open .folio-composer-footer { flex-wrap: nowrap; align-items: center; gap: 8px; padding: 8px 12px 12px 16px; }
+  .composer-design-open .folio-source-chip { flex: 1; max-width: none; min-width: 0; min-height: 44px; font-size: 12px; }
+  .composer-design-open .folio-chip-change { display: none; }
+  .composer-design-open .folio-compose-submit { width: auto; flex: none; }
+  .composer-design-open .folio-type-chip { font-size: 11px; }
+  .composer-design-open .folio-compose-submit > .button {
+    position: fixed; bottom: calc(8px + env(safe-area-inset-bottom)); left: 16px; right: 16px;
+    z-index: 25; width: calc(100% - 32px); height: 48px; min-height: 48px;
+    box-shadow: 0 0 0 8px #fff, 0 -9px 0 8px #fff; font-size: 14px;
+  }
+  .composer-design-open .folio-compose-submit > .button:focus-visible { outline-offset: 2px; }
+  .composer-design-open .folio-composer-hint { text-align: left; font-size: 12px; line-height: 18px; }
+  .composer-design-open .folio-transfer-consent { margin-top: 16px; font-size: 12px; line-height: 18px; }
+}

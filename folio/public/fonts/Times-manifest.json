@@ -1,0 +1,38 @@
+{
+  "converter": "pdfjs-dist 6.4.299",
+  "license": "LICENSE-Times.txt",
+  "fonts": [
+    {
+      "source": "Times-Roman",
+      "filename": "Times-Regular.otf",
+      "sha256": "5760408f99dbd0a68758c5f8deb899984dd2a318709610548a1655757c1f2cb2",
+      "bytes": 26488,
+      "pdfFilename": "Times-Regular-PDF.otf",
+      "pdfSha256": "41b3222f00c0208cc0729980e7f2bef059142e4759b5434fb9724b3c9c3c57d1"
+    },
+    {
+      "source": "Times-Bold",
+      "filename": "Times-Bold.otf",
+      "sha256": "fe614c7ef3cd0729c8d28f22402a9bcae911b57afc293098ca028020c51a5ecb",
+      "bytes": 26624,
+      "pdfFilename": "Times-Bold-PDF.otf",
+      "pdfSha256": "aaccc1b16fe3609db08a78462c4b193f11a3ef9a69d68ebcea16c9aa59131cd6"
+    },
+    {
+      "source": "Times-Italic",
+      "filename": "Times-Italic.otf",
+      "sha256": "3ae201a85ffe6fbba514e989126105ad019096b558c2ebb3d9a00f4559a74482",
+      "bytes": 28300,
+      "pdfFilename": "Times-Italic-PDF.otf",
+      "pdfSha256": "3c9534e7774577343752679026e5f4d303ccb6e920f31fcc2f9dcd304e235d3b"
+    },
+    {
+      "source": "Times-BoldItalic",
+      "filename": "Times-BoldItalic.otf",
+      "sha256": "64c73edf4de2a7f8fd63bc29f919f958558de9e95a61733ed76d05a211830024",
+      "bytes": 27676,
+      "pdfFilename": "Times-BoldItalic-PDF.otf",
+      "pdfSha256": "0a4dd2f05afdbb5c0ce0674abd24467b442fbf03a3fbab310da073257d6d00b1"
+    }
+  ]
+}

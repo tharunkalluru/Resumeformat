@@ -1,0 +1,49 @@
+.upgrade-readiness { border: 1px solid var(--kit-line, #e5e5e5); border-radius: 12px; padding: 18px; background: #fff; color: var(--kit-ink-900, #171717); margin: 0 0 20px; min-width: 0; }
+.upgrade-readiness > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.upgrade-readiness .upgrade-eyebrow { margin: 0 0 5px; color: #626262; font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.upgrade-readiness h3 { margin: 0; font-size: 17px; letter-spacing: -.025em; }
+.upgrade-readiness-count { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; background: #f5f0e8; color: #785025; font-size: 13px; font-weight: 600; }
+.upgrade-readiness-count.ready { background: #eef4ee; color: #2f663b; }
+.upgrade-readiness .upgrade-readiness-summary { font-size: 12px; line-height: 1.55; color: #626262; margin: 12px 0; }
+.upgrade-readiness-list { margin: 0; padding: 0; list-style: none; }
+.upgrade-readiness-list > li { display: flex; align-items: flex-start; gap: 9px; padding: 13px 0; border-top: 1px solid #ededed; }
+.upgrade-readiness-list > li > svg { flex: 0 0 auto; margin-top: 2px; color: #886235; }
+.upgrade-readiness-list > li > div { min-width: 0; }
+.upgrade-readiness-list strong { display: block; font-size: 12px; font-weight: 600; line-height: 1.45; }
+.upgrade-readiness-list p, .upgrade-source-checks p, .upgrade-readability p, .upgrade-complete-checks p { margin: 5px 0; font-size: 11px; line-height: 1.6; color: #626262; overflow-wrap: anywhere; }
+.upgrade-readiness .text-button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 11px; text-align: left; color: #303030; }
+.upgrade-readiness details { margin-top: 12px; }
+.upgrade-readiness summary { cursor: pointer; font-size: 11px; font-weight: 600; line-height: 1.6; padding-block: 6px; }
+.upgrade-readiness details ul { padding-left: 16px; font-size: 11px; line-height: 1.6; color: #626262; }
+.upgrade-source-checks > ul { list-style: none; padding: 0 !important; }
+.upgrade-source-checks > ul > li { padding: 8px 0; border-bottom: 1px solid #ededed; }
+.upgrade-complete-checks li { margin: 4px 0; }
+.upgrade-complete-checks li > span:first-child { display: inline-block; width: 19px; }
+.upgrade-complete-checks > ul { list-style: none; padding-left: 0 !important; }
+.upgrade-readiness-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+.upgrade-readiness-actions .button { flex: 1 1 auto; justify-content: center; font-size: 11px; min-height: 40px; }
+.upgrade-readability { border-top: 1px solid #ededed; padding-top: 12px; }
+.upgrade-readability > summary { display: flex; align-items: center; gap: 7px; }
+.upgrade-readability > summary::after { content: '+'; margin-left: auto; }
+.upgrade-readability[open] > summary::after { content: '−'; }
+.upgrade-readability-count { font-variant-numeric: tabular-nums; }
+.upgrade-readability .upgrade-readability-note { border-left: 2px solid #cfcfcf; padding-left: 10px; }
+.upgrade-readability-page > summary { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #ededed; padding: 9px 0; }
+.upgrade-readability-page > summary > span { color: #626262; font-weight: 400; }
+.upgrade-readability-page ol { list-style: none; margin: 0; padding: 0; }
+.upgrade-readability-page li { margin: 0; }
+.upgrade-passage { display: block; width: 100%; text-align: left; border: 1px solid #e5e5e5; background: #fafafa; border-radius: 7px; margin: 7px 0; padding: 9px; color: inherit; cursor: pointer; }
+.upgrade-passage:hover { background: #f2f2f2; border-color: #c5c5c5; }
+.upgrade-passage-heading { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; color: #626262; text-transform: capitalize; }
+.upgrade-passage-heading > span:last-child { display: inline-flex; gap: 4px; align-items: center; }
+.upgrade-passage-text { display: block; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; line-height: 1.6; margin-top: 7px; }
+.upgrade-passage small { display: block; font-size: 10px; line-height: 1.5; margin-top: 7px; color: #626262; }
+.upgrade-readiness :is(button, summary):focus-visible { outline: 2px solid #333; outline-offset: 3px; }
+.folio-insights .upgrade-change-context { margin: 8px 0 12px; font-size: 11px; color: #626262; line-height: 1.6; }
+.folio-insights .upgrade-source-status { display: block; font-size: 10px; color: #626262; margin: 7px 0; }
+.folio-insights .upgrade-change-position { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; font-size: 11px; color: #626262; }
+.folio-insights .upgrade-empty-source { padding: 10px; background: #f5f0e8; border-radius: 6px; font-size: 11px; line-height: 1.6; color: #785025; }
+@media (max-width: 760px), (pointer: coarse) {
+  .upgrade-readiness { padding: 15px; }
+  .upgrade-readiness :is(button, summary), .folio-insights .folio-change-actions button, .folio-insights .kit-review-batch button { min-height: 44px; }
+}

@@ -1,0 +1,19 @@
+import {describe,it,expect} from 'vitest';
+import {sourceParagraphGroups,sourceParagraphText} from './source-paragraphs';
+import type {Project,TextRegion} from './model';
+
+/** Synthetic geometry only; no source recapture or rendering authority is asserted. */
+function fixture():Project {
+ const style={fontFamily:'sans',fontSize:10,fontWeight:400,italic:false,color:'#000000',lineHeight:13,alignment:'left',sourceFontId:'font'} as const;
+ const items=[['•',44,48,60],['One',57,72,60],[' ',72,74,60],['bullet',74,100,60],['continued',57,99,73],[' ',99,101,73],['here',101,119,73]] as const;
+ const regions=items.map(([text,x,end,baseline],order)=>({kind:'text',id:'r'+order,pageId:'page',contentId:'b'+order,bounds:{x,y:baseline-8,width:end-x,height:10},style,order,role:'body',sourceLocator:'synthetic',sourceLayout:{version:1,sourceSha256:'a'.repeat(64),baselineRunsHash:'b'.repeat(64),anchor:'start',startX:x,endX:end,baseline,fontSize:10,glyphs:[{fontId:'font',cid:1,unicode:text,x,advance:end-x,operatorIndex:order}]}})) as TextRegion[];
+ return {source:{sha256:'a'.repeat(64)},template:{pages:[{id:'page',width:612,height:792,regions}],sourceFonts:[{id:'font',format:'truetype',sourceVersion:6,originalProgram:{sha256:'c'.repeat(64)}}]},baseline:{revision:1,blocks:items.map(([text],i)=>({id:'b'+i,runs:[{text}],sourceFactIds:['fact'+i]}))}} as unknown as Project;
+}
+describe('conservative source bullet ownership',()=>{
+ it('carries earlier fixed-slot wording into the complete editor without resetting the source',()=>{const p=fixture();p.draft=structuredClone(p.baseline);p.draft.blocks[1].runs[0].text='Updated';const g=sourceParagraphGroups(p)[0];expect(sourceParagraphText(p,g)).toBe('Updated bullet continued here');expect(g.baselineText).toBe('One bullet continued here');p.draft.blocks[1].sourceParagraphGroupId=g.id;p.draft.blocks[1].runs[0].text='One complete current bullet.';expect(sourceParagraphText(p,g)).toBe('One complete current bullet.');});
+ it('groups complete original rows, retains spaces, baselines and immutable source owners',()=>{const p=fixture(),before=structuredClone(p),g=sourceParagraphGroups(p);expect(g).toHaveLength(1);expect(g[0]).toMatchObject({baselineText:'One bullet continued here',baselines:[60,73],memberIds:['r1','r2','r3','r4','r5','r6'],frame:{x:57,y:52,width:62,height:23}});expect(p).toEqual(before);});
+ it('keeps grouping identity stable after portable identity remapping',()=>{const p=fixture(),id=sourceParagraphGroups(p)[0].id;p.template.pages[0].id='new-page';p.template.pages[0].regions.forEach((r,i)=>{r.id='new-r'+i;r.pageId='new-page';if(r.kind==='text')r.contentId='new-b'+i;});p.baseline.blocks.forEach((b,i)=>b.id='new-b'+i);expect(sourceParagraphGroups(p)[0].id).toBe(id);});
+ it('refuses mixed columns instead of joining unrelated text',()=>{const p=fixture(),r=p.template.pages[0].regions[3] as TextRegion;r.sourceLayout!.startX=220;r.bounds.x=220;expect(sourceParagraphGroups(p)).toEqual([]);});
+ it('refuses style switches and intervening source paint',()=>{const p=fixture();(p.template.pages[0].regions[2] as TextRegion).style={...(p.template.pages[0].regions[2] as TextRegion).style,fontWeight:700};expect(sourceParagraphGroups(p)).toEqual([]);const q=fixture();q.template.pages[0].regions.push({id:'rule',pageId:'page',kind:'rule',order:2.5,bounds:{x:40,y:60,width:500,height:0},thickness:1,color:'#000000'});expect(sourceParagraphGroups(q)).toEqual([]);});
+ it('refuses hyperlinks, inferred gaps and mixed font routes',()=>{for(const kind of ['link','gap','font']){const p=fixture();if(kind==='link')p.baseline.blocks[2].runs[0].href='https://example.org/';if(kind==='gap')(p.template.pages[0].regions[2] as TextRegion).sourceLayout!.glyphs=[{fontId:'font',cid:1,unicode:' ',x:72,advance:2,operatorIndex:2,inferredGap:true}];if(kind==='font')(p.template.sourceFonts![0] as any).sourceVersion=9;expect(sourceParagraphGroups(p)).toEqual([]);}});
+});

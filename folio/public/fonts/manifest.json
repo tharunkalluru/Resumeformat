@@ -1,0 +1,66 @@
+{
+  "upstream": "DejaVu Fonts 2.37",
+  "license": "LICENSE",
+  "fonts": [
+    {
+      "file": "DejaVuSans-Bold.ttf",
+      "byteLength": 705684,
+      "sha256": "e6476c1b80502924294eed40894c5b18e06c181444ca953e5334262df9c27724"
+    },
+    {
+      "file": "DejaVuSans-BoldOblique.ttf",
+      "byteLength": 643292,
+      "sha256": "eb436dca0c2594b73d8b603b892e374fdfd8d885d25ffb4f18df4c4c0b49e50f"
+    },
+    {
+      "file": "DejaVuSans-Oblique.ttf",
+      "byteLength": 635416,
+      "sha256": "4af75fa16ee6d3ad43e1ecec41862c24954af26a55c6bb1ebb27bd486a50f5f4"
+    },
+    {
+      "file": "DejaVuSans.ttf",
+      "byteLength": 757076,
+      "sha256": "7da195a74c55bef988d0d48f9508bd5d849425c1770dba5d7bfc6ce9ed848954"
+    },
+    {
+      "file": "DejaVuSansMono-Bold.ttf",
+      "byteLength": 331992,
+      "sha256": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769"
+    },
+    {
+      "file": "DejaVuSansMono-BoldOblique.ttf",
+      "byteLength": 253580,
+      "sha256": "91713a71d550bba22c2a6b2bb2a9ad8f9a159e12e4e9f0a5b2677998ba21213e"
+    },
+    {
+      "file": "DejaVuSansMono-Oblique.ttf",
+      "byteLength": 251932,
+      "sha256": "742097840c541870e8d6dc5c9b37bb1ceeea6c0dedd1d475faf903ef9df734b0"
+    },
+    {
+      "file": "DejaVuSansMono.ttf",
+      "byteLength": 340712,
+      "sha256": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582"
+    },
+    {
+      "file": "DejaVuSerif-Bold.ttf",
+      "byteLength": 356088,
+      "sha256": "c47b5527bcdc8dcf9ea8c77054454c5a884beaca2f44851a2a823ee639cbf07f"
+    },
+    {
+      "file": "DejaVuSerif-BoldItalic.ttf",
+      "byteLength": 347460,
+      "sha256": "8d3dd3d31350309042ed226af82b34539bd773518e6107cb352712853ba80308"
+    },
+    {
+      "file": "DejaVuSerif-Italic.ttf",
+      "byteLength": 345996,
+      "sha256": "2e39b1d50f90b933b00c7bb54a96afd3f86419b3d717c7cf202e36f2d4973e47"
+    },
+    {
+      "file": "DejaVuSerif.ttf",
+      "byteLength": 380132,
+      "sha256": "42d1edeb7952f31b1f96d767ed7030b08a39e0c372b0071641518864e2bffb51"
+    }
+  ]
+}

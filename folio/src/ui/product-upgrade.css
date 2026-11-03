@@ -1,0 +1,5 @@
+/* Integration styles are limited to application chrome, never resume fonts. */
+.folio-kit .workflow-bar { display: flex; }
+.folio-kit .upgrade-readiness, .folio-kit .template-inspection { min-width: 0; }
+@media (max-width: 699px) { .folio-kit .workflow-bar { padding: 10px 14px; } .folio-kit .workflow-caption { display: none; } }
+@media (prefers-reduced-motion: reduce) { .folio-kit *, .folio-kit *::before, .folio-kit *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
