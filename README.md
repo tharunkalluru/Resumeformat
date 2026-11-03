@@ -40,7 +40,7 @@ npm run build
 npm run preview
 ```
 
-The output is `folio/dist/`. Preview also uses `127.0.0.1:4594`. This repository does not configure a hosted deployment.
+The output is `folio/dist/`. Preview also uses `127.0.0.1:4594`. These instructions cover local operation. Hosting integrations already connected to the GitHub repository may run on pushes; their configuration is managed separately.
 
 ## Typical workflow
 
@@ -80,6 +80,8 @@ npm run ai:test
 `npm test` runs the frontend/domain/import/render/storage regression suites using bundled fictional or attributed public fixtures. Renderer tests use the native canvas dependency included through PDF.js; do not omit optional npm dependencies. Some optional private regression cases require explicitly supplied external inputs and are skipped by default. Passing fixtures do not establish fidelity for every resume.
 
 `npm run ai:test` runs four synthetic adapter, contract, HTTP, and protected-claim suites without a real provider request. `npm run ai:test:historical` preserves older controls that require unshipped historical evidence under `folio/output/`; it is not a portable release check. Private applicant corpora, personal exports, credentials, and historical output packets are excluded from this repository.
+
+**Validation on November 3, 2026:** fresh installation, type checking, production build, production HTTP/asset smoke checks, 327 focused product tests, and 40 synthetic adapter tests passed. The broader `npm test` run reported failures in historical import/reconstruction/recovery suites and is **not green**. See [the verification record](folio/VERIFICATION.md) for the exact focused command and limits. These results do not qualify arbitrary resumes or live AI.
 
 ## Privacy and data storage
 
