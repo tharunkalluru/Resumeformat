@@ -8,6 +8,19 @@ import { imageMime } from './raster';
 import { normalizeDocxInkEnvelope } from './docx-geometry';
 import { createDocxPropertyResolver, type DocxPropertyDecision, type DocxPropertyIssue } from './docx-properties';
 import { A, CT, R, W, WP, attr, child, children, descendants, numeric, parseXml, readRelationships, val } from './xml';
+/** Word bullet glyphs in Symbol/Wingdings private-use positions, and the plain character to show. */
+const WORD_SYMBOL_BULLETS: Record<string, { text: string; exact: boolean }> = {
+  '\uf0b7': { text: '•', exact: true },  // Symbol: default Word bullet
+  '\uf0a7': { text: '▪', exact: true },  // Wingdings: small square
+  '§': { text: '▪', exact: true },        // Wingdings square typed as §
+  'o': { text: '◦', exact: true },        // Courier New "o": Word's second-level bullet
+  '\uf06f': { text: '◦', exact: true },
+  '\uf0d8': { text: '•', exact: false }, // Wingdings arrowhead
+  '\uf076': { text: '•', exact: false }, // Wingdings diamond cluster
+  '\uf0fc': { text: '•', exact: false }, // Wingdings check mark
+  '\uf0e8': { text: '•', exact: false }, // Wingdings arrow
+  '\uf0a8': { text: '•', exact: false },
+};
 
 interface Format { family?: string; size?: number; bold?: boolean; italic?: boolean; underline?: boolean; color?: string; alignment?: TextStyle['alignment']; before?: number; after?: number; line?: number; lineRule?: string; hidden?: boolean; left?: number; right?: number; first?: number; pageBefore?: boolean; numId?: string; levelId?: string }
 interface Style { id: string; basedOn?: string; properties: Format }
@@ -225,7 +238,11 @@ export async function importDocx(file: File, bytes: Uint8Array): Promise<ImportR
       const kind = val(child(level, 'numFmt')), marker = val(child(level, 'lvlText'));
       if (child(level, 'lvlRestart') || numbering && descendants(numbering, 'num').some(num => attr(num, 'numId') === numId && children(num, 'lvlOverride').length)) add('DOCX_NUMBERING', 'Explicit numbering restart rules or level overrides need a matching PDF to preserve their markers.', 'blocking');
       for (const key of counters.keys()) if (key.startsWith(`${numId}:`) && Number(key.split(':')[1]) > Number(levelId)) counters.delete(key);
+      // Word's built-in bullets use private-use glyphs from the Symbol/Wingdings fonts
+      // (U+F0B7 is the default "•"). Map them to the ordinary characters they draw.
+      const wordBullet = kind === 'bullet' && marker ? WORD_SYMBOL_BULLETS[marker] : undefined;
       if (kind === 'bullet' && marker && /^[•◦▪\-–◆]$/.test(marker)) { runs.unshift({ text: `${marker} ` }); bullet = true; }
+      else if (wordBullet) { runs.unshift({ text: `${wordBullet.text} ` }); bullet = true; if (!wordBullet.exact) add('DOCX_NUMBERING', 'A decorative list marker is shown as a plain bullet.', 'info'); }
       else if (kind === 'decimal' && marker && new RegExp(`^%${Number(levelId) + 1}[.)]$`).test(marker) && /^[0-8]$/.test(levelId)) {
         const key = `${numId}:${levelId}`, count = (counters.get(key) ?? numeric(val(child(level, 'start')), 1) - 1) + 1;
         counters.set(key, count);

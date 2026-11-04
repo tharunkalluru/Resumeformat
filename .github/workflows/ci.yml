@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: folio
+
+jobs:
+  product:
+    name: Typecheck, build and product tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: folio/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run test:product
+      - run: npm run ai:test
+
+  engine:
+    # The historical exact-layout engine suite has known failures (see TESTING.md).
+    # It runs on every change for visibility but does not block merging until triaged.
+    name: Engine suite (non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: folio/package-lock.json
+      - run: npm ci
+      - run: npm run test:engine
+        env:
+          VITEST_MAX_WORKERS: 2

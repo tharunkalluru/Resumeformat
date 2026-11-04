@@ -6,6 +6,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
+    "test:product": "vitest run --config vitest.product.config.ts",
+    "test:engine": "vitest run",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "ai:check": "node --env-file-if-exists=server/.env.local server/config-check.mjs",
@@ -53,5 +55,8 @@
     "vite": "8.3.2",
     "vitest": "5.0.3"
   },
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=22.9"
+  }
 }

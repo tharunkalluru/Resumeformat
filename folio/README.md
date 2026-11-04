@@ -2,7 +2,7 @@
 
 The current local resume workspace. See the [repository README](../README.md) for the full feature list, workflow, privacy details, and limitations.
 
-Requires Node.js 24 and npm:
+Requires Node.js 22 or newer and npm:
 
 ```sh
 npm ci

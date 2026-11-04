@@ -114,7 +114,7 @@ describe('local AI readiness status hook', () => {
     await mount(true);
     await reject(0);
     expect(latest.service.state).toBe('unavailable');
-    expect(latest.service.message).toContain('local AI server is unavailable');
+    expect(latest.service.message).toContain('AI tailoring is offline');
     expect(observed).not.toContain('ready');
     expect(transport).toHaveBeenCalledOnce();
   });

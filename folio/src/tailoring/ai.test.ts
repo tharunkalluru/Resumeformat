@@ -296,14 +296,19 @@ describe('fixed same-origin AI client (injected synthetic transport)', () => {
   });
   it('suppresses arbitrary error bodies and malformed or oversized responses', async () => {
     const request = requestFor(await syntheticApplication());
-    for (const response of [
-      json({ error: { code: 'untrusted-code', message: 'Unsafe leaked document text' } }, 502),
-      new Response('<h1>server html</h1>', { headers: { 'Content-Type': 'text/html' } }),
-      json({ ...syntheticResult(request), forbidden: true }),
-      new Response('x'.repeat(512 * 1024 + 1), { headers: { 'Content-Type': 'application/json' } }),
-    ]) {
+    for (const [response, expected] of [
+      // A gateway error means the service is offline; its body is never shown.
+      [json({ error: { code: 'untrusted-code', message: 'Unsafe leaked document text' } }, 502), /AI tailoring is offline/],
+      [new Response('<h1>bad gateway</h1>', { status: 502, headers: { 'Content-Type': 'text/html' } }), /AI tailoring is offline/],
+      [json({ error: { code: 'untrusted-code', message: 'Unsafe leaked document text' } }, 400), /failed validation/],
+      [new Response('<h1>server html</h1>', { headers: { 'Content-Type': 'text/html' } }), /failed validation/],
+      [json({ ...syntheticResult(request), forbidden: true }), /failed validation/],
+      [new Response('x'.repeat(512 * 1024 + 1), { headers: { 'Content-Type': 'application/json' } }), /failed validation/],
+    ] as const) {
       const syntheticFetch = vi.fn<typeof fetch>(async () => response);
-      await expect(createAiClient(syntheticFetch).tailor(request, { status: syntheticStatus, consentHash: request.consent.contextHash })).rejects.toThrowError(/failed validation/);
+      const failure = createAiClient(syntheticFetch).tailor(request, { status: syntheticStatus, consentHash: request.consent.contextHash });
+      await expect(failure).rejects.toThrowError(expected);
+      await expect(failure).rejects.not.toThrowError(/Unsafe/);
     }
     expect(aiErrorMessage(new Error('Unsafe leaked document text'))).not.toContain('Unsafe');
   });

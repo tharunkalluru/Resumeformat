@@ -117,7 +117,10 @@ export function confirmDraft(project: Project): Project {
     }
     return { ...block, sourceFactIds: [fact.id], runs: block.runs.map(run => ({ ...run, sourceFactIds: [fact.id] })) };
   });
-  return advance(project, { facts, draft: { ...project.draft, blocks }, reviewedDraftRevision: project.draft.revision });
+  // Keep the same draft object when nothing needed new evidence, so a confirmation
+  // does not invalidate the layout check and PDF review the applicant just completed.
+  const unchanged = blocks.every((block, index) => block === project.draft.blocks[index]);
+  return advance(project, { facts, draft: unchanged ? project.draft : { ...project.draft, blocks }, reviewedDraftRevision: project.draft.revision });
 }
 export function revertDraft(project: Project): Project {
   return advance(project, { draft: { revision: project.draft.revision + 1, blocks: structuredClone(project.baseline.blocks) }, evidenceDecisions: {}, reviewedDraftRevision: null });

@@ -42,7 +42,10 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
   const [consentHash, setConsentHash] = useState('');
   const [review, setReview] = useState<Review | null>(null);
   const [proposalReviews, setProposalReviews] = useState<Record<string, ProposalReview>>({});
-  const facts = eligibleEvidence(project);
+  // Separators, spaces and other fragments without letters or digits are not useful choices.
+  const meaningful = (text: string) => /[\p{L}\p{N}]/u.test(text);
+  const facts = eligibleEvidence(project).filter(fact => meaningful(fact.text));
+  const [statusChecked, setStatusChecked] = useState(false);
   const selectedFacts = new Set(factIds);
   const selectedBlocks = new Set(blockIds);
   const currentPreview = preview?.fingerprint === fingerprint ? preview : null;
@@ -89,8 +92,8 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
   useEffect(() => {
     if (!application) return;
     const abort = new AbortController();
-    client.status(abort.signal).then(value => { if (!abort.signal.aborted) setStatus(value); })
-      .catch(reason => { if (!abort.signal.aborted) { setStatus(null); setError(aiErrorMessage(reason)); } });
+    client.status(abort.signal).then(value => { if (!abort.signal.aborted) { setStatus(value); setStatusChecked(true); } })
+      .catch(reason => { if (!abort.signal.aborted) { setStatus(null); setStatusChecked(true); setError(aiErrorMessage(reason)); } });
     return () => abort.abort();
   }, [application, client, project.id]);
 
@@ -120,6 +123,7 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
       }
     } catch (reason) {
       if (operation === generation.current && !abort.signal.aborted) {
+        if (!verify) setStatus(null);
         setError(aiErrorMessage(reason));
         if (verify && status) setStatus({ ...status, accountModelVerified: false, verification: 'failed' });
         else setStatus(null);
@@ -209,6 +213,13 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
   </section>;
 
   const unresolved = review?.result.proposals.some(proposal => !proposalReviews[proposal.blockId]?.decision) ?? false;
+  // Without a configured AI service, show one quiet line instead of the full request builder.
+  const serviceUsable = !!status && status.keyConfigured && status.modelConfigured && status.supportedModel;
+  if (!serviceUsable && !review && busy !== 'tailor' && busy !== 'accept') return <section className="ai-tailoring ai-tailoring-offline panel-section" aria-labelledby={`${id}-title`}>
+    <h3 id={`${id}-title`}><Sparkles size={16} aria-hidden="true" />AI suggestions</h3>
+    <p role="status">{!statusChecked || busy === 'status' ? 'Checking AI availability…' : status ? aiStatusMessage(status) : 'AI tailoring is offline right now. You can still edit and download your resume.'}</p>
+    <button type="button" className="text-button" onClick={() => void checkStatus(false)} disabled={locked}>Check again</button>
+  </section>;
   return <section className="ai-tailoring panel-section" aria-labelledby={`${id}-title`} aria-busy={busy !== null}>
     <h3 id={`${id}-title`}><Sparkles size={16} aria-hidden="true" />AI wording proposals</h3>
     <p>Choose the facts and paragraphs to send. Suggestions use <a href="https://developers.openai.com/api/docs/models/gpt-6.1-sol" target="_blank" rel="noreferrer">{AI_MODEL}</a> with medium reasoning and always need your review.</p>
@@ -232,7 +243,7 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
     </fieldset>
     <fieldset className="ai-selection" disabled={locked}>
       <legend>Current paragraphs ({blockIds.length}/100)</legend>
-      <div className="ai-choice-list">{project.draft.blocks.map(block => <label key={block.id} className="ai-choice">
+      <div className="ai-choice-list">{project.draft.blocks.filter(block => meaningful(blockText(block))).map(block => <label key={block.id} className="ai-choice">
         <input type="checkbox" checked={selectedBlocks.has(block.id)} disabled={!selectedBlocks.has(block.id) && blockIds.length >= 100} onChange={event => changeSelection('block', block.id, event.target.checked)} />
         <span><span className="ai-exact-text">{blockText(block) || '(Empty paragraph)'}</span><small className="ai-required-facts">Required current sources: {(() => { try { return aiRequiredFactIds(project, block.id).map(factId => facts.find(fact => fact.id === factId)?.text ?? `Unavailable source ${factId}`).join(' · ') || 'No reviewed source facts'; } catch { return 'Review this paragraph’s source references on the canvas.'; } })()}</small></span>
       </label>)}</div>

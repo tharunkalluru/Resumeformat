@@ -4,7 +4,7 @@ Local resume import, deterministic evidence matching, editing, rendering, and PD
 
 ## Configuration
 
-Use Node.js 24. Manually create `server/.env.local` from the `folio/` directory using this shape, then enter your existing key in that file:
+Use Node.js 22 or newer. Manually create `server/.env.local` from the `folio/` directory using this shape, then enter your existing key in that file:
 
 ```dotenv
 OPENAI_API_KEY=

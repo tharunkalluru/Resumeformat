@@ -97,7 +97,7 @@ export type AiStatus = z.infer<typeof statusSchema>;
 export type AiLayoutBudget = z.infer<typeof layoutBudgetSchema>;
 
 const ERROR_MESSAGES: Record<string, string> = {
-  server_unavailable: 'The local AI server is unavailable. Start the configured local server, then check its status.',
+  server_unavailable: 'AI tailoring is offline right now. You can still edit and download your resume.',
   not_configured: 'The server key or model is missing. Configure it outside this browser, then check status.',
   unsupported_model: 'The server must use gpt-6.1-sol.',
   requests_disabled: 'Paid AI requests are disabled. Server configuration and a confirmed test budget are required before sending.',
@@ -406,6 +406,13 @@ export function createAiClient(fetchImpl: typeof fetch = globalThis.fetch) {
         headers: { Accept: 'application/json', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
+      // A proxy or gateway error (for example 502 when the AI server is not running) is an
+      // unavailable service, not an invalid model response.
+      const isJson = /^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '');
+      if (!response.ok && (!isJson || response.status === 502 || response.status === 503 || response.status === 504)) {
+        await response.body?.cancel().catch(() => {});
+        throw new AiClientError('server_unavailable');
+      }
       const value = await responseJson(response);
       if (!response.ok) {
         const error = z.object({ error: z.object({ code: z.string().max(100), message: z.string().max(1000) }).strict() }).strict().safeParse(value);

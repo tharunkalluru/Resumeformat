@@ -104,7 +104,8 @@ afterEach(async () => {
   await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals();
 });
 async function flush(action?: () => void) {
-  await act(async () => { action?.(); for (let i = 0; i < 6; i++) await new Promise<void>(resolve => setImmediate(resolve)); });
+  // Enough macrotask turns for mocked saves and chained effects to settle on slower machines.
+  await act(async () => { action?.(); for (let i = 0; i < 20; i++) await new Promise<void>(resolve => setImmediate(resolve)); });
 }
 async function mount(enterComposer = true) {
   await flush(() => root.render(createElement(App)));
@@ -150,7 +151,7 @@ describe('actual App preference and synchronous route ownership controls', () =>
     await flush(() => button('Continue to tailoring').click());
     expect(surface()).toBe('compose'); expect(h.composer.value).toBe(text); expect(h.composer.consent).toBe(false);
     await flush(() => host.querySelector<HTMLButtonElement>('.kit-tabs .kit-tab')!.click());
-    expect(surface()).toBe('home'); expect(h.home.value).toBe(text);
+    await vi.waitFor(() => expect(surface()).toBe('home')); expect(h.home.value).toBe(text);
     await flush(() => button('Continue to tailoring').click());
     expect(surface()).toBe('compose'); expect(h.composer.value).toBe(text); noTransfer();
   });
@@ -291,6 +292,7 @@ describe('immediate composer to history navigation', () => {
     await flush(() => h.composer.onChange(text));
     await flush(() => button('Applications').click());
     expect(host.querySelector('.folio-compose')).not.toBeNull(); expect(h.composer.busy).toBe('Saving your current draft'); expect(host.querySelector<HTMLTextAreaElement>('.folio-composer textarea')!.readOnly).toBe(true);
+    await vi.waitFor(() => expect(h.save.mock.calls.some(call => (call[0] as Project).workspace?.kind === 'application')).toBe(true));
     const pending = h.save.mock.calls.map(call => call[0] as Project).filter(item => item.workspace?.kind === 'application');
     expect(pending).toHaveLength(1); expect(pending[0].job.description).toBe(text); expect(pending[0].source.sha256).toBe(a.source.sha256);
     await flush(() => h.composer.onTailor());
@@ -307,7 +309,8 @@ describe('immediate composer to history navigation', () => {
     await mount(); const text = 'Fictional retained job input';
     h.save.mockImplementation((item: Project) => item.workspace?.kind === 'application' ? Promise.reject(new Error('Controlled new-draft save refusal')) : Promise.resolve());
     await flush(() => h.composer.onChange(text)); await flush(() => button('Applications').click());
-    expect(host.querySelector('.folio-history-surface')).toBeNull(); expect(h.composer.value).toBe(text); expect(h.composer.busy).toBe(''); expect(host.querySelector<HTMLTextAreaElement>('.folio-composer textarea')!.readOnly).toBe(false);
+    await vi.waitFor(() => expect(h.composer.busy).toBe(''));
+    expect(host.querySelector('.folio-history-surface')).toBeNull(); expect(h.composer.value).toBe(text); expect(host.querySelector<HTMLTextAreaElement>('.folio-composer textarea')!.readOnly).toBe(false);
     expect(host.textContent).toContain('Controlled new-draft save refusal'); noTransfer();
   });
 });
@@ -319,6 +322,8 @@ describe('history route ownership while real App persistence is held', () => {
     h.save.mockImplementation((item: Project) => item.workspace?.kind === 'application' ? held.promise : Promise.resolve());
     await flush(() => h.composer.onChange(text)); await flush(() => button('Applications').click());
     expect(h.composer.busy).toBe('Saving your current draft'); expect(host.querySelector<HTMLTextAreaElement>('.folio-composer textarea')!.readOnly).toBe(true);
+    // The held application save is issued asynchronously after the busy state appears.
+    await vi.waitFor(() => expect(h.save.mock.calls.some(call => (call[0] as Project).workspace?.kind === 'application')).toBe(true));
     const record = h.save.mock.calls.map(call => call[0] as Project).find(item => item.workspace?.kind === 'application')!;
     expect(record.job.description).toBe(text); return { held, text, record };
   }
@@ -518,7 +523,8 @@ describe('product upgrade live-state integration', () => {
       h.composer.onJobDetailsChange({ title: 'Frontend Engineer', company: 'Authored Studio' });
       h.composer.onOpenDraft();
     });
-    expect(surface()).toBe('studio');
+    // Opening the draft waits for its save, which can take more than the fixed flush ticks.
+    await vi.waitFor(() => expect(surface()).toBe('studio'));
     expect(h.canvas.project.job).toEqual({ description: 'Build accessible React dashboards with TypeScript.', title: 'Frontend Engineer', company: 'Authored Studio' });
     expect(h.save.mock.calls.some(([project]) => project.job.company === 'Authored Studio')).toBe(true);
     noTransfer();

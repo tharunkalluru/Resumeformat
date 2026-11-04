@@ -28,9 +28,11 @@ function button(text: string) { const found = [...host.querySelectorAll<HTMLButt
 describe('Workspace actions respect real readiness', () => {
   it('keeps AI disabled for unchecked status while allowing local evidence and manual editing', async () => {
     const callbacks = await renderComposer();
-    expect(button('Tailor resume').disabled).toBe(true);
+    // Without a ready AI service there is no AI button or consent box, only Continue.
+    expect([...host.querySelectorAll('button')].some(item => item.textContent?.trim() === 'Tailor resume')).toBe(false);
+    expect(host.textContent).not.toContain('I agree to send this job');
     expect(host.textContent).toContain('Local word matching');
-    await act(async () => button('Open draft editor').click());
+    await act(async () => button('Continue').click());
     expect(callbacks.onOpenDraft).toHaveBeenCalledOnce(); expect(fetch).not.toHaveBeenCalled();
   });
   it('exposes the exact blocked service reason and a non-inference status action', async () => {
