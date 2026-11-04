@@ -9,7 +9,7 @@ const USER_DAILY_LIMIT = Number(env('AI_DAILY_USER_LIMIT') || 20);
 const GLOBAL_DAILY_LIMIT = Number(env('AI_DAILY_GLOBAL_LIMIT') || 300);
 const ALLOWED_ORIGINS = new Set(['http://localhost:4594', 'http://127.0.0.1:4594', ...env('ALLOWED_ORIGINS').split(',').map(o => o.trim()).filter(Boolean)]);
 // Cloudflare Pages production and preview deployments of the Folio project.
-const PAGES_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?folio-app\.pages\.dev$/;
+const PAGES_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?folio-app-78s\.pages\.dev$/;
 
 const admin = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
 const configuration = Object.freeze({ apiKey: env('OPENAI_API_KEY'), model: MODEL, requestsEnabled: true });
