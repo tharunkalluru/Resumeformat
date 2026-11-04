@@ -4,6 +4,8 @@ import { aiErrorMessage, aiStatusMessage, canSendAiRequest, createAiClient } fro
 export interface AiReadiness {
   state: 'unchecked' | 'checking' | 'ready' | 'blocked' | 'unavailable';
   message: string;
+  /** The service needs a signed-in account. */
+  needsSignIn?: boolean;
 }
 
 /** Local configuration lookup only. Never verifies the account or sends content. */
@@ -20,7 +22,7 @@ export function useAiReadiness(active: boolean) {
       if (pending.current !== controller || controller.signal.aborted) return;
       setService({ state: canSendAiRequest(status) ? 'ready' : 'blocked', message: aiStatusMessage(status) });
     } catch (error) {
-      if (pending.current === controller && !controller.signal.aborted) setService({ state: 'unavailable', message: aiErrorMessage(error) });
+      if (pending.current === controller && !controller.signal.aborted) setService({ state: 'unavailable', message: aiErrorMessage(error), needsSignIn: error instanceof Error && 'code' in error && error.code === 'sign_in_required' });
     } finally { if (pending.current === controller) pending.current = null; }
   }, []);
   useEffect(() => {

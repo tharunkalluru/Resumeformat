@@ -51,7 +51,7 @@ describe('local AI readiness status hook', () => {
     expect(latest.service.state).toBe('checking');
     await answer(0, enabled);
     expect(latest.service.state).toBe('ready');
-    expect(latest.service.message).toContain('paid external transfer');
+    expect(latest.service.message).toContain('sent to OpenAI');
     expect(transport).toHaveBeenCalledOnce();
   });
 

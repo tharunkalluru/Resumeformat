@@ -375,7 +375,7 @@ export function aiStatusMessage(status: AiStatus): string {
     return status.paidRequestsEnabled ? verification : `${verification} ${ERROR_MESSAGES.requests_disabled}`;
   }
   if (!status.paidRequestsEnabled) return ERROR_MESSAGES.requests_disabled;
-  return 'Account model access is verified. Sending a request is a paid external transfer to OpenAI.';
+  return 'AI tailoring is ready. Only this job and the resume lines you pick are sent to OpenAI, through Folio.';
 }
 export function canSendAiRequest(status: AiStatus | null): boolean {
   return !!status && status.keyConfigured && status.modelConfigured && status.supportedModel && status.accountModelVerified && status.paidRequestsEnabled && !status.busy;

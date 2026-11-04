@@ -4,6 +4,7 @@ import type { Project } from '../core/model';
 export interface ComposerServiceReadiness {
   state: 'unchecked' | 'checking' | 'ready' | 'blocked' | 'unavailable';
   message: string;
+  needsSignIn?: boolean;
 }
 export type ApplicationStage = 'draft' | 'review' | 'reviewed';
 
