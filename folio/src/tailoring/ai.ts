@@ -97,8 +97,12 @@ export type AiStatus = z.infer<typeof statusSchema>;
 export type AiLayoutBudget = z.infer<typeof layoutBudgetSchema>;
 
 const ERROR_MESSAGES: Record<string, string> = {
+  sign_in_required: 'Sign in to use AI tailoring. Editing and downloading work without an account.',
+  daily_limit: 'You’ve used today’s AI tailorings. Try again tomorrow, or edit by hand.',
+  service_limit: 'AI tailoring is at capacity for today. You can still edit and download.',
+  not_found: 'AI tailoring is offline right now. You can still edit and download your resume.',
   server_unavailable: 'AI tailoring is offline right now. You can still edit and download your resume.',
-  not_configured: 'The server key or model is missing. Configure it outside this browser, then check status.',
+  not_configured: 'AI tailoring isn’t set up on the server yet.',
   unsupported_model: 'The server must use gpt-6.1-sol.',
   requests_disabled: 'Paid AI requests are disabled. Server configuration and a confirmed test budget are required before sending.',
   account_unverified: 'Verify account access to the model before sending. Verification does not generate content.',
@@ -123,12 +127,12 @@ const ERROR_MESSAGES: Record<string, string> = {
   provider_invalid_response: 'The response failed validation. No wording was applied.',
   provider_refusal: 'OpenAI declined to provide tailoring proposals. No wording was applied.',
   provider_incomplete: 'OpenAI returned an incomplete response. No wording was applied.',
-  cancelled: 'The local request was stopped. OpenAI may already have processed it; no automatic retry was made.',
+  cancelled: 'The request was stopped. OpenAI may already have processed it; no automatic retry was made.',
   forbidden_host: 'Open Folio at the approved local address to use AI.',
   forbidden_origin: 'Open Folio at the approved local address to use AI.',
   body_too_large: 'The request exceeds the 128 KiB limit. Select less text.',
-  unsupported_content_type: 'The local AI service rejected the request format.',
-  internal_error: 'The local AI service could not complete the request.',
+  unsupported_content_type: 'The AI service rejected the request format.',
+  internal_error: 'The AI service could not complete the request.',
 };
 export class AiClientError extends Error {
   constructor(public readonly code: string) { super(ERROR_MESSAGES[code] ?? ERROR_MESSAGES.provider_invalid_response); this.name = 'AiClientError'; }
@@ -397,26 +401,45 @@ async function responseJson(response: Response): Promise<unknown> {
   } catch { throw new AiClientError('provider_invalid_response'); }
   finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
 }
-/** Production routes are fixed same-origin; injected transport is for synthetic tests. */
-export function createAiClient(fetchImpl: typeof fetch = globalThis.fetch) {
+export interface AiEndpoint { baseUrl: string; headers: Record<string, string> }
+/** Signed-in users call their home region's edge function; null means not signed in. */
+export async function cloudAiEndpoint(): Promise<AiEndpoint | null> {
+  const { REGIONS, REGION_IDS, regionClient, rememberedRegion } = await import('../auth/regions');
+  const remembered = rememberedRegion();
+  const order = remembered ? [remembered, ...REGION_IDS.filter(id => id !== remembered)] : REGION_IDS;
+  for (const region of order) {
+    const { data } = await regionClient(region).auth.getSession();
+    const token = data.session?.access_token;
+    if (token) return { baseUrl: `${REGIONS[region].url}/functions/v1/ai`, headers: { Authorization: `Bearer ${token}`, apikey: REGIONS[region].publishableKey } };
+  }
+  return null;
+}
+// Unit tests use a synthetic same-path transport instead of the cloud function.
+const defaultEndpoint: () => Promise<AiEndpoint | null> = import.meta.env.MODE === 'test' ? async () => ({ baseUrl: '/api/ai', headers: {} }) : cloudAiEndpoint;
+/** Injected transport and endpoint are for synthetic tests. */
+export function createAiClient(fetchImpl?: typeof fetch, endpoint?: () => Promise<AiEndpoint | null>) {
+  const transport = fetchImpl ?? ((input: RequestInfo | URL, init?: RequestInit) => globalThis.fetch(input, init));
+  const resolve = endpoint ?? (() => defaultEndpoint());
   async function call(route: 'status' | 'verify' | 'tailor', body?: unknown, signal?: AbortSignal): Promise<unknown> {
     try {
-      const response = await fetchImpl(`/api/ai/${route}`, {
-        method: body === undefined ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal,
-        headers: { Accept: 'application/json', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+      const target = await resolve();
+      if (!target) throw new AiClientError('sign_in_required');
+      const response = await transport(`${target.baseUrl}/${route}`, {
+        method: body === undefined ? 'GET' : 'POST', credentials: 'omit', cache: 'no-store', redirect: 'error', signal,
+        headers: { Accept: 'application/json', ...target.headers, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
       // A proxy or gateway error (for example 502 when the AI server is not running) is an
       // unavailable service, not an invalid model response.
       const isJson = /^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '');
-      if (!response.ok && (!isJson || response.status === 502 || response.status === 503 || response.status === 504)) {
+      if (!response.ok && !isJson) {
         await response.body?.cancel().catch(() => {});
         throw new AiClientError('server_unavailable');
       }
       const value = await responseJson(response);
       if (!response.ok) {
         const error = z.object({ error: z.object({ code: z.string().max(100), message: z.string().max(1000) }).strict() }).strict().safeParse(value);
-        throw new AiClientError(error.success && Object.hasOwn(ERROR_MESSAGES, error.data.error.code) ? error.data.error.code : 'provider_invalid_response');
+        throw new AiClientError(error.success && Object.hasOwn(ERROR_MESSAGES, error.data.error.code) ? error.data.error.code : response.status >= 502 ? 'server_unavailable' : 'provider_invalid_response');
       }
       return value;
     } catch (error) {

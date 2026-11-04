@@ -69,6 +69,7 @@ afterAll(() => restoreFonts());
 beforeEach(() => { vi.stubGlobal('crypto', webcrypto); });
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
+const testEndpoint = async () => ({ baseUrl: '/api/ai', headers: {} });
 describe('synthetic project immutability snapshots', () => {
   it('keeps genuine fixture bytes valid while comparing the complete clone', async () => {
     const project = await fixtureProject(), snapshot = structuredClone(project);
@@ -270,7 +271,7 @@ describe('AI result review boundary (synthetic; no provider)', () => {
 
 describe('fixed same-origin AI client (injected synthetic transport)', () => {
   it('status reads locally and verification posts only an empty object', async () => {
-    const syntheticFetch = vi.fn<typeof fetch>(async () => json(syntheticStatus)), client = createAiClient(syntheticFetch);
+    const syntheticFetch = vi.fn<typeof fetch>(async () => json(syntheticStatus)), client = createAiClient(syntheticFetch, testEndpoint);
     await client.status(); await client.verify();
     expect(syntheticFetch.mock.calls.map(([route, options]) => [route, options?.method, options?.body])).toEqual([
       ['/api/ai/status', 'GET', undefined], ['/api/ai/verify', 'POST', '{}'],
@@ -282,14 +283,14 @@ describe('fixed same-origin AI client (injected synthetic transport)', () => {
     if (failure === 'unverified') { status.accountModelVerified = false; status.verification = 'unverified'; }
     if (failure === 'missing-key') { status.keyConfigured = false; status.accountModelVerified = false; status.verification = 'unverified'; }
     if (failure === 'unsupported-model') { status.supportedModel = false; status.accountModelVerified = false; status.verification = 'unverified'; }
-    const syntheticFetch = vi.fn<typeof fetch>(), client = createAiClient(syntheticFetch);
+    const syntheticFetch = vi.fn<typeof fetch>(), client = createAiClient(syntheticFetch, testEndpoint);
     await expect(client.tailor(request, { status, consentHash: failure === 'consent' ? '' : request.consent.contextHash })).rejects.toBeInstanceOf(AiClientError);
     expect(syntheticFetch).not.toHaveBeenCalled(); expect(canSendAiRequest(status)).toBe(failure === 'consent');
   });
   it('transfers only the validated DTO once and never automatically retries', async () => {
     const request = requestFor(await syntheticApplication());
     const syntheticFetch = vi.fn<typeof fetch>(async () => json({ error: { code: 'provider_rate_limit', message: 'Unsafe provider body text' } }, 429));
-    await expect(createAiClient(syntheticFetch).tailor(request, { status: syntheticStatus, consentHash: request.consent.contextHash })).rejects.toThrowError(/rate limited/);
+    await expect(createAiClient(syntheticFetch, testEndpoint).tailor(request, { status: syntheticStatus, consentHash: request.consent.contextHash })).rejects.toThrowError(/rate limited/);
     expect(syntheticFetch).toHaveBeenCalledTimes(1);
     expect(syntheticFetch.mock.calls[0][0]).toBe('/api/ai/tailor');
     expect(JSON.parse(String(syntheticFetch.mock.calls[0][1]?.body))).toEqual(request);
@@ -306,7 +307,7 @@ describe('fixed same-origin AI client (injected synthetic transport)', () => {
       [new Response('x'.repeat(512 * 1024 + 1), { headers: { 'Content-Type': 'application/json' } }), /failed validation/],
     ] as const) {
       const syntheticFetch = vi.fn<typeof fetch>(async () => response);
-      const failure = createAiClient(syntheticFetch).tailor(request, { status: syntheticStatus, consentHash: request.consent.contextHash });
+      const failure = createAiClient(syntheticFetch, testEndpoint).tailor(request, { status: syntheticStatus, consentHash: request.consent.contextHash });
       await expect(failure).rejects.toThrowError(expected);
       await expect(failure).rejects.not.toThrowError(/Unsafe/);
     }
@@ -609,15 +610,14 @@ describe('applicant proposal controls (synthetic UI transport; no provider)', ()
     await render(await fixtureProject()); expect(host.textContent).toContain('Start an application'); expect(syntheticFetch).not.toHaveBeenCalled();
     expect(host.querySelector('input[type="password"]')).toBeNull();
   });
-  it('only checks local status on opening and requires an explicit empty-body verification click', async () => {
+  it('only checks status on opening and sends nothing else until asked', async () => {
     const project = await syntheticApplication();
     const syntheticFetch = vi.fn<typeof fetch>(async () => json(syntheticStatus)); vi.stubGlobal('fetch', syntheticFetch);
     await render(project);
     expect(syntheticFetch.mock.calls.map(([route]) => route)).toEqual(['/api/ai/status']);
-    await click(button('Verify model access'));
-    expect(syntheticFetch.mock.calls.map(([route]) => route)).toEqual(['/api/ai/status', '/api/ai/verify']);
-    expect(syntheticFetch.mock.calls[1][1]?.body).toBe('{}');
-    expect(host.textContent).toContain('No content generation was requested');
+    await click(button('Check AI status'));
+    expect(syntheticFetch.mock.calls.map(([route]) => route)).toEqual(['/api/ai/status', '/api/ai/status']);
+    expect(host.textContent).toContain('No OpenAI call was made');
   });
   it('clears reviewed consent after a job change and never sends when paid requests are disabled', async () => {
     const project = await syntheticApplication();

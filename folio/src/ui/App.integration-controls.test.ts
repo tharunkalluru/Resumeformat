@@ -137,7 +137,7 @@ function noTransfer() {
   // no model verification, inference, resume content or external URL is sent.
   for (const [url, options] of vi.mocked(fetch).mock.calls) {
     expect(url).toBe('/api/ai/status'); expect(options?.method).toBe('GET');
-    expect(options?.body).toBeUndefined(); expect(options?.credentials).toBe('same-origin');
+    expect(options?.body).toBeUndefined(); expect(options?.credentials).toBe('omit');
   }
 }
 
