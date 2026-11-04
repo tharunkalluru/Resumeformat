@@ -39,7 +39,7 @@ describe('template inspection guidance', () => {
     expect(templateSupport(project).kind).toBe('read-only');
     project.template.sourceType1Baseline.editableSlots[0].sourceLocator = 'Authored';
     expect(templateSupport(project).kind).toBe('limited');
-    expect(templateSupport(project).description).toContain('full job tailoring is unavailable');
+    expect(templateSupport(project).description).toContain('Full tailoring isn’t available');
   });
   it('preserves every import message and gives actual region locations to overflow issues', () => {
     const project = fixture(), render = renderOf(project);

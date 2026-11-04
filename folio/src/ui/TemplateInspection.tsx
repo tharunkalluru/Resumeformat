@@ -131,7 +131,7 @@ export function TemplateInspection(props: TemplateInspectionProps) {
   return <section className="template-inspection" aria-label="Template inspection">
     <div className="inspection-summary">
       <span className={`inspection-support inspection-support-${support.kind}`}>{support.kind === 'read-only' ? <LockKeyhole size={15} /> : <FileText size={15} />}{support.label}</span>
-      <span className="inspection-summary-state">{blockingCount ? `${blockingCount} blocking ${blockingCount === 1 ? 'issue' : 'issues'}` : reviewCount ? `${reviewCount} ${reviewCount === 1 ? 'detail' : 'details'} to review` : 'Visual review required'}</span>
+      <span className="inspection-summary-state">{blockingCount ? `${blockingCount} blocking ${blockingCount === 1 ? 'issue' : 'issues'}` : reviewCount ? 'Looks ready' : 'Ready to check'}</span>
       <p>{support.description}</p>
     </div>
 
@@ -176,7 +176,7 @@ export function TemplateInspection(props: TemplateInspectionProps) {
               : <DocxReference bytes={project.source.bytes} page={page} />}</div>
         </div>
         <div className="inspection-column inspection-baseline">
-          <div className="inspection-paper-label"><strong>{originalReplay ? 'Original layout preview' : 'Reconstructed template'}</strong><span>{hasValidApproval(project) ? 'Approved template' : 'Review required'}</span></div>
+          <div className="inspection-paper-label"><strong>{originalReplay ? 'Original layout preview' : 'Reconstructed template'}</strong><span>{hasValidApproval(project) ? 'Approved' : 'What Folio will edit'}</span></div>
           <div ref={baselineFrame} className="inspection-paper inspection-reconstruction-paper">{!templatePage
             ? <div className="inspection-placeholder">The template has no page {page}.</div>
             : render
@@ -187,13 +187,14 @@ export function TemplateInspection(props: TemplateInspectionProps) {
         {selectedBounds && templatePage && readyBaseline && <div className="inspection-mark-column" aria-hidden="true"><div className="inspection-mark-paper" style={{ width: `${baselineWidth * displayScale}px`, height: `${pageObservation.baseline!.height / 1.5 * displayScale}px` }}><div ref={highlight} className="inspection-region-highlight" style={{ left: `${selectedBounds.x / templatePage.width * 100}%`, top: `${selectedBounds.y / templatePage.height * 100}%`, width: `${selectedBounds.width / templatePage.width * 100}%`, height: `${selectedBounds.height / templatePage.height * 100}%` }} /></div></div>}
       </div>
     </div>
-    <p className="inspection-caption" id={`${id}-caption`}>{project.source.format === 'pdf' ? 'Zoom and scrolling stay synchronized. Compare fonts, spacing, borders, photos, links and every page before approval.' : 'The DOCX reference is approximate. A PDF exported from Word provides a stronger visual reference.'} Loaded-page indicators confirm rendering, not approval.</p>
+    <p className="inspection-caption" id={`${id}-caption`}>{project.source.format === 'pdf' ? 'Your original is on the left and the version Folio will edit is on the right. They scroll and zoom together.' : 'Word files are shown approximately in the browser, so small spacing differences are normal.'}</p>
 
-    <div className="inspection-diagnostics">
-      <div className="inspection-diagnostics-heading"><h2>Inspection details <span>{diagnostics.length}</span></h2>{diagnostics.length > 0 && <button type="button" onClick={nextIssue}>Next detail<ArrowRight size={14} /></button>}</div>
+    <details className="inspection-diagnostics" open={diagnostics.some(issue => issue.severity === 'blocking')}>
+      <summary className="inspection-diagnostics-heading"><h2>{diagnostics.some(issue => issue.severity === 'blocking') ? 'Needs attention' : 'Technical notes'} <span>{diagnostics.length}</span></h2></summary>
+      <div className="inspection-diagnostics-heading">{diagnostics.length > 0 && <button type="button" onClick={nextIssue}>Next detail<ArrowRight size={14} /></button>}</div>
       {!diagnostics.length ? <p className="inspection-no-issues">No import or baseline layout issues were reported. Compare the actual pages to confirm appearance; this does not guarantee an exact match.</p> : <div ref={issueList} className="inspection-issue-list">{diagnostics.map((issue, index) => <button type="button" key={issue.id} data-issue-index={index} className={`inspection-issue inspection-issue-${issue.severity}`} aria-pressed={activeIssueId === issue.id} onClick={() => inspectIssue(issue)}>
         <AlertCircle size={16} aria-hidden="true" /><span><strong>{issue.title}</strong><span>{issue.message}</span><small>{issue.severity === 'blocking' ? 'Blocks approval' : issue.severity === 'review' ? 'Review required' : 'Information'} · {issue.page ? `Page ${issue.page}${issue.bounds ? ' · Region highlighted when selected' : ''}` : 'Document-wide detail'}</small></span>{issue.page && <ArrowRight size={14} aria-hidden="true" />}
       </button>)}</div>}
-    </div>
+    </details>
   </section>;
 }

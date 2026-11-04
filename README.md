@@ -22,7 +22,7 @@ The current application is in **[`folio/`](folio/)**, built with React, TypeScri
 
 ## Run locally
 
-Use **Node.js 24** and npm. Install the locked dependencies from the current app directory:
+Use **Node.js 22 or newer** and npm. Install the locked dependencies from the current app directory:
 
 ```sh
 git clone https://github.com/tharunkalluru/Resumeformat.git

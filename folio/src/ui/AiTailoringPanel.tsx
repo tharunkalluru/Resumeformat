@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Check, FilePlus2, LoaderCircle, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { Check, FilePlus2, LoaderCircle, Sparkles, X } from 'lucide-react';
 import { eligibleEvidence } from '../core/careerMemory';
 import { blockText, workspaceOf } from '../core/model';
 import type { Project } from '../core/model';
@@ -9,6 +9,7 @@ import {
 } from '../tailoring/ai';
 import type { AiProposal, AiRequest, AiResult, AiStatus } from '../tailoring/ai';
 import './ai-tailoring.css';
+import { useOptionalAuth } from '../auth/AuthProvider';
 
 export interface AiTailoringPanelProps {
   project: Project;
@@ -42,7 +43,13 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
   const [consentHash, setConsentHash] = useState('');
   const [review, setReview] = useState<Review | null>(null);
   const [proposalReviews, setProposalReviews] = useState<Record<string, ProposalReview>>({});
-  const facts = eligibleEvidence(project);
+  // Separators, spaces and other fragments without letters or digits are not useful choices.
+  const meaningful = (text: string) => /[\p{L}\p{N}]/u.test(text);
+  const facts = eligibleEvidence(project).filter(fact => meaningful(fact.text));
+  const [statusChecked, setStatusChecked] = useState(false);
+  const auth = useOptionalAuth();
+  const signedInId = auth?.user?.id ?? null;
+  const [needsSignIn, setNeedsSignIn] = useState(false);
   const selectedFacts = new Set(factIds);
   const selectedBlocks = new Set(blockIds);
   const currentPreview = preview?.fingerprint === fingerprint ? preview : null;
@@ -89,10 +96,14 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
   useEffect(() => {
     if (!application) return;
     const abort = new AbortController();
-    client.status(abort.signal).then(value => { if (!abort.signal.aborted) setStatus(value); })
-      .catch(reason => { if (!abort.signal.aborted) { setStatus(null); setError(aiErrorMessage(reason)); } });
+    client.status(abort.signal).then(value => { if (!abort.signal.aborted) { setStatus(value); setStatusChecked(true); setNeedsSignIn(false); } })
+      .catch(reason => { if (!abort.signal.aborted) {
+        setStatus(null); setStatusChecked(true);
+        const signIn = reason instanceof Error && 'code' in reason && reason.code === 'sign_in_required';
+        setNeedsSignIn(signIn); if (!signIn) setError(aiErrorMessage(reason));
+      } });
     return () => abort.abort();
-  }, [application, client, project.id]);
+  }, [application, client, project.id, signedInId]);
 
   useEffect(() => {
     if (selectedBlockId && project.draft.blocks.some(block => block.id === selectedBlockId)) {
@@ -116,10 +127,11 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
       const value = await (verify ? client.verify(abort.signal) : client.status(abort.signal));
       if (operation === generation.current && !abort.signal.aborted) {
         setStatus(value);
-        setNotice(verify ? 'Read-only account model verification completed. No content generation was requested.' : 'Local server status checked. No OpenAI call was made.');
+        setNotice(verify ? 'Read-only account model verification completed. No content generation was requested.' : 'AI status checked. No OpenAI call was made.');
       }
     } catch (reason) {
       if (operation === generation.current && !abort.signal.aborted) {
+        if (!verify) setStatus(null);
         setError(aiErrorMessage(reason));
         if (verify && status) setStatus({ ...status, accountModelVerified: false, verification: 'failed' });
         else setStatus(null);
@@ -209,16 +221,24 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
   </section>;
 
   const unresolved = review?.result.proposals.some(proposal => !proposalReviews[proposal.blockId]?.decision) ?? false;
+  // Without a configured AI service, show one quiet line instead of the full request builder.
+  const serviceUsable = !!status && status.keyConfigured && status.modelConfigured && status.supportedModel;
+  if (!serviceUsable && !review && busy !== 'tailor' && busy !== 'accept') return <section className="ai-tailoring ai-tailoring-offline panel-section" aria-labelledby={`${id}-title`}>
+    <h3 id={`${id}-title`}><Sparkles size={16} aria-hidden="true" />AI suggestions</h3>
+    <p role="status">{!statusChecked || busy === 'status' ? 'Checking AI availability…' : status ? aiStatusMessage(status) : needsSignIn ? 'Sign in to get AI wording suggestions for this job. Editing and downloading work without an account.' : 'AI tailoring is offline right now. You can still edit and download your resume.'}</p>
+    {needsSignIn && auth
+      ? <button type="button" className="button button-primary" onClick={() => auth.openAuth('signin')}>Sign in to use AI</button>
+      : <button type="button" className="text-button" onClick={() => void checkStatus(false)} disabled={locked}>Check again</button>}
+  </section>;
   return <section className="ai-tailoring panel-section" aria-labelledby={`${id}-title`} aria-busy={busy !== null}>
     <h3 id={`${id}-title`}><Sparkles size={16} aria-hidden="true" />AI wording proposals</h3>
     <p>Choose the facts and paragraphs to send. Suggestions use <a href="https://developers.openai.com/api/docs/models/gpt-6.1-sol" target="_blank" rel="noreferrer">{AI_MODEL}</a> with medium reasoning and always need your review.</p>
     <div className="ai-server-status">
-      <p role="status">{status ? aiStatusMessage(status) : 'Local AI server status is not available yet.'}</p>
+      <p role="status">{status ? aiStatusMessage(status) : 'AI status is not available yet.'}</p>
       <div className="ai-actions">
-        <button type="button" className="button button-secondary" onClick={() => void checkStatus(false)} disabled={locked}>Check server status</button>
-        <button type="button" className="button button-secondary" onClick={() => void checkStatus(true)} disabled={locked || !status?.keyConfigured || !status.modelConfigured || !status.supportedModel || status.busy}><ShieldCheck size={14} aria-hidden="true" />Verify model access</button>
+        <button type="button" className="button button-secondary" onClick={() => void checkStatus(false)} disabled={locked}>Check AI status</button>
       </div>
-      <p className="ai-help">Verification makes a read-only OpenAI account request, without your resume or job text. It is separate from paid generation.</p>
+      <p className="ai-help">Only the facts and paragraphs you select are sent, through Folio’s server, to OpenAI.</p>
     </div>
 
     <fieldset className="ai-selection" disabled={locked}>
@@ -232,7 +252,7 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
     </fieldset>
     <fieldset className="ai-selection" disabled={locked}>
       <legend>Current paragraphs ({blockIds.length}/100)</legend>
-      <div className="ai-choice-list">{project.draft.blocks.map(block => <label key={block.id} className="ai-choice">
+      <div className="ai-choice-list">{project.draft.blocks.filter(block => meaningful(blockText(block))).map(block => <label key={block.id} className="ai-choice">
         <input type="checkbox" checked={selectedBlocks.has(block.id)} disabled={!selectedBlocks.has(block.id) && blockIds.length >= 100} onChange={event => changeSelection('block', block.id, event.target.checked)} />
         <span><span className="ai-exact-text">{blockText(block) || '(Empty paragraph)'}</span><small className="ai-required-facts">Required current sources: {(() => { try { return aiRequiredFactIds(project, block.id).map(factId => facts.find(fact => fact.id === factId)?.text ?? `Unavailable source ${factId}`).join(' · ') || 'No reviewed source facts'; } catch { return 'Review this paragraph’s source references on the canvas.'; } })()}</small></span>
       </label>)}</div>
@@ -259,8 +279,8 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
       <button type="button" className="button button-primary" onClick={() => void send()} disabled={locked || !canSendAiRequest(status) || consentHash !== currentPreview.request.consent.contextHash || unresolved}>Send paid request to OpenAI</button>
     </div>}
 
-    {busy && <div className="ai-pending" role="status"><LoaderCircle size={15} className="spin" aria-hidden="true" />{busy === 'tailor' ? 'Waiting for OpenAI proposals…' : busy === 'verify' ? 'Verifying account model access…' : busy === 'accept' ? 'Checking the exact proposal fit…' : 'Checking local server status…'}
-      {busy !== 'accept' && <button type="button" className="text-button" onClick={() => { controller.current?.abort(); generation.current += 1; inFlight.current = false; setBusy(null); setNotice(busy === 'tailor' ? 'Request stopped locally. OpenAI may already have processed it. No automatic retry was made.' : 'Local operation stopped.'); }}>Stop</button>}
+    {busy && <div className="ai-pending" role="status"><LoaderCircle size={15} className="spin" aria-hidden="true" />{busy === 'tailor' ? 'Waiting for OpenAI proposals…' : busy === 'verify' ? 'Verifying account model access…' : busy === 'accept' ? 'Checking the exact proposal fit…' : 'Checking AI status…'}
+      {busy !== 'accept' && <button type="button" className="text-button" onClick={() => { controller.current?.abort(); generation.current += 1; inFlight.current = false; setBusy(null); setNotice(busy === 'tailor' ? 'Request stopped locally. OpenAI may already have processed it. No automatic retry was made.' : 'Stopped.'); }}>Stop</button>}
     </div>}
     {error && <p className="ai-error" role="alert">{error}</p>}
     {notice && <p className="ai-notice" role="status">{notice}</p>}

@@ -117,3 +117,20 @@ describe('review, provenance and export invariants', () => {
     expect(edited.draft.blocks[0].runs[0].href).toBeUndefined();
   });
 });
+
+describe('claim confirmation keeps completed checks (phase 1)', () => {
+  it('keeps the same draft object when no paragraph needs new evidence', async () => {
+    const project = await fixtureProject();
+    const confirmed = confirmDraft(project);
+    expect(confirmed.draft).toBe(project.draft);
+    expect(confirmed.reviewedDraftRevision).toBe(project.draft.revision);
+    expect(confirmed.revision).toBe(project.revision + 1);
+  });
+  it('still records applicant-confirmed evidence for edited paragraphs', async () => {
+    let project = await fixtureProject();
+    project = editBlock(project, project.draft.blocks[0].id, [{ text: 'A fictional reviewed sentence.', bold: false, italic: false, underline: false }]);
+    const confirmed = confirmDraft(project);
+    expect(confirmed.draft).not.toBe(project.draft);
+    expect(confirmed.facts.some(fact => fact.kind === 'applicantEdit' && fact.text === 'A fictional reviewed sentence.')).toBe(true);
+  });
+});

@@ -7,7 +7,7 @@ import { DOMMatrix, ImageData, Path2D } from '@napi-rs/canvas';
 import { JSDOM } from 'jsdom';
 import JSZip from 'jszip';
 import { importDocx } from './docx';
-import { makeProject, type ImportResult } from '../core/model';
+import { blockText, makeProject, type ImportResult } from '../core/model';
 import { approveTemplate, confirmDraft, validateExport } from '../core/commands';
 import { setFontLoader } from '../layout/fonts';
 import { renderDocument } from '../render/pdf';
@@ -913,5 +913,25 @@ describe('other applicable unsupported decoration carriers', () => {
   it('does not waive relevant properties hidden in unknown Word wrappers', () => {
     const carrier = xml('rPr', '<w:unknownWrapper><w:rtl w:val="0"/></w:unknownWrapper>').documentElement;
     expect(classifyDocxProperty(carrier, 'rtl', { locator: 'fixture/rPr', carrier: 'runDirect' }).state).toBe('uncertain');
+  });
+});
+
+describe('Word built-in bullets (phase 1)', () => {
+  const list = (marker: string) => `<w:abstractNum w:abstractNumId="4"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="${marker}"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="4"/></w:num>`;
+  const body = '<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>Led a fictional rollout</w:t></w:r></w:p>';
+  it('reads Word’s default Symbol-font bullet as a normal bullet without blocking the import', async () => {
+    const result = await word(body, '', '', list(''));
+    expect(result.template.warnings.filter(warning => warning.severity === 'blocking')).toEqual([]);
+    expect(blockText(result.baseline.blocks[0])).toMatch(/^• Led a fictional rollout/);
+  });
+  it('shows decorative Wingdings markers as a plain bullet with an informational note', async () => {
+    const result = await word(body, '', '', list(''));
+    expect(result.template.warnings.some(warning => warning.severity === 'blocking')).toBe(false);
+    expect(result.template.warnings.some(warning => warning.code === 'DOCX_NUMBERING' && warning.severity === 'info')).toBe(true);
+    expect(blockText(result.baseline.blocks[0])).toMatch(/^• /);
+  });
+  it('still blocks markers it cannot represent', async () => {
+    const result = await word(body, '', '', list(''));
+    expect(result.template.warnings.some(warning => warning.code === 'DOCX_NUMBERING' && warning.severity === 'blocking')).toBe(true);
   });
 });

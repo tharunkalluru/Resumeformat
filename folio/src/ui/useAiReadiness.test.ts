@@ -24,7 +24,7 @@ beforeEach(() => {
     expect(url).toBe('/api/ai/status');
     expect(options?.method).toBe('GET');
     expect(options).not.toHaveProperty('body');
-    expect(options).toMatchObject({ credentials: 'same-origin', cache: 'no-store', redirect: 'error', headers: { Accept: 'application/json' } });
+    expect(options).toMatchObject({ credentials: 'omit', cache: 'no-store', redirect: 'error', headers: { Accept: 'application/json' } });
     expect(Object.keys(options!.headers!)).toEqual(['Accept']);
     expect(options?.signal).toBeInstanceOf(AbortSignal);
     return new Promise<Response>((resolve, reject) => requests.push({ signal: options!.signal!, resolve, reject }));
@@ -114,7 +114,7 @@ describe('local AI readiness status hook', () => {
     await mount(true);
     await reject(0);
     expect(latest.service.state).toBe('unavailable');
-    expect(latest.service.message).toContain('local AI server is unavailable');
+    expect(latest.service.message).toContain('AI tailoring is offline');
     expect(observed).not.toContain('ready');
     expect(transport).toHaveBeenCalledOnce();
   });

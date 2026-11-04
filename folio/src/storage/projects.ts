@@ -44,8 +44,30 @@ export function subscribeGroupChanges(listener: (change: GroupChange) => void): 
 }
 function announce(state: GroupState) { channel?.postMessage({ templateGroupId: state.templateGroupId, epoch: state.epoch, state: state.state }); }
 function remember(project: Project, epoch: number) { knownRevisions.set(project.id, project.revision); knownMemoryRevisions.set(project.id, project.careerMemory?.revision); knownEpochs.set(workspaceOf(project).templateGroupId, epoch); }
+/**
+ * Source proofs depend only on the original bytes, template, baseline, facts and image assets.
+ * Draft-only edits do not change them, so a proof that already passed is not re-run on
+ * every autosave (it parses the whole original PDF and took seconds per save).
+ */
+const passedSourceProofs = new Set<string>();
+async function sourceProofKey(project: Project): Promise<string> {
+  const byteArrays: Uint8Array[] = [];
+  // The document-scoped proof also reads the baseline (and facts when sources are shared).
+  const shape = JSON.stringify({ template: project.template, assets: project.assets, baseline: project.baseline, facts: project.facts, claimedSourceSha256: project.source.sha256 }, (_key, value: unknown) => {
+    if (value instanceof Uint8Array) { byteArrays.push(value); return { bytes: byteArrays.length - 1, length: value.byteLength }; }
+    return value;
+  });
+  const digests = await Promise.all(byteArrays.map(bytes => sha256(bytes)));
+  return `${await sha256(project.source.bytes)}:${await sha256(new TextEncoder().encode(`${shape}|${digests.join(',')}`))}`;
+}
 async function checkedProject(project: Project): Promise<Project> {
   const valid = validateProject(structuredClone(project));
+  const proofKey = await sourceProofKey(valid);
+  if (!passedSourceProofs.has(proofKey)) { await checkSourceProofs(valid); if (passedSourceProofs.size > 50) passedSourceProofs.clear(); passedSourceProofs.add(proofKey); }
+  for (const source of valid.careerMemory?.sources ?? []) if (source.bytes && await sha256(source.bytes) !== source.sha256) throw new FolioError('SOURCE_CHECKSUM', 'A Career Memory original failed its integrity check. The saved record was not changed.');
+  return valid;
+}
+async function checkSourceProofs(valid: Project): Promise<void> {
   if((valid.template.sourceFonts?.length||valid.template.sourceStandardFonts?.length) && new TextEncoder().encode(JSON.stringify(metadata(valid))).length>2*1024*1024)throw new FolioError('SOURCE_FONT_METADATA_LIMIT','The positioned source font document exceeds the 2 MiB metadata limit. No data was omitted.');
   if(valid.source.format==='pdf')await (await import('../import/pdf-composite')).validateCompositeSourceClass(valid);
   if(valid.template.sourceCompositePages){await (await import('../import/pdf-composite')).validateCompositeProject(valid);}else{
@@ -58,8 +80,6 @@ async function checkedProject(project: Project): Promise<Project> {
   await validateSourceScopedPaint(valid.source.bytes, valid.template, valid.assets);
   if(hasOriginalCff(valid.template)||hasPermittedOriginalTrueType(valid.template)||valid.template.sourceColorProfile||valid.template.sourceFonts?.some(font=>font.sourceVersion===7||font.sourceVersion===8)){const {validateDocumentScopedBaseline}=await import('../import/document-scoped-baseline');await validateDocumentScopedBaseline(valid);}
   }
-  for (const source of valid.careerMemory?.sources ?? []) if (source.bytes && await sha256(source.bytes) !== source.sha256) throw new FolioError('SOURCE_CHECKSUM', 'A Career Memory original failed its integrity check. The saved record was not changed.');
-  return valid;
 }
 function metadata(project: Project): unknown { return packRecordMetadata(packScopedMetadata({ ...project, source: { ...project.source, bytes: undefined }, assets: project.assets.map(asset => ({ ...asset, bytes: undefined })), template: { ...project.template,...(project.template.sourceStandardFonts?{sourceStandardFonts:project.template.sourceStandardFonts.map(f=>({...f,nativeAdapter:{...f.nativeAdapter,bytes:undefined}}))}:{}),...(project.template.sourceColorProfile?{sourceColorProfile:{...project.template.sourceColorProfile,bytes:undefined}}:{}), ...(project.template.sourceFonts ? {sourceFonts:project.template.sourceFonts.map(font=>({...font,bytes:undefined,...('originalProgram'in font&&font.originalProgram?{originalProgram:{...font.originalProgram,bytes:undefined}}:{})}))}: {}) }, ...(project.careerMemory ? { careerMemory: { ...project.careerMemory, sources: project.careerMemory.sources.map(source => ({ ...source, bytes: undefined })) } } : {}) })); }
 const saves = new Map<string, Promise<void>>();

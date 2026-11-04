@@ -43,22 +43,22 @@ export function templateSupport(project: Project): TemplateSupport {
     const editable = type1EditableRegions(project.template).length;
     return { kind: editable ? 'limited' : 'read-only', label: editable ? 'Limited editing' : 'Read-only layout',
       description: editable
-        ? `${editable} ${editable === 1 ? 'original line has' : 'original lines have'} a bounded wording editor. Use covered characters within the existing frame; full job tailoring is unavailable.`
-        : 'The original layout can be inspected. Wording edits and job tailoring are unavailable for this source.',
+        ? `${editable} ${editable === 1 ? 'line can' : 'lines can'} be edited using characters from your original fonts. Full tailoring isn’t available for this file.`
+        : 'This file can be viewed but not edited. Upload a Word file or a PDF exported from Word or Google Docs to tailor it.',
       textRegionCount: total, lockedRegionCount: Math.max(0, total - editable) };
   }
   const fonts = new Map(project.template.sourceFonts?.map(font => [font.id, font]));
   const locked = regions.filter(region => region.sourceLayout && region.sourceLayout.version !== 1 && region.sourceLayout.editPolicy === 'baselineOnly' ||
     region.style.sourceFontId && (!fonts.has(region.style.sourceFontId) || fonts.get(region.style.sourceFontId)?.sourceVersion === 10)).length;
   if (!total || locked === total) return { kind: 'read-only', label: 'Read-only layout',
-    description: total ? 'These text regions preserve their source geometry without a supported wording editor.' : 'No editable text regions were recovered. Review import warnings before continuing.',
+    description: total ? 'This file can be viewed but not edited. Upload a Word file or a PDF exported from Word or Google Docs to tailor it.' : 'No text could be read from this file. Upload a Word file or a PDF with selectable text.',
     textRegionCount: total, lockedRegionCount: locked };
   const sourceBound = regions.some(region => region.sourceLayout || region.sourceStandardLayout || region.style.sourceFontId || region.style.sourceStandardFontId);
   if (sourceBound || locked || project.template.sourceCompositePages) return { kind: 'limited', label: 'Limited editing',
-    description: `Source fonts and fixed text frames restrict changes.${locked ? ` ${locked} ${locked === 1 ? 'text region is' : 'text regions are'} read-only.` : ''} Available editors check supported characters and layout before applying changes. A matching preview does not establish full tailoring support.`,
+    description: `Your original fonts are kept, so some lines can only use characters those fonts include.${locked ? ` ${locked} ${locked === 1 ? 'line stays' : 'lines stay'} exactly as they are.` : ''} Folio checks every edit fits before applying it.`,
     textRegionCount: total, lockedRegionCount: locked };
   return { kind: 'editable', label: 'Editable template',
-    description: 'Text regions support editing after template approval. New wording must still fit the existing layout and pass the final PDF review.',
+    description: 'You can edit any line. New wording just needs to fit the space it has.',
     textRegionCount: total, lockedRegionCount: 0 };
 }
 
