@@ -738,6 +738,18 @@ export default function App() {
     } catch (reason) { setError(errorMessage(reason)); }
     finally { recoveryInFlight.current = false; setBusy(''); }
   }
+  // The landing page's "Try a sample" link opens /app?sample=1.
+  const [sampleRequested, setSampleRequested] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('sample') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    if (!sampleRequested) return;
+    const url = new URL(window.location.href); url.searchParams.delete('sample');
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+    const timer = window.setTimeout(() => { setSampleRequested(false); void loadSample(); }, 600);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sampleRequested]);
   async function loadSample() {
     if (busy) return;
     setBusy('Loading fictional sample'); setError('');

@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import { Site } from './site/Site';
 import { AuthProvider } from './auth/AuthProvider';
 import './styles.css';
 
@@ -17,4 +17,4 @@ class WorkspaceBoundary extends React.Component<{ children: React.ReactNode }, {
   }
 }
 
-createRoot(document.getElementById('root')!).render(<React.StrictMode><WorkspaceBoundary><AuthProvider><App /></AuthProvider></WorkspaceBoundary></React.StrictMode>);
+createRoot(document.getElementById('root')!).render(<React.StrictMode><WorkspaceBoundary><AuthProvider><Site /></AuthProvider></WorkspaceBoundary></React.StrictMode>);
