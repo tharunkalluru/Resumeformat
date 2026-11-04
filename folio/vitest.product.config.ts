@@ -45,6 +45,7 @@ export default defineConfig({
       'src/import/docx-properties.test.ts',
       'src/import/docxReference.test.ts',
       'src/ui/fileNames.test.ts',
+      'src/auth/authActions.test.ts',
     ],
   },
 });

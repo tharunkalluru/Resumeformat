@@ -7,11 +7,15 @@ import type { PrivateProfile } from '../core/activity';
 import { presentation } from '../core/folio';
 import { sourceReviewIssues } from '../tailoring/sourceSupport';
 import { matchProject, changedParagraphs } from '../tailoring/local';
+import { useOptionalAuth } from '../auth/AuthProvider';
+import { REGIONS } from '../auth/regions';
 import { applicationEntries, applicationProgress, applicationSearchText, shortDate, type ComposerServiceReadiness } from './workspacePresentation';
 
 export function AccountMenu({ profile, onProfile, onMemory, onSettings, onHelp }: { profile: PrivateProfile | null; onProfile: () => void; onMemory: () => void; onSettings: () => void; onHelp: () => void }) {
   const [open, setOpen] = useState(false), root = useRef<HTMLDivElement>(null), trigger = useRef<HTMLButtonElement>(null);
-  const name = profile?.name || 'Your profile';
+  const auth = useOptionalAuth(), user = auth?.status === 'signedIn' ? auth.user : null;
+  const accountName = (user?.user_metadata?.full_name as string | undefined) || user?.email || '';
+  const name = profile?.name || accountName || 'Your profile';
   const actions = [{ title: 'My profile', icon: UserRound, action: onProfile }, { title: 'Career memory', icon: BookOpen, action: onMemory }, { title: 'Settings', icon: Settings2, action: onSettings }, { title: 'Help', icon: HelpCircle, action: onHelp }];
   useEffect(() => {
     if (!open) return;
@@ -26,8 +30,11 @@ export function AccountMenu({ profile, onProfile, onMemory, onSettings, onHelp }
     const items = Array.from(root.current?.querySelectorAll<HTMLButtonElement>('[role=menuitem]') ?? []), index = items.indexOf(document.activeElement as HTMLButtonElement);
     if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); items[event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus(); }
   }}>
-    {open && <div className="folio-account-menu" role="menu" aria-label="Private profile menu">{actions.map(({ title, icon: Icon, action }) => <button role="menuitem" key={title} onClick={() => { close(); action(); }}><Icon size={16} />{title}</button>)}<p><LockKeyhole size={13} /> Local workspace · no account connected</p></div>}
-    <button ref={trigger} className="folio-account-trigger" aria-haspopup="menu" aria-expanded={open} aria-label={`${name}, private profile menu`} onClick={() => setOpen(value => !value)}><span className="folio-avatar">{profile?.name ? profile.name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => [...word][0]).join('').toUpperCase() : <UserRound size={18} />}</span><span><strong>{name}</strong><small>Private · on this device</small></span><ChevronDown size={15} /></button>
+    {open && <div className="folio-account-menu" role="menu" aria-label="Private profile menu">{actions.map(({ title, icon: Icon, action }) => <button role="menuitem" key={title} onClick={() => { close(); action(); }}><Icon size={16} />{title}</button>)}{auth && (user
+      ? <><p><LockKeyhole size={13} /> Signed in as {user.email}{auth.region ? ` · data in ${REGIONS[auth.region].label}` : ''}</p><button role="menuitem" onClick={() => { close(); void auth.signOut(); }}>Sign out</button></>
+      : <><p><LockKeyhole size={13} /> Local workspace · not signed in</p><button role="menuitem" onClick={() => { close(); auth.openAuth('signin'); }}>Sign in or create account</button></>)}
+    {!auth && <p><LockKeyhole size={13} /> Local workspace · no account connected</p>}</div>}
+    <button ref={trigger} className="folio-account-trigger" aria-haspopup="menu" aria-expanded={open} aria-label={`${name}, private profile menu`} onClick={() => setOpen(value => !value)}><span className="folio-avatar">{profile?.name ? profile.name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => [...word][0]).join('').toUpperCase() : <UserRound size={18} />}</span><span><strong>{name}</strong><small>{user ? `Signed in · ${auth?.region ? REGIONS[auth.region].label : ''}` : 'Private · on this device'}</small></span><ChevronDown size={15} /></button>
   </div>;
 }
 
