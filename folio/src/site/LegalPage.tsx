@@ -1,7 +1,7 @@
 import { SiteFooter, SiteHeader } from './Site';
 import { linkProps } from './router';
 
-const UPDATED = 'November 4, 2026';
+const UPDATED = 'November 12, 2026';
 const CONTACT = 'tharun99.kalluru@gmail.com';
 
 export function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
@@ -18,31 +18,37 @@ function Privacy() {
     <p className="site-fineprint">Last updated {UPDATED}</p>
     <p>Folio helps you tailor your resume to job descriptions. This policy explains what Folio collects, where it is kept and how you can remove it.</p>
 
-    <h2>What stays on your device</h2>
-    <p>Your resume files, drafts, applications, career notes and downloads are stored in your browser’s storage on your device. They are not uploaded to Folio’s servers. Clearing your browser data removes them.</p>
+    <h2>Your resumes</h2>
+    <p>The file you add is opened in your browser and is never uploaded; Folio works from its text. Your resumes, the versions tailored for each job, and cover letters are stored in your browser’s storage on your device.</p>
+    <p>If you are signed in, a copy of your resumes, tailored versions, job postings and cover letters is also saved to your account, so they are there on your other devices. You can turn this off under “Save to my account” in the menu: the copies in your account are deleted and nothing more is saved there. When you sign out, resumes that are saved in your account are removed from that browser.</p>
+    <p>The older exact-layout workspace keeps everything in your browser only.</p>
 
     <h2>Your account</h2>
-    <p>If you create an account, Folio stores your email address, your name, and your profile picture if you sign in with Google. This is kept with our database provider, Supabase, in the region you choose when signing up: India (Mumbai) or the United States (Ohio). Your account lives in one region only.</p>
+    <p>If you create an account, Folio stores your email address, your name, and your profile picture if you sign in with Google. This, and the copies of your resumes described above, is kept with our database provider, Supabase, in the region you choose when signing up: India (Mumbai) or the United States (Ohio). Your account lives in one region only.</p>
 
-    <h2>AI suggestions</h2>
-    <p>When you ask for AI suggestions, Folio sends the job description and the resume lines and facts you selected to OpenAI through Folio’s server, to generate wording suggestions. Nothing is sent until you choose to request suggestions. Requests are made with OpenAI’s storage turned off. Folio does not keep the content of these requests. It keeps a short record of each request (time, status, and amount of AI usage) to apply daily limits.</p>
+    <h2>AI</h2>
+    <p>Folio uses AI to read your resume into sections, to tailor it to a job, and to draft a cover letter. For this, the text of your resume and the job posting are sent through Folio’s server to OpenAI. The text of your resume is sent when you add it; the job posting is sent when you ask for a tailoring. Requests are made with OpenAI’s storage turned off. Folio’s server does not keep the content of these requests. It keeps a short record of each request (time, status, and amount of AI usage) to apply daily limits.</p>
+    <p>If you paste a link to a job posting, Folio’s server opens that page to read its text.</p>
+
+    <h2>Trying Folio without an account</h2>
+    <p>You can tailor one resume without an account. To limit this to one try per visitor, Folio’s server keeps a one-way scrambled form of your internet address, which cannot be turned back into the address, and deletes it within three days.</p>
 
     <h2>Sign-in with Google</h2>
     <p>If you use Google to sign in, Folio receives your name, email address and profile picture from Google. Folio does not access your Gmail, Drive, contacts or any other Google data. Folio’s use of information received from Google follows the Google API Services User Data Policy, including its Limited Use requirements.</p>
 
     <h2>Cookies and storage</h2>
-    <p>Folio uses your browser’s local storage to keep you signed in and to remember your region. Folio does not use advertising or tracking cookies, and does not sell or share your information for advertising.</p>
+    <p>Folio uses your browser’s local storage to keep you signed in and to remember your region and paper size. Folio does not use advertising or tracking cookies, and does not sell or share your information for advertising.</p>
 
     <h2>Service providers</h2>
     <ul>
-      <li>Supabase — accounts and sign-in</li>
-      <li>OpenAI — AI wording suggestions</li>
+      <li>Supabase — accounts, sign-in and the copies of resumes saved to your account</li>
+      <li>OpenAI — reading, tailoring and cover-letter drafts</li>
       <li>Cloudflare — hosting the website</li>
       <li>Google — optional sign-in</li>
     </ul>
 
     <h2>Deleting your data</h2>
-    <p>You can delete your resumes and drafts at any time from Folio or by clearing your browser data. To delete your account, email <a href={`mailto:${CONTACT}`}>{CONTACT}</a> from the address on your account and it will be removed within 30 days.</p>
+    <p>You can delete any resume or job from Folio at any time; if it was saved to your account, that copy is deleted too. Clearing your browser data removes what is stored on your device. To delete your account, email <a href={`mailto:${CONTACT}`}>{CONTACT}</a> from the address on your account and it will be removed within 30 days.</p>
 
     <h2>Children</h2>
     <p>Folio is not intended for anyone under 16.</p>
@@ -59,10 +65,10 @@ function Terms() {
     <p>By using Folio you agree to these terms. If you do not agree, please do not use Folio.</p>
 
     <h2>The service</h2>
-    <p>Folio is an early-access tool for editing and tailoring resumes. It is provided free of charge, as is, and may change or be unavailable at times. AI suggestions are limited per day.</p>
+    <p>Folio is an early-access tool for editing and tailoring resumes. It is provided free of charge, as is, and may change or be unavailable at times. AI use is limited per day.</p>
 
     <h2>Your content</h2>
-    <p>You own your resume and everything you create with Folio. You give Folio permission to process it only to provide the service, such as sending selected text for AI suggestions when you ask.</p>
+    <p>You own your resume and everything you create with Folio. You give Folio permission to process it only to provide the service: sending your resume text and job postings to the AI provider, and keeping copies in your account while that setting is on.</p>
 
     <h2>Your responsibility</h2>
     <p>AI suggestions can be wrong. Review every change before you use it, and make sure your resume is true and accurate. Do not use Folio to misrepresent your experience, to upload content you do not have the right to use, or to misuse or overload the service.</p>

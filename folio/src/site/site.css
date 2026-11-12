@@ -94,3 +94,4 @@
   .site-actions .site-button { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .site * { transition: none !important; } }
+.site-loading { padding: 20vh 24px; text-align: center; color: var(--text-muted); font: var(--text-body); font-family: var(--font-sans); }

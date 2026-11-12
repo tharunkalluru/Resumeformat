@@ -1,16 +1,38 @@
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import type { Bullet, StructuredResume } from './model';
+import type { Bullet, StructuredResume, TemplateId } from './model';
 
-/** "Classic": one column, real text, standard section names. Reads cleanly in applicant-tracking systems. */
+/** One column, real text, standard section names: every template reads cleanly in applicant-tracking systems. */
 export type Paper = 'letter' | 'a4';
 const PAPER: Record<Paper, [number, number]> = { letter: [612, 792], a4: [595.28, 841.89] };
 const INK = rgb(0.07, 0.07, 0.07), MUTED = rgb(0.33, 0.33, 0.32), RULE = rgb(0.78, 0.78, 0.76);
 
-type Face = 'regular' | 'bold' | 'italic';
-const FILES: Record<Face, [string, string]> = {
-  regular: ['structured/Inter-Regular.ttf', 'DejaVuSans.ttf'], bold: ['structured/Inter-SemiBold.ttf', 'DejaVuSans-Bold.ttf'], italic: ['structured/Inter-Italic.ttf', 'DejaVuSans-Oblique.ttf'],
+/** The templates differ in spacing, header alignment and one accent colour; content and order are the same. */
+interface Look { margin: number; size: number; centered: boolean; accent: ReturnType<typeof rgb> | null; rule: ReturnType<typeof rgb>; name: number }
+const LOOKS: Record<TemplateId, Look> = {
+  classic: { margin: 46, size: 1, centered: false, accent: null, rule: RULE, name: 21 },
+  modern: { margin: 50, size: 1, centered: true, accent: rgb(0.09, 0.27, 0.45), rule: rgb(0.62, 0.72, 0.82), name: 23 },
+  compact: { margin: 36, size: 0.9, centered: false, accent: null, rule: RULE, name: 19 },
 };
+export const TEMPLATES: { id: TemplateId; label: string }[] = [{ id: 'classic', label: 'Classic' }, { id: 'modern', label: 'Modern' }, { id: 'compact', label: 'Compact' }];
+
+type Face = 'regular' | 'bold' | 'italic';
+// Small Latin-only fonts keep a download under 100 KB. Text with other characters uses the full fonts, then DejaVu.
+const FILES: Record<Face, [string, string, string]> = {
+  regular: ['structured/Inter-Regular-Latin.ttf', 'structured/Inter-Regular.ttf', 'DejaVuSans.ttf'],
+  bold: ['structured/Inter-SemiBold-Latin.ttf', 'structured/Inter-SemiBold.ttf', 'DejaVuSans-Bold.ttf'],
+  italic: ['structured/Inter-Italic-Latin.ttf', 'structured/Inter-Italic.ttf', 'DejaVuSans-Oblique.ttf'],
+};
+const coverage = new Map<string, Promise<Set<number>>>();
+/** The characters a font file can draw. */
+function covers(file: string): Promise<Set<number>> {
+  let pending = coverage.get(file);
+  if (!pending) {
+    pending = (async () => { const probe = await PDFDocument.create(); probe.registerFontkit(fontkit); return new Set((await probe.embedFont(await loadFont(file), { subset: false })).getCharacterSet()); })();
+    pending.catch(() => coverage.delete(file)); coverage.set(file, pending);
+  }
+  return pending;
+}
 const fontBytes = new Map<string, Promise<Uint8Array>>();
 function loadFont(file: string): Promise<Uint8Array> {
   let pending = fontBytes.get(file);
@@ -30,22 +52,34 @@ type Segment = { text: string; font: PDFFont };
 /** Ids of changed bullets (and 'summary') to tint in the on-screen preview. Never used for downloads. */
 export type Highlight = ReadonlySet<string>;
 const TINT = rgb(0.996, 0.953, 0.78);
+/** Where an editable line sits on a page, as fractions of the page, so the preview can make it clickable. */
+export interface Region { key: string; page: number; left: number; top: number; width: number; height: number }
+export interface Rendered { bytes: Uint8Array; pages: number; tightened: boolean; regions: Region[] }
 
-async function render(resume: StructuredResume, paper: Paper, scale: number, highlight?: Highlight) {
+async function render(resume: StructuredResume, paper: Paper, template: TemplateId, tighten: number, highlight?: Highlight) {
+  const look = LOOKS[template] ?? LOOKS.classic, scale = look.size * tighten;
   const pdf = await PDFDocument.create(); pdf.registerFontkit(fontkit);
   pdf.setTitle(`${resume.name} — Resume`); pdf.setAuthor(resume.name); pdf.setCreator('Folio');
   // Each face needs its own name, or viewers treat the subsets as one font and drop glyphs.
   const embed = async (file: string) => pdf.embedFont(await loadFont(file), { subset: false, customName: `Folio-${file.replace(/^.*\//, '').replace(/\.ttf$/, '')}`, features: { kern: false, liga: false, clig: false, calt: false } });
-  const fonts: Fonts = { face: { regular: await embed(FILES.regular[0]), bold: await embed(FILES.bold[0]), italic: await embed(FILES.italic[0]) }, fallback: {}, covered: new Set() };
-  fonts.covered = new Set(fonts.face.regular.getCharacterSet());
+  const used = [...new Set([...JSON.stringify(resume)].filter(char => char > ' ').map(char => char.codePointAt(0)!))];
+  const lacks = async (file: string) => { const set = await covers(file); return used.some(code => !set.has(code)); };
+  const tier = await lacks(FILES.regular[0]) ? 1 : 0;
+  const fonts: Fonts = { face: { regular: await embed(FILES.regular[tier]), bold: await embed(FILES.bold[tier]), italic: await embed(FILES.italic[tier]) }, fallback: {}, covered: await covers(FILES.regular[tier]) };
   // Characters the main font lacks (other scripts, rare symbols) are drawn with a wide-coverage font.
-  const everything = JSON.stringify(resume);
-  if ([...everything].some(char => !fonts.covered.has(char.codePointAt(0)!) && char > ' '))
-    for (const face of ['regular', 'bold', 'italic'] as Face[]) fonts.fallback[face] = await embed(FILES[face][1]);
+  if (tier === 1 && await lacks(FILES.regular[1]))
+    for (const face of ['regular', 'bold', 'italic'] as Face[]) fonts.fallback[face] = await embed(FILES[face][2]);
 
-  const [width, height] = PAPER[paper], margin = 46, right = width - margin, s = (value: number) => value * scale;
-  let page: PDFPage = pdf.addPage([width, height]), y = height - margin;
-  const room = (needed: number) => { if (y - needed < margin) { page = pdf.addPage([width, height]); y = height - margin; } };
+  const [width, height] = PAPER[paper], margin = look.margin, right = width - margin, s = (value: number) => value * scale;
+  let page: PDFPage = pdf.addPage([width, height]), y = height - margin, pageIndex = 0;
+  const room = (needed: number) => { if (y - needed < margin) { page = pdf.addPage([width, height]); y = height - margin; pageIndex += 1; } };
+  const regions: Region[] = [];
+  /** Adds the line just drawn (baseline at y) to the clickable area of `key`. */
+  const mark = (key: string, x: number, leading: number) => {
+    const top = (height - y - leading * 0.78) / height, left = (x - 3) / width, wide = (right - x + 6) / width, tall = leading / height;
+    const last = regions.at(-1);
+    if (last?.key === key && last.page === pageIndex) last.height = top + tall - last.top; else regions.push({ key, page: pageIndex, left, top, width: wide, height: tall });
+  };
 
   const split = (text: string, face: Face): Segment[] => {
     const out: Segment[] = [], other = fonts.fallback[face];
@@ -69,13 +103,13 @@ async function render(resume: StructuredResume, paper: Paper, scale: number, hig
     return lines;
   };
   const tint = (x: number, leading: number) => page.drawRectangle({ x: x - 3, y: y - leading * 0.26, width: right - x + 6, height: leading, color: TINT });
-  const paragraph = (text: string, face: Face, size: number, leading: number, x = margin, color = INK, marked = false) => {
-    for (const line of wrap(text, face, size, right - x)) { room(leading); y -= leading; if (marked) tint(x, leading); draw(line, x, face, size, color); }
+  const paragraph = (text: string, face: Face, size: number, leading: number, x = margin, color = INK, marked = false, key = '', center = false) => {
+    for (const line of wrap(text, face, size, right - x)) { room(leading); y -= leading; if (marked) tint(x, leading); if (key) mark(key, x, leading); draw(line, center ? (width - measure(line, face, size)) / 2 : x, face, size, color); }
   };
   const section = (title: string) => {
     room(s(48)); y -= s(20);
-    draw(title.toUpperCase(), margin, 'bold', s(9));
-    y -= s(4.5); page.drawLine({ start: { x: margin, y }, end: { x: right, y }, thickness: 0.6, color: RULE }); y -= s(2.5);
+    draw(title.toUpperCase(), margin, 'bold', s(9), look.accent ?? INK);
+    y -= s(4.5); page.drawLine({ start: { x: margin, y }, end: { x: right, y }, thickness: look.accent ? 0.9 : 0.6, color: look.rule }); y -= s(2.5);
   };
   /** Left text with a right-aligned note (dates) on the same line; the left side wraps short of the note. */
   const heading = (left: string, note: string, size: number) => {
@@ -89,14 +123,15 @@ async function render(resume: StructuredResume, paper: Paper, scale: number, hig
     for (const item of items) {
       const text = typeof item === 'string' ? item : item.text, lines = wrap(text, 'regular', s(9.8), right - margin - s(11));
       const marked = typeof item !== 'string' && !!highlight?.has(item.id);
-      lines.forEach((line, index) => { room(s(13.6)); y -= s(13.6); if (marked) tint(margin + s(11), s(13.6)); if (!index) draw('•', margin + s(1), 'regular', s(9.8), MUTED); draw(line, margin + s(11), 'regular', s(9.8)); });
+      lines.forEach((line, index) => { room(s(13.6)); y -= s(13.6); if (marked) tint(margin + s(11), s(13.6)); if (typeof item !== 'string') mark(`bullet:${item.id}`, margin + s(11), s(13.6)); if (!index) draw('•', margin + s(1), 'regular', s(9.8), MUTED); draw(line, margin + s(11), 'regular', s(9.8)); });
     }
   };
 
-  y -= s(21); draw(resume.name, margin, 'bold', s(21));
-  if (resume.headline) { y -= s(15); draw(resume.headline, margin, 'regular', s(11), MUTED); }
-  if (resume.contact.length) { y -= s(3); paragraph(resume.contact.join('  ·  '), 'regular', s(9.2), s(13), margin, MUTED); }
-  if (resume.summary) { section('Summary'); y -= s(1); paragraph(resume.summary, 'regular', s(9.8), s(14), margin, INK, !!highlight?.has('summary')); }
+  const head = (text: string, face: Face, size: number, color = INK) => draw(text, look.centered ? Math.max(margin, (width - measure(text, face, size)) / 2) : margin, face, size, color);
+  y -= s(look.name); head(resume.name, 'bold', s(look.name), look.accent ?? INK);
+  if (resume.headline) { y -= s(15); head(resume.headline, 'regular', s(11), MUTED); }
+  if (resume.contact.length) { y -= s(3); paragraph(resume.contact.join('  ·  '), 'regular', s(9.2), s(13), margin, MUTED, false, '', look.centered); }
+  if (resume.summary) { section('Summary'); y -= s(1); paragraph(resume.summary, 'regular', s(9.8), s(14), margin, INK, !!highlight?.has('summary'), 'summary'); }
   if (resume.experience.length) {
     section('Experience');
     for (const role of resume.experience) {
@@ -137,13 +172,13 @@ async function render(resume: StructuredResume, paper: Paper, scale: number, hig
   }
   for (const extra of resume.extras) { section(extra.title); y -= s(1); bullets(extra.items); }
 
-  return { bytes: await pdf.save(), pages: pdf.getPageCount() };
+  return { bytes: await pdf.save(), pages: pdf.getPageCount(), regions };
 }
 
 /** Renders the resume, tightening slightly when that brings a near-miss back onto one page. */
-export async function renderResumePdf(resume: StructuredResume, paper: Paper, highlight?: Highlight): Promise<{ bytes: Uint8Array; pages: number; tightened: boolean }> {
-  const full = await render(resume, paper, 1, highlight);
+export async function renderResumePdf(resume: StructuredResume, paper: Paper, template: TemplateId = 'classic', highlight?: Highlight): Promise<Rendered> {
+  const full = await render(resume, paper, template, 1, highlight);
   if (full.pages === 1) return { ...full, tightened: false };
-  for (const scale of [0.95, 0.9]) { const tight = await render(resume, paper, scale, highlight); if (tight.pages === 1) return { ...tight, tightened: true }; }
+  for (const tighten of [0.95, 0.9]) { const tight = await render(resume, paper, template, tighten, highlight); if (tight.pages === 1) return { ...tight, tightened: true }; }
   return { ...full, tightened: false };
 }

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 
-/** Folio's public routes. Everything else is the workspace at /app. */
-export type Route = 'landing' | 'app' | 'privacy' | 'terms' | 'notFound';
+/** Folio's routes. /app is the workspace; /app/classic is the older exact-layout workspace. */
+export type Route = 'landing' | 'app' | 'classic' | 'privacy' | 'terms' | 'notFound';
 
-const paths: Record<Exclude<Route, 'notFound'>, string> = { landing: '/', app: '/app', privacy: '/privacy', terms: '/terms' };
+const paths: Record<Exclude<Route, 'notFound'>, string> = { landing: '/', app: '/app', classic: '/app/classic', privacy: '/privacy', terms: '/terms' };
 
 export function routeOf(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '') || '/';
   if (path === '/') return 'landing';
+  if (path === '/app/classic') return 'classic';
   if (path === '/app' || path.startsWith('/app/')) return 'app';
   if (path === '/privacy') return 'privacy';
   if (path === '/terms') return 'terms';

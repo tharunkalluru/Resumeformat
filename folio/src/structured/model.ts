@@ -14,6 +14,8 @@ export interface StructuredResume {
 
 /** What the server returns after its own checks; every item still needs the applicant's accept. */
 export interface Tailoring {
+  /** Role and company as the posting writes them; empty when it does not say. */
+  job?: { title: string; company: string };
   summary: { text: string; reason: string } | null;
   bullets: { id: string; text: string; reason: string }[];
   cuts: { id: string; reason: string }[];
@@ -32,7 +34,57 @@ export interface StructuredRecord {
   job: Job; tailoring: Tailoring | null; decisions: Decisions;
 }
 
+export type TemplateId = 'classic' | 'modern' | 'compact';
+/** One tailoring of a resume for one job. Saved as soon as it exists. `edits` are the applicant's own rewording of a line for this job. */
+export interface JobRecord {
+  id: string; job: Job; tailoring: Tailoring; decisions: Decisions; edits: Record<string, string>; letter: string;
+  status: 'draft' | 'applied'; appliedAt: string | null; createdAt: string; updatedAt: string;
+}
+/** A resume and every job it has been tailored for. `synced` is local bookkeeping and is never sent to the account. */
+export interface ResumeRecord {
+  id: string; sourceName: string; base: StructuredResume; template: TemplateId; createdAt: string; updatedAt: string;
+  jobs: JobRecord[]; deletedJobs: string[]; synced?: { user: string; at: string };
+}
+
 const newId = () => crypto.randomUUID().slice(0, 8);
+const now = () => new Date().toISOString();
+
+export function newResume(sourceName: string, base: StructuredResume): ResumeRecord {
+  return { id: crypto.randomUUID(), sourceName, base, template: 'classic', createdAt: now(), updatedAt: now(), jobs: [], deletedJobs: [] };
+}
+export function newJob(job: Job, tailoring: Tailoring): JobRecord {
+  return { id: crypto.randomUUID(), job, tailoring, decisions: Object.fromEntries(suggestionKeys(tailoring).map(key => [key, 'accepted' as const])), edits: {}, letter: '', status: 'draft', appliedAt: null, createdAt: now(), updatedAt: now() };
+}
+/** Replaces (or adds) one job and stamps both as changed. */
+export function withJob(resume: ResumeRecord, job: JobRecord): ResumeRecord {
+  const next = { ...job, updatedAt: now() };
+  return { ...resume, updatedAt: now(), jobs: resume.jobs.some(item => item.id === job.id) ? resume.jobs.map(item => item.id === job.id ? next : item) : [next, ...resume.jobs] };
+}
+export function withoutJob(resume: ResumeRecord, jobId: string): ResumeRecord {
+  return { ...resume, updatedAt: now(), jobs: resume.jobs.filter(item => item.id !== jobId), deletedJobs: [...new Set([...resume.deletedJobs, jobId])] };
+}
+/** Records saved before jobs were kept separately: one resume with at most one tailoring. */
+export function fromV1(old: StructuredRecord): ResumeRecord {
+  const resume = { ...newResume(old.sourceName, old.base), createdAt: old.updatedAt, updatedAt: old.updatedAt };
+  if (!old.tailoring) return resume;
+  return { ...resume, jobs: [{ ...newJob(old.job, old.tailoring), decisions: old.decisions, createdAt: old.updatedAt, updatedAt: old.updatedAt }] };
+}
+/** Two copies of the same resume (this device and the account): the newer resume text wins, and no job is lost. */
+export function mergeResume(a: ResumeRecord, b: ResumeRecord): ResumeRecord {
+  const [newer, older] = a.updatedAt >= b.updatedAt ? [a, b] : [b, a];
+  const deletedJobs = [...new Set([...(a.deletedJobs ?? []), ...(b.deletedJobs ?? [])])], jobs = new Map<string, JobRecord>();
+  for (const job of [...older.jobs, ...newer.jobs]) { const seen = jobs.get(job.id); if (!seen || job.updatedAt >= seen.updatedAt) jobs.set(job.id, job); }
+  return { ...newer, deletedJobs, jobs: [...jobs.values()].filter(job => !deletedJobs.includes(job.id)).sort((x, y) => y.createdAt.localeCompare(x.createdAt)) };
+}
+/** JSON with keys in a fixed order, so copies that went through the database compare equal. */
+const stable = (value: unknown): string => Array.isArray(value) ? `[${value.map(stable).join(',')}]`
+  : value && typeof value === 'object' ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stable((value as Record<string, unknown>)[key])}`).join(',')}}` : JSON.stringify(value ?? null);
+/** True when the two copies hold the same content, whatever their bookkeeping or key order. */
+export function sameContent(a: ResumeRecord, b: ResumeRecord): boolean {
+  const plain = ({ synced: _synced, ...rest }: ResumeRecord) => stable(rest);
+  return plain(a) === plain(b);
+}
+export const jobLabel = (job: Job) => [job.title, job.company].filter(Boolean).join(' at ') || 'Untitled job';
 
 /** The model returns plain strings; ids are added here so suggestions can point at bullets. */
 export function withIds(raw: {
@@ -61,14 +113,20 @@ export function resumeText(resume: StructuredResume): string {
   return lines.filter(Boolean).join('\n');
 }
 
-/** Drops blank lines left behind by hand edits. */
+/** Drops blank lines and stray spaces left behind by hand edits. */
 export function clean(resume: StructuredResume): StructuredResume {
+  const kept = (items: string[]) => items.map(item => item.trim()).filter(Boolean);
   const filled = <T extends { bullets: Bullet[] }>(parent: T): T => ({ ...parent, bullets: parent.bullets.filter(bullet => bullet.text.trim()) });
-  return { ...resume, contact: resume.contact.map(item => item.trim()).filter(Boolean), experience: resume.experience.map(filled), projects: resume.projects.map(filled) };
+  return {
+    ...resume, contact: kept(resume.contact), experience: resume.experience.map(filled), projects: resume.projects.map(filled),
+    education: resume.education.map(item => ({ ...item, details: kept(item.details) })),
+    skills: resume.skills.map(group => ({ ...group, items: kept(group.items) })).filter(group => group.items.length),
+    extras: resume.extras.map(extra => ({ ...extra, items: kept(extra.items) })).filter(extra => extra.items.length),
+  };
 }
 
 /** The base resume with only the accepted suggestions applied. */
-export function applyTailoring(base: StructuredResume, tailoring: Tailoring | null, decisions: Decisions): StructuredResume {
+export function applyTailoring(base: StructuredResume, tailoring: Tailoring | null, decisions: Decisions, edits: Record<string, string> = {}): StructuredResume {
   if (!tailoring) return base;
   const yes = (key: string) => decisions[key] === 'accepted';
   const rewrites = new Map(tailoring.bullets.filter(item => yes(`bullet:${item.id}`)).map(item => [item.id, item.text]));
@@ -78,11 +136,15 @@ export function applyTailoring(base: StructuredResume, tailoring: Tailoring | nu
   const bullets = <T extends { id: string; bullets: Bullet[] }>(parent: T): T => {
     const ranked = order.get(parent.id);
     const sorted = ranked ? [...parent.bullets].sort((a, b) => ranked.indexOf(a.id) - ranked.indexOf(b.id)) : parent.bullets;
-    return { ...parent, bullets: sorted.filter(bullet => !cuts.has(bullet.id)).map(bullet => rewrites.has(bullet.id) ? { ...bullet, text: rewrites.get(bullet.id)! } : bullet) };
+    // The applicant's own wording for this job wins over both the original line and a suggestion.
+    return { ...parent, bullets: sorted.filter(bullet => !cuts.has(bullet.id)).map(bullet => {
+      const own = edits[`bullet:${bullet.id}`];
+      return own !== undefined ? { ...bullet, text: own } : rewrites.has(bullet.id) ? { ...bullet, text: rewrites.get(bullet.id)! } : bullet;
+    }).filter(bullet => bullet.text.trim()) };
   };
   return {
     ...base,
-    summary: tailoring.summary && yes('summary') ? tailoring.summary.text : base.summary,
+    summary: edits.summary !== undefined ? edits.summary : tailoring.summary && yes('summary') ? tailoring.summary.text : base.summary,
     experience: base.experience.map(bullets), projects: base.projects.map(bullets),
     skills: base.skills.map(group => skills.has(group.id) ? { ...group, items: skills.get(group.id)! } : group),
   };

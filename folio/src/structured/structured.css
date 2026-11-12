@@ -96,3 +96,29 @@
 .structured-more ul { margin: 0 0 var(--space-3); padding-left: 18px; }
 .structured-again { align-self: flex-start; min-height: 44px; }
 .structured-job textarea { min-height: 260px; }
+
+/* ---- Saved jobs, free try, cover letter, click a line to reword ---- */
+.structured-gate { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--border-strong); border-radius: var(--radius-card); background: var(--bg-subtle); }
+.structured-gate p { font: var(--text-body); color: var(--text-primary); }
+.structured-next { display: grid; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--border-default); }
+.structured-next.is-done { padding: var(--space-4); border: 1px solid var(--border-default); border-radius: var(--radius-card); background: var(--status-success-bg); }
+.structured-next h2 { display: flex; align-items: center; gap: 6px; }
+.structured-next p { margin-top: 2px; color: var(--text-secondary); }
+.structured-next .button[aria-pressed="true"] { border-color: var(--text-primary); }
+.structured-letter { display: grid; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--border-default); }
+.structured-letter textarea { min-height: 320px; font-family: var(--font-serif, Georgia, serif); line-height: 26px; }
+.structured-note .spin { vertical-align: -2px; }
+.structured-page { position: relative; }
+.structured-page-empty { display: grid; place-items: center; }
+.structured-page-empty p { display: flex; align-items: center; gap: var(--space-2); color: var(--text-muted); }
+.structured-line { position: absolute; padding: 0; border: 0; border-radius: 2px; background: none; cursor: text; }
+.structured-line:hover, .structured-line:focus-visible { background: color-mix(in srgb, var(--text-primary) 7%, transparent); outline: 1px solid var(--border-strong); }
+.structured-line:focus-visible { outline: 2px solid var(--border-focus); }
+.structured-line-edit { position: absolute; z-index: 3; display: grid; gap: var(--space-2); min-width: min(100%, 300px); padding: var(--space-3); border-radius: var(--radius-card); background: var(--bg-surface); box-shadow: var(--shadow-overlay); font: var(--text-small); font-family: var(--font-sans); }
+.structured-line-edit textarea { width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--bg-surface); color: var(--text-primary); font: var(--text-small); font-size: 16px; line-height: 24px; resize: vertical; }
+.structured-line-edit textarea:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+.structured-line-edit .structured-row { align-items: center; }
+.structured-menu-list { max-width: calc(100vw - 2 * var(--space-3)); }
+.structured-menu-row { flex-wrap: wrap; padding-block: 6px; }
+.structured-menu-row > button:disabled { opacity: .5; }
+@media (max-width: 860px) { .structured-line-edit { left: 2% !important; width: 96% !important; } }

@@ -1,14 +1,17 @@
-import { useEffect, type ReactNode } from 'react';
-import App from '../App';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { useOptionalAuth } from '../auth/AuthProvider';
 import { rememberedRegion } from '../auth/regions';
+import { Workspace } from '../structured/Workspace';
 import { Landing } from './Landing';
 import { LegalPage } from './LegalPage';
 import { carriesAuthReturn, linkProps, navigate, useRoute } from './router';
 import '../ui/folio-kit-tokens.css';
 import './site.css';
 
-const TITLES = { landing: 'Folio — Tailor your resume to every job, in your own layout', app: 'Folio — Workspace', privacy: 'Privacy — Folio', terms: 'Terms — Folio', notFound: 'Page not found — Folio' };
+// The older exact-layout workspace is large; it loads only when someone opens it.
+const App = lazy(() => import('../App'));
+
+const TITLES = { landing: 'Folio — Tailor your resume to every job', app: 'Folio — Your resumes', classic: 'Folio — Exact-layout workspace', privacy: 'Privacy — Folio', terms: 'Terms — Folio', notFound: 'Page not found — Folio' };
 
 export function Site() {
   const route = useRoute();
@@ -24,7 +27,8 @@ export function Site() {
 
   useEffect(() => { document.title = TITLES[route]; }, [route]);
 
-  if (route === 'app' || (route === 'landing' && carriesAuthReturn(window.location))) return <App />;
+  if (route === 'classic') return <Suspense fallback={<p className="site-loading" role="status">Opening the exact-layout workspace…</p>}><App /></Suspense>;
+  if (route === 'app' || (route === 'landing' && carriesAuthReturn(window.location))) return <Workspace />;
   if (route === 'privacy') return <LegalPage kind="privacy" />;
   if (route === 'terms') return <LegalPage kind="terms" />;
   if (route === 'notFound') return <NotFound />;

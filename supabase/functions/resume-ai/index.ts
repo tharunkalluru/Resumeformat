@@ -117,6 +117,8 @@ Deno.serve(async request => {
     const address = (request.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown';
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${address}:${env('SUPABASE_SERVICE_ROLE_KEY').slice(-24)}`));
     const ipHash = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+    // The hashes are only needed for a day; older ones are deleted.
+    await admin.from('ai_anon_runs').delete().lt('created_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString());
     const [mine, everyone] = await Promise.all([
       admin.from('ai_anon_runs').select('id', { count: 'exact', head: true }).eq('ip_hash', ipHash).eq('route', route).gte('created_at', since),
       admin.from('ai_anon_runs').select('id', { count: 'exact', head: true }).neq('route', 'job').gte('created_at', since),

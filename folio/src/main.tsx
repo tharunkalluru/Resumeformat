@@ -1,8 +1,18 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+// Shared styles load first, in this order, so every screen (and the lazily loaded older workspace) builds on the same base.
+import './render/fonts.css';
+import './styles.css';
+import './ui/design.css';
+import './ui/global-rail.css';
+import './ui/intake-composer-design.css';
+import './ui/folio-kit-tokens.css';
+import './ui/folio-kit.css';
+import './ui/workspace-upgrade.css';
+import './ui/product-upgrade.css';
+import './ui/design-pass.css';
 import { Site } from './site/Site';
 import { AuthProvider } from './auth/AuthProvider';
-import './styles.css';
 
 class WorkspaceBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
   state = { failed: false };

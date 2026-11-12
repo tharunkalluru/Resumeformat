@@ -72,6 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const openAuth = useCallback((mode: AuthMode = 'signin') => setDialog({ mode }), []);
   const signOut = useCallback(async () => {
     if (!session) return;
+    const user = session.session.user.id;
+    // Resumes that are safely in the account leave this browser with the user.
+    await import('../structured/sync').then(({ clearSyncedCopies }) => clearSyncedCopies(user)).catch(() => {});
     await signOutRegion(session.region);
     setSession(null); setStatus('signedOut');
   }, [session]);

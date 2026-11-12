@@ -1,8 +1,13 @@
 import { cloudAiEndpoint } from '../tailoring/ai';
+import { REGIONS, detectRegion, rememberedRegion } from '../auth/regions';
 import { withIds, type Job, type StructuredResume, type Tailoring } from './model';
 
 const MESSAGES: Record<string, string> = {
-  sign_in_required: 'Sign in to use Folio templates and AI tailoring.',
+  sign_in_required: 'Create a free account to do this.',
+  trial_used: 'You’ve used your free try. Create a free account to keep going.',
+  trial_closed: 'Free tries are used up for today. Create a free account to continue.',
+  job_unreadable: 'That page couldn’t be read. Paste the job text instead.',
+  request_already_sent: 'That request was already sent. Try again.',
   daily_limit: 'You’ve used today’s AI runs. Try again tomorrow.',
   service_limit: 'AI is at capacity for today. Try again tomorrow.',
   provider_timeout: 'The AI took too long. Try again.',
@@ -17,9 +22,13 @@ export class StructuredAiError extends Error {
   constructor(public readonly code: string) { super(MESSAGES[code] ?? 'Something went wrong with the AI request. Try again.'); }
 }
 
-async function call<T>(route: 'structure' | 'tailor', body: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
-  const endpoint = await cloudAiEndpoint();
-  if (!endpoint) throw new StructuredAiError('sign_in_required');
+/** These codes mean "this needs an account", so the workspace offers sign-up instead of a retry. */
+export const needsAccount = (error: unknown) => error instanceof StructuredAiError && ['sign_in_required', 'trial_used', 'trial_closed'].includes(error.code);
+
+async function call<T>(route: 'structure' | 'tailor' | 'job' | 'cover', body: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
+  // Without an account the request carries only the public key; the server allows one try per visitor.
+  const region = REGIONS[rememberedRegion() ?? detectRegion()];
+  const endpoint = await cloudAiEndpoint() ?? { baseUrl: `${region.url}/functions/v1/ai`, headers: { apikey: region.publishableKey } };
   let response: Response;
   try {
     response = await fetch(`${endpoint.baseUrl.replace(/\/ai$/, '/resume-ai')}/${route}`, {
@@ -43,3 +52,9 @@ export async function readResume(text: string, signal?: AbortSignal): Promise<St
 }
 
 export const tailorResume = (resume: StructuredResume, job: Job, signal?: AbortSignal) => call<Tailoring>('tailor', { resume, job }, signal);
+
+/** A single web address and nothing else: the user pasted a link to the posting instead of its text. */
+export const jobLink = (text: string) => /^https?:\/\/\S+$/i.test(text.trim()) ? text.trim().replace(/^http:/i, 'https:') : null;
+/** The text of a job posting page. Many job sites refuse automated readers; the caller then asks for the text. */
+export const readJobLink = async (url: string, signal?: AbortSignal) => (await call<{ text: string }>('job', { url }, signal)).text;
+export const writeLetter = async (resume: StructuredResume, job: Job, signal?: AbortSignal) => (await call<{ letter: string }>('cover', { resume, job }, signal)).letter;
