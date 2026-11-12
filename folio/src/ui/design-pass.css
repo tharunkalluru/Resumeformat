@@ -1,0 +1,65 @@
+/* Design pass, 2026-11. One place where legacy values are resolved to the kit tokens
+   (folio-kit-tokens.css). Rules here replace older layers; when a section below is
+   stable, fold it into the file it overrides and delete it from here. */
+
+/* ---- Step bar: neutral, compact, readable (was a tinted 67px band with 2.8:1 labels) ---- */
+.folio-kit .workflow-bar { min-height: 48px; padding: 0 var(--space-6); background: var(--bg-surface); border-bottom: 1px solid var(--border-default); justify-content: flex-start; }
+.folio-kit .stage-navigation { gap: var(--space-2); }
+.folio-kit .stage-button { min-height: 32px; gap: var(--space-2); padding: 0 var(--space-1); border-radius: var(--radius-xs); font: var(--text-label); font-size: 13px; color: var(--text-muted); }
+.folio-kit .stage-button:hover { color: var(--text-primary); }
+.folio-kit .stage-button.is-current { color: var(--text-primary); font-weight: 600; }
+.folio-kit .stage-number { width: 22px; height: 22px; font: 600 11px/1 var(--font-sans); border: 1px solid var(--border-strong); background: var(--bg-surface); color: var(--text-muted); }
+.folio-kit .stage-button.is-current .stage-number { background: var(--action-primary); border-color: var(--action-primary); color: var(--text-on-primary); }
+.folio-kit .stage-button.is-complete .stage-number { background: var(--status-success-bg); border-color: transparent; color: var(--status-success); }
+.folio-kit .stage-chevron { color: var(--sand-400); margin-left: var(--space-1); }
+@media (max-width: 699px) { .folio-kit .workflow-bar { padding: 0 var(--space-4); min-height: 44px; } .folio-kit .stage-navigation { width: 100%; justify-content: space-between; gap: 0; } }
+
+/* ---- Status banner ---- */
+.folio-kit .message-banner { align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-4) var(--space-2) var(--space-6); background: var(--bg-subtle); border-bottom: 1px solid var(--border-default); color: var(--text-secondary); font: var(--text-small); }
+.folio-kit .message-banner > svg { margin: 0; color: var(--text-muted); }
+.folio-kit .message-banner.message-error { background: var(--status-error-bg); border-color: var(--red-100); color: var(--red-700); }
+.folio-kit .message-banner.message-error > svg { color: var(--status-error); }
+.folio-kit .message-banner .icon-button { width: 32px; height: 32px; min-height: 32px; margin: 0; }
+
+/* ---- Legacy sage greys that fail 4.5:1 ---- */
+.folio-kit .preview-placeholder, .folio-kit .page-controls, .folio-kit .preservation-note p { color: var(--text-muted); }
+.folio-kit .preservation-note strong { color: var(--text-secondary); }
+.folio-kit .preservation-note > svg { color: var(--status-success); }
+
+/* ---- One page-title style everywhere (was 22/28/30px at weights 500/600/700) ---- */
+.folio-kit .folio-compose-copy h1, .folio-kit .kit-page-heading h1, .folio-kit .memory-design-heading h1, .folio-kit .folio-privacy-content > h1, .folio-kit .folio-help > h1 { font: var(--text-h1); letter-spacing: var(--tracking-display); }
+@media (max-width: 699px) {
+  .folio-kit .folio-compose-copy h1, .folio-kit .kit-page-heading h1, .folio-kit .memory-design-heading h1, .folio-kit .folio-privacy-content > h1, .folio-kit .folio-help > h1 { font: var(--text-h2); letter-spacing: var(--tracking-display); }
+}
+
+/* ---- Career Memory ---- */
+.folio-kit .memory-design .memory-kit-stats { gap: var(--space-1) var(--space-5); margin-bottom: var(--space-4); }
+.folio-kit .memory-design .memory-kit-stats > span { font: var(--text-small); color: var(--text-muted); gap: 4px; }
+.folio-kit .memory-design .memory-kit-stats strong { font: 600 14px/20px var(--font-sans); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.folio-kit .memory-design .memory-kit-stats .is-attention, .folio-kit .memory-design .memory-kit-stats .is-attention strong { color: var(--status-warning-text); }
+
+/* ---- Tab strip: the review toggle stays reachable when tabs scroll on small screens ---- */
+@media (max-width: 899px) { .folio-kit .kit-tabs .kit-tabs-review { position: sticky; right: 0; margin-left: auto; background: var(--bg-surface); box-shadow: -12px 0 12px -4px var(--bg-surface); } }
+
+/* ---- Disclosure rows need a real hit area ---- */
+.folio-kit .upgrade-readability > summary, .folio-kit .ai-tailoring summary { min-height: 32px; display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
+
+/* ---- Help ---- */
+.folio-kit .folio-help h2 { font: var(--text-title); margin-bottom: var(--space-2); }
+.folio-kit .folio-help p { font: var(--text-body); color: var(--text-secondary); max-width: 62ch; text-wrap: pretty; }
+.folio-kit .folio-help section { padding: var(--space-6) 0; border-bottom: 1px solid var(--border-default); }
+.folio-kit .folio-help .text-button { margin: var(--space-2) 0 0 -10px; min-height: 44px; }
+
+/* ---- Phone: the sticky bar already names the page; don't say it twice ---- */
+@media (max-width: 760px) {
+  .folio-kit .memory-design-heading h1, .folio-kit .folio-privacy-content > h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .folio-kit .memory-design .memory-kit-stats { display: none; }
+}
+
+/* ---- Compose: the action must be reachable without scrolling on a laptop ---- */
+.folio-kit.composer-design-open .folio-compose.workspace-composer, .folio-kit .folio-compose.workspace-composer { padding-top: var(--space-12); }
+.folio-kit .workspace-composer .folio-compose-copy { margin-bottom: var(--space-5); }
+.folio-kit .workspace-composer .folio-compose-copy > p:last-child { margin-top: var(--space-1); font: var(--text-body); color: var(--text-muted); }
+.folio-kit .workspace-composer .workspace-selected-resume { margin-bottom: var(--space-5); padding-top: var(--space-3); padding-bottom: var(--space-3); }
+.folio-kit .workspace-composer .folio-composer textarea { min-height: 176px; field-sizing: content; }
+@media (max-width: 699px) { .folio-kit.composer-design-open .folio-compose.workspace-composer, .folio-kit .folio-compose.workspace-composer { padding-top: var(--space-6); } }

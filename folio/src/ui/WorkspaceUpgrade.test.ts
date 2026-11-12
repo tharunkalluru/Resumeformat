@@ -31,7 +31,7 @@ describe('Workspace actions respect real readiness', () => {
     // Without a ready AI service there is no AI button or consent box, only Continue.
     expect([...host.querySelectorAll('button')].some(item => item.textContent?.trim() === 'Tailor resume')).toBe(false);
     expect(host.textContent).not.toContain('I agree to send this job');
-    expect(host.textContent).toContain('Local word matching');
+    expect(host.textContent).toContain('Compared on this device, no AI');
     await act(async () => button('Continue').click());
     expect(callbacks.onOpenDraft).toHaveBeenCalledOnce(); expect(fetch).not.toHaveBeenCalled();
   });

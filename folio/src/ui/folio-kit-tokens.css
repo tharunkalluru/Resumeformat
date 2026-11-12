@@ -1,5 +1,19 @@
 @font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:100 800;font-display:swap;src:url("/design-fonts/JetBrainsMono-variable.ttf") format("truetype")}
 /* Folio neutral workspace v4. Values and local font definitions from the supplied 2026-10-14 design kit. */
+/* Usage rules added in the 2026-11 design pass. Each cites the screen that showed the gap.
+   1. Page titles use --text-h1 on desktop and --text-h2 under 700px, weight 600. One per screen.
+      (Titles had drifted to 22/28/30px at weights 500/600/700 across Layout check, Compose, Review, Help.)
+   2. Body and secondary text never go below --text-muted on white (5.3:1). The older sage greys
+      (#939995, #83907d, #9ca594, #7a876e) are retired. (Step bar, PDF page controls, Layout check.)
+   3. --text-link is ink, so a link inside running text must be underlined. (Privacy page.)
+   4. --accent is for information only. The current step, selected state and primary actions use
+      --action-primary. (Step bar used a blue current step that competed with the primary button.)
+   5. --font-serif is the document voice: resume content, Career Memory facts, and the single display
+      headline on the public site. Workspace chrome stays sans. (Landing page.)
+   6. Interactive targets are at least 24px, and 44px for navigation and anything on a phone.
+      (Public nav and footer links, auth links, step buttons were 19 to 21px tall.)
+   7. Status belongs to the screen it appeared on and is one line. (A review notice followed the
+      user to Applications; Fit check used three tiles to say what one line says.) */
 
 @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("/design-fonts/Inter-normal-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("/design-fonts/Inter-normal-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}

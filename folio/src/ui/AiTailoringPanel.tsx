@@ -232,7 +232,7 @@ export function AiTailoringPanel({ project, selectedBlockId, disabled = false, o
   </section>;
   return <section className="ai-tailoring panel-section" aria-labelledby={`${id}-title`} aria-busy={busy !== null}>
     <h3 id={`${id}-title`}><Sparkles size={16} aria-hidden="true" />AI wording proposals</h3>
-    <p>Choose the facts and paragraphs to send. Suggestions use <a href="https://developers.openai.com/api/docs/models/gpt-6.1-sol" target="_blank" rel="noreferrer">{AI_MODEL}</a> with medium reasoning and always need your review.</p>
+    <p>Choose which lines to improve and which facts to draw on. Suggestions come from OpenAI and nothing changes until you accept it.</p>
     <div className="ai-server-status">
       <p role="status">{status ? aiStatusMessage(status) : 'AI status is not available yet.'}</p>
       <div className="ai-actions">
