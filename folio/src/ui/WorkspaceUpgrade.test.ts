@@ -72,7 +72,7 @@ describe('Workspace actions respect real readiness', () => {
     const project = await createApplication(resume, { title: 'Designer', company: 'Cedar', description: 'Design interfaces' });
     await act(async () => root.render(createElement(AllTailorings, { projects: [project], failedIds: [], onOpen: noop, onDelete: noop, onRename: noop, onNew: noop, onRetry: noop })));
     expect(host.textContent).toContain(project.source.sha256);
-    expect(host.textContent).toContain(`v${project.template.revision} / r${project.draft.revision}`);
+    expect(host.textContent).toContain(`Layout version ${project.template.revision}, draft ${project.draft.revision}`);
     expect(host.textContent).toContain('Earlier download history is unavailable');
     expect(host.textContent).not.toContain('Ready');
   });
