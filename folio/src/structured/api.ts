@@ -29,18 +29,27 @@ async function call<T>(route: 'structure' | 'tailor' | 'job' | 'cover', body: Re
   // Without an account the request carries only the public key; the server allows one try per visitor.
   const region = REGIONS[rememberedRegion() ?? detectRegion()];
   const endpoint = await cloudAiEndpoint() ?? { baseUrl: `${region.url}/functions/v1/ai`, headers: { apikey: region.publishableKey } };
+  // Nobody should watch a spinner forever: give up well after the usual time and say so.
+  const limit = new AbortController(), both = limit.signal, cancel = () => limit.abort();
+  let late = false;
+  const timer = setTimeout(() => { late = true; limit.abort(); }, route === 'job' ? 20_000 : 75_000);
+  if (signal?.aborted) limit.abort(); else signal?.addEventListener('abort', cancel, { once: true });
+  const settle = () => { clearTimeout(timer); signal?.removeEventListener('abort', cancel); };
   let response: Response;
   try {
     response = await fetch(`${endpoint.baseUrl.replace(/\/ai$/, '/resume-ai')}/${route}`, {
-      method: 'POST', credentials: 'omit', cache: 'no-store', signal,
+      method: 'POST', credentials: 'omit', cache: 'no-store', signal: both,
       headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...endpoint.headers },
       body: JSON.stringify({ requestId: crypto.randomUUID(), ...body }),
     });
   } catch (error) {
+    settle();
     if (signal?.aborted) throw error;
-    throw new StructuredAiError('offline');
+    throw new StructuredAiError(late ? (route === 'job' ? 'job_unreadable' : 'provider_timeout') : 'offline');
   }
   const value = await response.json().catch(() => null) as { error?: { code?: string } } | null;
+  settle();
+  if (!value && late) throw new StructuredAiError('provider_timeout');
   if (!response.ok || !value) throw new StructuredAiError(value?.error?.code ?? (response.status >= 502 ? 'offline' : 'unknown'));
   return value as T;
 }
