@@ -5,21 +5,22 @@ import { linkProps, navigate } from './router';
 
 const STEPS = [
   { title: 'Add your resume', text: 'Drop in your PDF or Word file. Folio reads it into a clean template while you find the job posting.' },
-  { title: 'Paste the job', text: 'Paste the posting, or a link to it. Folio rewrites, reorders and trims your resume for that job.' },
+  { title: 'Add the job', text: 'Paste a link to the posting, or its text. Folio rewrites, reorders and trims your resume for that job, on the same number of pages.' },
   { title: 'Check and download', text: 'Changes arrive applied and highlighted. Undo any you don’t want, then download a PDF or Word file.' },
 ];
 
 const PROMISES = [
   { title: 'Only what’s true', text: 'Every change is built from your own resume. Folio never adds a title, number, tool or skill you didn’t write, and holds back any suggestion that tries to.' },
   { title: 'Every change is yours to undo', text: 'Each change shows the old line, the new line and the reason. Undo one, undo all, or click any line on the resume to reword it yourself.' },
-  { title: 'Clean templates that get read', text: 'Three one-column templates with real text and standard headings, which applicant-tracking systems read correctly. Files stay under 100 KB.' },
+  { title: 'More than one resume can hold', text: 'Keep your projects, notes and GitHub in career memory. When a job calls for something your resume left out, Folio brings it in, and still only uses what you wrote.' },
 ];
 
 const FAQ = [
   { q: 'Is Folio free?', a: 'Yes. Your first tailoring needs no account. A free account gives you a daily allowance of tailorings and cover letters while Folio is in early access.' },
-  { q: 'Where is my resume stored?', a: 'In your browser. If you’re signed in, a copy is also saved to your account, in the region you chose (India or the United States), so your resumes and jobs follow you to any device. You can turn that off from the menu.' },
-  { q: 'What is sent to the AI?', a: 'The text of your resume and the job posting, through Folio’s server to OpenAI, with OpenAI’s storage turned off. Your file itself is never uploaded.' },
+  { q: 'Where is my resume stored?', a: 'In your browser, together with your career memory. If you’re signed in, a copy is also saved to your account, in the region you chose (India or the United States), so your resumes and jobs follow you to any device. You can turn that off from the menu.' },
+  { q: 'What is sent to the AI?', a: 'The text of your resume, the job posting and the relevant parts of your career memory, through Folio’s server to OpenAI, with OpenAI’s storage turned off. Your file itself is never uploaded.' },
   { q: 'Do I need an account?', a: 'Not for your first tailoring. You need one to tailor more jobs, to write cover letters, and to keep your resumes across devices.' },
+  { q: 'Do job links work?', a: 'Links from Greenhouse, Lever, Ashby, SmartRecruiters and most company career pages are read directly. LinkedIn, Indeed and Naukri don’t let other apps read their pages; for those, a one-click “Send to Folio” bookmark sends the posting from your own browser, or you can paste the text.' },
   { q: 'Can I keep my own resume design?', a: 'Yes. The exact-layout workspace, in the menu, edits your original file in place instead of using a template.' },
 ];
 

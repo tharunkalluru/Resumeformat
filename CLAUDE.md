@@ -12,7 +12,7 @@ The app lives in `folio/`. `resume-formatter/` is an older project; leave it alo
 cd folio
 npm ci
 npx vite --host 127.0.0.1 --port 4594   # dev server; sign-in is allow-listed for this port
-npm run test:product                     # required: 601 tests, must stay green
+npm run test:product                     # required: 605 tests, must stay green
 npm run typecheck
 npm run build
 ```
@@ -23,8 +23,9 @@ Do not treat those as regressions. Needs Node 22.9 or newer.
 ## How it is built
 
 - React 19, Vite 8, TypeScript, pdf.js, pdf-lib, tiptap, zod.
-- Routes (`folio/src/site/`): `/` landing, `/app` the workspace (`structured/Workspace.tsx`),
-  `/app/classic` the older exact-layout workspace (`App.tsx`, loaded lazily, reachable from the
+- Routes (`folio/src/site/`): `/` landing; `/app` (Resumes), `/app/jobs`, `/app/memory` and
+  `/app/tailor` are pages of the workspace (`structured/Workspace.tsx`, which owns its own
+  sub-routing and the sidebar / phone tab bar); `/app/classic` the older exact-layout workspace (`App.tsx`, loaded lazily, reachable from the
   menu; it keeps the original file's layout and stores everything in the browser only),
   `/privacy`, `/terms`. Signed-in users and auth return links skip the landing page.
 - Shared CSS is imported at the top of `main.tsx`, in a fixed order, before any component. Keep it
@@ -33,8 +34,19 @@ Do not treat those as regressions. Needs Node 22.9 or newer.
   (ap-south-1), US `nocejvdlrazsvopyjrvo` (us-east-2). Email and Google sign-in. A user lives in
   one region; sign-in tries both. Publishable keys are in `regions.ts` and are safe in the browser.
 - The workspace (`folio/src/structured/`):
-  - `Workspace.tsx` is home: the list of resumes and the jobs each was tailored for.
-    `StructuredStudio.tsx` is the full-screen editor for one resume and one job.
+  - `Workspace.tsx` is the app shell and the Resumes and Jobs pages. `StructuredStudio.tsx` is the
+    tailoring page (steps: Resume, Job, Review and download), shown inside the shell.
+    `MemoryPage.tsx` is Career memory.
+  - Page count: the original's page count is read on upload (`plainText.ts`, `ResumeRecord.pages`)
+    and `renderResumePdf` tightens type, line spacing and margins (`FITS` in `pdf.ts`, floor 7.5 pt)
+    until the resume fits that count. If it cannot, `over` is set and the page says so. The Word
+    file is scaled by the same `fit`.
+  - Career memory (`memory.ts`): notes, documents, LinkedIn text, public GitHub repositories (read
+    in the browser from GitHub's API), a web page, dictation. `memoryText` sends the items most
+    relevant to the posting with `/tailor` and `/cover`. The server then allows facts from the
+    resume or the memory, and can return `additions` (new bullets), `newSkills` and `newProjects`,
+    each checked against the applicant's own text. Stored in IndexedDB and synced as one row in
+    `public.resumes` with `schema_version` 3.
   - A new file is turned into plain text in the browser (`plainText.ts`) and read into sections by
     AI while the user pastes the job. Reading starts once, in the upload handler, never in an
     effect (React runs effects twice in development, which would spend a visitor's free try).
@@ -55,8 +67,12 @@ Do not treat those as regressions. Needs Node 22.9 or newer.
 - AI, server side (`supabase/functions/resume-ai/`, deployed identically to both regions with
   `verify_jwt` off because it checks the user itself): `/structure` reads resume text into
   sections, `/tailor` proposes changes for one job and returns the role and company the posting
-  names, `/job` fetches a public job page and returns its text, `/cover` drafts a cover letter
-  (signed-in only). The server drops any suggestion that uses a number, name, term or job-posting
+  names, `/job` reads a posting from a link (`job-readers.mjs`), `/cover` drafts a cover letter
+  (signed-in only). Job links are read only where the site offers it: the public feeds of
+  Greenhouse, Lever, Ashby and SmartRecruiters, or the page itself fetched under Folio's own
+  User-Agent. Do not add readers that imitate a browser, call private endpoints or route around a
+  refusal (LinkedIn, Indeed, Naukri refuse): the "Send to Folio" bookmark in the Job step sends the
+  posting from the person's own browser instead (`/app#job=<text>`). The server drops any suggestion that uses a number, name, term or job-posting
   word the resume does not contain (`structured.mjs`, tested in `folio/src/structured/model.test.ts`).
   Signed-in limits: 20 runs per user and 300 per region per day (`public.ai_runs`). Without an
   account: one `/structure` and one `/tailor` per address per day, 100 calls per region per day
@@ -88,10 +104,11 @@ unit tests.
 - `main` has Phase 1, accounts and cloud AI (PR #7).
 - `phase-5-structured` is the newest branch and contains everything after that: the landing page
   (PR #8, still open), the design pass, the template workspace, saved jobs, account sync, the free
-  try, job links, cover letters, click-to-reword, three templates and small PDFs. Merging it into
+  try, job links, cover letters, click-to-reword, three templates, small PDFs, page-count fitting,
+  career memory and the sidebar app layout. Merging it into
   `main` makes the main Pages address live and starts the keep-awake job.
 - Both regions run `resume-ai` with the same code as this branch, and both have the
-  `ai_anon_runs` migration applied.
+  `ai_anon_runs` and `purge_anon_runs` migrations applied.
 
 Next, in order:
 

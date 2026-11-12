@@ -23,12 +23,16 @@ function Privacy() {
     <p>If you are signed in, a copy of your resumes, tailored versions, job postings and cover letters is also saved to your account, so they are there on your other devices. You can turn this off under “Save to my account” in the menu: the copies in your account are deleted and nothing more is saved there. When you sign out, resumes that are saved in your account are removed from that browser.</p>
     <p>The older exact-layout workspace keeps everything in your browser only.</p>
 
+    <h2>Career memory</h2>
+    <p>Career memory is where you can keep more about your work than one resume holds: notes, the text of documents you add, your LinkedIn profile if you paste or export it, your public GitHub projects, the text of a web page about your work, and dictated notes. It is stored like your resumes: in your browser, and in your account if you are signed in and saving to your account is on. You can edit or delete any item at any time.</p>
+    <p>When you import GitHub projects, your browser asks GitHub directly for the public repositories of the username you enter. When you dictate, your browser’s own speech service turns your voice into text; Folio receives only the text you save.</p>
+
     <h2>Your account</h2>
     <p>If you create an account, Folio stores your email address, your name, and your profile picture if you sign in with Google. This, and the copies of your resumes described above, is kept with our database provider, Supabase, in the region you choose when signing up: India (Mumbai) or the United States (Ohio). Your account lives in one region only.</p>
 
     <h2>AI</h2>
-    <p>Folio uses AI to read your resume into sections, to tailor it to a job, and to draft a cover letter. For this, the text of your resume and the job posting are sent through Folio’s server to OpenAI. The text of your resume is sent when you add it; the job posting is sent when you ask for a tailoring. Requests are made with OpenAI’s storage turned off. Folio’s server does not keep the content of these requests. It keeps a short record of each request (time, status, and amount of AI usage) to apply daily limits.</p>
-    <p>If you paste a link to a job posting, Folio’s server opens that page to read its text.</p>
+    <p>Folio uses AI to read your resume into sections, to tailor it to a job, and to draft a cover letter. For this, the text of your resume, the job posting, and the parts of your career memory that are relevant to that posting are sent through Folio’s server to OpenAI. The text of your resume is sent when you add it; the job posting is sent when you ask for a tailoring. Requests are made with OpenAI’s storage turned off. Folio’s server does not keep the content of these requests. It keeps a short record of each request (time, status, and amount of AI usage) to apply daily limits.</p>
+    <p>If you paste a link to a job posting or to a page about your work, Folio’s server reads that one page, or the hiring platform’s public feed for that posting, identifying itself as Folio. It does not sign in anywhere and does not read sites that refuse it. The optional “Send to Folio” bookmark runs in your own browser and sends Folio only the posting on the page you are looking at when you click it.</p>
 
     <h2>Trying Folio without an account</h2>
     <p>You can tailor one resume without an account. To limit this to one try per visitor, Folio’s server keeps a one-way scrambled form of your internet address, which cannot be turned back into the address, and deletes it within three days.</p>
@@ -41,7 +45,7 @@ function Privacy() {
 
     <h2>Service providers</h2>
     <ul>
-      <li>Supabase — accounts, sign-in and the copies of resumes saved to your account</li>
+      <li>Supabase — accounts, sign-in and the copies of resumes and career memory saved to your account</li>
       <li>OpenAI — reading, tailoring and cover-letter drafts</li>
       <li>Cloudflare — hosting the website</li>
       <li>Google — optional sign-in</li>
