@@ -1,5 +1,5 @@
 /* Template workspace. A full-screen layer over the app shell; uses the kit tokens only. */
-.structured { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: var(--bg-canvas); color: var(--text-primary); font: var(--text-small); font-family: var(--font-sans); }
+.structured { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--bg-canvas); color: var(--text-primary); font: var(--text-small); font-family: var(--font-sans); }
 .structured-bar { display: flex; align-items: center; gap: var(--space-4); min-height: var(--topbar-height); padding: 0 var(--space-4); background: var(--bg-surface); border-bottom: 1px solid var(--border-default); flex: none; }
 .structured-bar > strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--text-label); }
 .structured-back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 var(--space-2); border: 0; border-radius: var(--radius-control); background: none; font: var(--text-label); color: var(--text-secondary); }
@@ -122,3 +122,46 @@
 .structured-menu-row { flex-wrap: wrap; padding-block: 6px; }
 .structured-menu-row > button:disabled { opacity: .5; }
 @media (max-width: 860px) { .structured-line-edit { left: 2% !important; width: 96% !important; } }
+.structured-over { padding: var(--space-3) var(--space-4); border-radius: var(--radius-control); background: var(--status-warning-bg); color: var(--text-primary); }
+
+/* ---- The tailoring page inside the app: steps, visible options, link-first job box ---- */
+.structured-steps { flex: 1; display: flex; align-items: center; gap: var(--space-4); margin: 0; padding: 0; list-style: none; min-width: 0; font: var(--text-caption); color: var(--text-muted); }
+.structured-steps li { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.structured-steps li + li::before { content: ''; width: 20px; height: 1px; margin-right: var(--space-2); background: var(--border-strong); }
+.structured-steps span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--border-strong); font-size: 11px; font-weight: 600; }
+.structured-steps .is-now { color: var(--text-primary); font-weight: 600; }
+.structured-steps .is-now span { border-color: var(--text-primary); background: var(--text-primary); color: var(--bg-surface); }
+.structured-steps .is-done span { border-color: transparent; background: var(--status-success-bg); color: var(--status-success); }
+.structured-tools { width: min(100%, 760px); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); font: var(--text-caption); color: var(--text-muted); }
+.structured-tools > div { display: flex; align-items: center; gap: var(--space-1); }
+.structured-tools > div > span { margin-right: var(--space-1); }
+.structured-tools button { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 var(--space-3); border: 1px solid var(--border-default); border-radius: var(--radius-pill); background: var(--bg-surface); font: var(--text-caption); color: var(--text-secondary); }
+.structured-tools button:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text-primary); }
+.structured-tools button[aria-pressed="true"] { border-color: var(--text-primary); color: var(--text-primary); font-weight: 600; }
+.structured-tools button:disabled { opacity: .5; }
+.structured-tool { margin-left: auto; }
+.structured-resume-line { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 0 var(--space-3); border: 1px solid var(--border-default); border-radius: var(--radius-control); color: var(--text-secondary); }
+.structured-resume-line > span, .structured-resume-line label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.structured-resume-line select { width: 100%; min-height: 40px; border: 0; background: none; font: var(--text-small); color: var(--text-primary); }
+.structured-source-note a { color: inherit; text-decoration: underline; }
+.structured-link input { font-size: 16px; }
+.structured-job textarea { min-height: 150px; }
+.structured-memory-line { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-control); background: var(--bg-subtle); color: var(--text-secondary); }
+.structured-memory-line svg { flex: none; margin-top: 2px; }
+.structured-memory-line strong { color: var(--text-primary); }
+.structured-memory-line .text-button { display: inline; min-height: 0; padding: 0; font-size: inherit; text-decoration: underline; }
+.structured-send-button { display: inline-flex; align-items: center; min-height: 32px; padding: 0 var(--space-3); margin-right: var(--space-2); border: 1px solid var(--text-primary); border-radius: var(--radius-pill); background: var(--bg-surface); color: var(--text-primary); font: var(--text-label); font-size: 13px; text-decoration: none; cursor: grab; }
+.structured-missing ul { padding: 0; list-style: none; display: grid; gap: var(--space-1); }
+.structured-missing li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 var(--space-3); color: var(--text-primary); }
+.structured-missing li .text-button { min-height: 32px; flex: none; }
+.structured-tell { flex-basis: 100%; display: grid; gap: var(--space-2); padding: var(--space-2) 0 var(--space-3); }
+.structured-foot { display: flex; justify-content: flex-end; }
+.structured-foot .text-button, .structured-foot .home-confirm .text-button { min-height: 32px; color: var(--text-muted); }
+.structured-preview-foot { justify-content: center; }
+@media (max-width: 860px) {
+  .structured-steps { order: 3; flex-basis: 100%; justify-content: space-between; gap: var(--space-2); padding-bottom: var(--space-2); overflow: hidden; }
+  .structured-steps li + li::before { display: none; }
+  .structured-bar-actions { margin-left: auto; }
+  .structured-tool { margin-left: 0; }
+}
+@media (hover: none), (max-width: 860px) { .structured-send { display: none; } }

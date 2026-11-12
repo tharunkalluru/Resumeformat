@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyTailoring, clean, fromV1, jobHeading, jobMatch, mergeResume, newJob, newResume, sameContent, suggestionKeys, withIds, withJob, withoutJob, type StructuredResume, type Tailoring } from './model';
 import { jobLink } from './api';
+import { emptyMemory, memoryText, mergeMemory, newItem, withItem, withoutItem } from './memory';
 // The server-side checks are plain JavaScript shared with the edge function.
 // @ts-expect-error no type declarations for the edge function module
 import { checkLetter, checkStructure, checkTailoring, corpus, htmlToJobText, safeJobUrl, ungrounded, validResume } from '../../../supabase/functions/resume-ai/structured.mjs';
@@ -97,7 +98,7 @@ describe('structured resume: job links, cover letters and the posting’s own ti
     const page = `<html><head><script type="application/ld+json">${JSON.stringify({ '@type': 'JobPosting', title: 'Product Designer', hiringOrganization: { name: 'Northstar' }, description })}</script></head><body><nav>Menu</nav>Other</body></html>`;
     const text = htmlToJobText(page) as string;
     expect(text.startsWith('Product Designer at Northstar')).toBe(true); expect(text).toContain('Accessibility & research'); expect(text).not.toContain('<');
-    expect(htmlToJobText(`<body><script>var x = 1</script><h1>Designer</h1>${'<p>Design accessible dashboards with the team.</p>'.repeat(12)}</body>`)).toContain('Designer\n');
+    expect(htmlToJobText(`<body><script>var x = 1</script><h1>Designer</h1>${'<p>Design accessible dashboards with the team.</p>'.repeat(24)}</body>`)).toContain('Designer\n');
     expect(htmlToJobText('<body><p>Please enable JavaScript.</p></body>')).toBeNull();
   });
   it('rejects a letter with a figure or a name that is in neither the resume nor the posting', () => {
@@ -144,5 +145,46 @@ describe('structured resume: saved jobs', () => {
     expect(mergeResume(laptop, phone)).toEqual(merged);
     expect(sameContent(merged, { ...merged, synced: { user: 'u', at: 'x' } })).toBe(true); expect(sameContent(merged, phone)).toBe(false);
     const { id, ...rest } = merged; expect(sameContent(merged, { ...rest, id } as typeof merged)).toBe(true);
+  });
+});
+
+describe('career memory', () => {
+  const notes = 'Side project: Tideline, an open-source scheduling library in TypeScript used by 40 teams (github.com/casey/tideline, 2022 – 2024). Ran usability research with 12 customers at Northstar Studio. Comfortable with Kubernetes dashboards.';
+  const withNotes = { ...proposal, job: { title: '', company: '' },
+    additions: [{ parentId: 'r1', text: 'Ran usability research with 12 customers.', reason: 'research' }, { parentId: 'r1', text: 'Ran usability research with 30 customers.', reason: '' }, { parentId: 'nope', text: 'Ran usability research with 12 customers.', reason: '' }],
+    newSkills: [{ groupId: 's1', item: 'TypeScript' }, { groupId: 's1', item: 'Terraform' }, { groupId: 's1', item: 'Figma' }],
+    newProjects: [{ name: 'Tideline', link: 'github.com/casey/tideline', dates: '2022 – 2024', bullets: ['Built an open-source scheduling library in TypeScript used by 40 teams.'], reason: 'r' }, { name: 'Initech Portal', link: '', dates: '', bullets: ['Built a portal.'], reason: '' }] };
+  it('lets tailoring add only what the applicant’s own notes say', () => {
+    const checked = checkTailoring(withNotes, resume, job, notes) as Tailoring;
+    expect(checked.additions?.map(item => item.text)).toEqual(['Ran usability research with 12 customers.']);
+    expect(checked.newSkills).toEqual([{ groupId: 's1', item: 'TypeScript' }]);
+    expect(checked.newProjects?.map(item => item.name)).toEqual(['Tideline']);
+    // A job word becomes usable once the applicant's notes use it too.
+    expect(checkTailoring({ ...proposal, bullets: [{ id: 'b1', text: 'Designed accessible dashboards for a scheduling product.', reason: '' }] }, resume, job, notes).bullets).toHaveLength(1);
+  });
+  it('adds nothing from memory when there is none', () => {
+    const checked = checkTailoring(withNotes, resume, job) as Tailoring;
+    expect(checked.additions).toEqual([]); expect(checked.newSkills).toEqual([]); expect(checked.newProjects).toEqual([]);
+  });
+  it('applies additions, new skills and new projects, each on its own switch', () => {
+    const tailoring: Tailoring = { summary: null, bullets: [], cuts: [], order: [], skills: [], missing: [], dropped: {},
+      additions: [{ id: 'a1', parentId: 'r1', text: 'Ran usability research with 12 customers.', reason: '' }], newSkills: [{ groupId: 's1', item: 'TypeScript' }],
+      newProjects: [{ id: 'p9', name: 'Tideline', link: 'github.com/casey/tideline', dates: '2022 – 2024', bullets: [{ id: 'pb', text: 'Built a scheduling library.' }], reason: '' }] };
+    expect(suggestionKeys(tailoring)).toEqual(['add:a1', 'newSkills', 'project:p9']);
+    const all = applyTailoring(resume, tailoring, { 'add:a1': 'accepted', newSkills: 'accepted', 'project:p9': 'accepted' }, { 'bullet:pb': 'Built Tideline.' });
+    expect(all.experience[0].bullets[0]).toEqual({ id: 'a1', text: 'Ran usability research with 12 customers.' }); expect(all.experience[0].bullets).toHaveLength(5);
+    expect(all.skills[0].items.at(-1)).toBe('TypeScript'); expect(all.projects).toEqual([{ id: 'p9', name: 'Tideline', link: 'github.com/casey/tideline', dates: '2022 – 2024', bullets: [{ id: 'pb', text: 'Built Tideline.' }] }]);
+    expect(applyTailoring(resume, tailoring, { 'add:a1': 'rejected' })).toEqual(resume);
+  });
+  it('keeps one copy per source, merges two devices, and sends the most relevant items first', () => {
+    let memory = withItem(emptyMemory(), newItem('github', 'tideline', 'Project: tideline. TypeScript scheduling library.', 'https://github.com/casey/tideline'));
+    memory = withItem(memory, newItem('github', 'tideline', 'Project: tideline. Now with Figma plugins.', 'https://github.com/casey/tideline'));
+    expect(memory.items).toHaveLength(1); expect(memory.items[0].text).toContain('Figma');
+    const note = newItem('note', 'Cooking', 'I bake bread at weekends and run a supper club for neighbours.');
+    const other = withItem({ ...emptyMemory(), id: memory.id }, note), merged = mergeMemory(memory, other);
+    expect(merged.items.map(item => item.title).sort()).toEqual(['Cooking', 'tideline']);
+    expect(mergeMemory(withoutItem(merged, note.id), other).items.map(item => item.title)).toEqual(['tideline']);
+    const text = memoryText(merged, job);
+    expect(text.indexOf('tideline')).toBeLessThan(text.indexOf('Cooking')); expect(memoryText(merged, job, 120)).not.toContain('Cooking'); expect(memoryText(emptyMemory(), job)).toBe('');
   });
 });

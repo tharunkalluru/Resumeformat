@@ -54,10 +54,20 @@ export type Highlight = ReadonlySet<string>;
 const TINT = rgb(0.996, 0.953, 0.78);
 /** Where an editable line sits on a page, as fractions of the page, so the preview can make it clickable. */
 export interface Region { key: string; page: number; left: number; top: number; width: number; height: number }
-export interface Rendered { bytes: Uint8Array; pages: number; tightened: boolean; regions: Region[] }
+export interface Rendered { bytes: Uint8Array; pages: number; tightened: boolean; regions: Region[]; fit: Fit; over: boolean }
 
-async function render(resume: StructuredResume, paper: Paper, template: TemplateId, tighten: number, highlight?: Highlight) {
-  const look = LOOKS[template] ?? LOOKS.classic, scale = look.size * tighten;
+/** How far a page is tightened to fit: type size, line spacing and margins, each as a share of the template's own. */
+export interface Fit { size: number; leading: number; margin: number }
+const FITS: Fit[] = [
+  { size: 1, leading: 1, margin: 1 }, { size: 0.97, leading: 0.97, margin: 0.9 }, { size: 0.94, leading: 0.94, margin: 0.8 },
+  { size: 0.9, leading: 0.92, margin: 0.72 }, { size: 0.87, leading: 0.9, margin: 0.66 }, { size: 0.84, leading: 0.88, margin: 0.62 },
+  { size: 0.8, leading: 0.86, margin: 0.58 }, { size: 0.76, leading: 0.85, margin: 0.56 },
+];
+/** Body text never goes below 7.5 pt, whatever the template. Inter's letters are tall, so this reads like 8.5 to 9 pt in Calibri or Arial. */
+const SMALLEST = 0.76;
+
+async function render(resume: StructuredResume, paper: Paper, template: TemplateId, fit: Fit, highlight?: Highlight) {
+  const look = LOOKS[template] ?? LOOKS.classic, scale = Math.max(SMALLEST, look.size * fit.size);
   const pdf = await PDFDocument.create(); pdf.registerFontkit(fontkit);
   pdf.setTitle(`${resume.name} — Resume`); pdf.setAuthor(resume.name); pdf.setCreator('Folio');
   // Each face needs its own name, or viewers treat the subsets as one font and drop glyphs.
@@ -70,7 +80,7 @@ async function render(resume: StructuredResume, paper: Paper, template: Template
   if (tier === 1 && await lacks(FILES.regular[1]))
     for (const face of ['regular', 'bold', 'italic'] as Face[]) fonts.fallback[face] = await embed(FILES[face][2]);
 
-  const [width, height] = PAPER[paper], margin = look.margin, right = width - margin, s = (value: number) => value * scale;
+  const [width, height] = PAPER[paper], margin = Math.max(26, look.margin * fit.margin), right = width - margin, s = (value: number) => value * scale, v = (value: number) => value * scale * fit.leading;
   let page: PDFPage = pdf.addPage([width, height]), y = height - margin, pageIndex = 0;
   const room = (needed: number) => { if (y - needed < margin) { page = pdf.addPage([width, height]); y = height - margin; pageIndex += 1; } };
   const regions: Region[] = [];
@@ -107,15 +117,15 @@ async function render(resume: StructuredResume, paper: Paper, template: Template
     for (const line of wrap(text, face, size, right - x)) { room(leading); y -= leading; if (marked) tint(x, leading); if (key) mark(key, x, leading); draw(line, center ? (width - measure(line, face, size)) / 2 : x, face, size, color); }
   };
   const section = (title: string) => {
-    room(s(48)); y -= s(20);
+    room(v(48)); y -= v(20);
     draw(title.toUpperCase(), margin, 'bold', s(9), look.accent ?? INK);
-    y -= s(4.5); page.drawLine({ start: { x: margin, y }, end: { x: right, y }, thickness: look.accent ? 0.9 : 0.6, color: look.rule }); y -= s(2.5);
+    y -= v(4.5); page.drawLine({ start: { x: margin, y }, end: { x: right, y }, thickness: look.accent ? 0.9 : 0.6, color: look.rule }); y -= v(2.5);
   };
   /** Left text with a right-aligned note (dates) on the same line; the left side wraps short of the note. */
   const heading = (left: string, note: string, size: number) => {
     const noteWidth = note ? measure(note, 'regular', s(9.4)) + s(12) : 0, lines = wrap(left, 'bold', size, right - margin - noteWidth);
     lines.forEach((line, index) => {
-      room(s(14)); y -= s(index ? 13 : 14.5); draw(line, margin, 'bold', size);
+      room(v(14)); y -= s(index ? 13 : 14.5); draw(line, margin, 'bold', size);
       if (!index && note) draw(note, right - measure(note, 'regular', s(9.4)), 'regular', s(9.4), MUTED);
     });
   };
@@ -123,62 +133,72 @@ async function render(resume: StructuredResume, paper: Paper, template: Template
     for (const item of items) {
       const text = typeof item === 'string' ? item : item.text, lines = wrap(text, 'regular', s(9.8), right - margin - s(11));
       const marked = typeof item !== 'string' && !!highlight?.has(item.id);
-      lines.forEach((line, index) => { room(s(13.6)); y -= s(13.6); if (marked) tint(margin + s(11), s(13.6)); if (typeof item !== 'string') mark(`bullet:${item.id}`, margin + s(11), s(13.6)); if (!index) draw('•', margin + s(1), 'regular', s(9.8), MUTED); draw(line, margin + s(11), 'regular', s(9.8)); });
+      lines.forEach((line, index) => { room(v(13.6)); y -= v(13.6); if (marked) tint(margin + s(11), v(13.6)); if (typeof item !== 'string') mark(`bullet:${item.id}`, margin + s(11), v(13.6)); if (!index) draw('•', margin + s(1), 'regular', s(9.8), MUTED); draw(line, margin + s(11), 'regular', s(9.8)); });
     }
   };
 
   const head = (text: string, face: Face, size: number, color = INK) => draw(text, look.centered ? Math.max(margin, (width - measure(text, face, size)) / 2) : margin, face, size, color);
   y -= s(look.name); head(resume.name, 'bold', s(look.name), look.accent ?? INK);
-  if (resume.headline) { y -= s(15); head(resume.headline, 'regular', s(11), MUTED); }
-  if (resume.contact.length) { y -= s(3); paragraph(resume.contact.join('  ·  '), 'regular', s(9.2), s(13), margin, MUTED, false, '', look.centered); }
-  if (resume.summary) { section('Summary'); y -= s(1); paragraph(resume.summary, 'regular', s(9.8), s(14), margin, INK, !!highlight?.has('summary'), 'summary'); }
+  if (resume.headline) { y -= v(15); head(resume.headline, 'regular', s(11), MUTED); }
+  if (resume.contact.length) { y -= v(3); paragraph(resume.contact.join('  ·  '), 'regular', s(9.2), v(13), margin, MUTED, false, '', look.centered); }
+  if (resume.summary) { section('Summary'); y -= v(1); paragraph(resume.summary, 'regular', s(9.8), v(14), margin, INK, !!highlight?.has('summary'), 'summary'); }
   if (resume.experience.length) {
     section('Experience');
     for (const role of resume.experience) {
       heading(role.title || role.company, role.dates, s(10.4));
       const place = [role.title ? role.company : '', role.location].filter(Boolean).join(' · ');
-      if (place) paragraph(place, 'italic', s(9.6), s(13), margin, MUTED);
-      y -= s(1.5); bullets(role.bullets); y -= s(5);
+      if (place) paragraph(place, 'italic', s(9.6), v(13), margin, MUTED);
+      y -= v(1.5); bullets(role.bullets); y -= v(5);
     }
-    y += s(5);
+    y += v(5);
   }
   if (resume.projects.length) {
     section('Projects');
     for (const project of resume.projects) {
       heading(project.name, project.dates, s(10.2));
-      if (project.link) paragraph(project.link, 'regular', s(9.2), s(12.6), margin, MUTED);
-      y -= s(1.5); bullets(project.bullets); y -= s(5);
+      if (project.link) paragraph(project.link, 'regular', s(9.2), v(12.6), margin, MUTED);
+      y -= v(1.5); bullets(project.bullets); y -= v(5);
     }
-    y += s(5);
+    y += v(5);
   }
   if (resume.education.length) {
     section('Education');
     for (const item of resume.education) {
       heading(item.degree || item.school, item.dates, s(10.2));
       const place = [item.degree ? item.school : '', item.location].filter(Boolean).join(' · ');
-      if (place) paragraph(place, 'italic', s(9.6), s(13), margin, MUTED);
-      for (const detail of item.details) paragraph(detail, 'regular', s(9.6), s(13.2));
-      y -= s(4);
+      if (place) paragraph(place, 'italic', s(9.6), v(13), margin, MUTED);
+      for (const detail of item.details) paragraph(detail, 'regular', s(9.6), v(13.2));
+      y -= v(4);
     }
-    y += s(4);
+    y += v(4);
   }
   if (resume.skills.length) {
-    section('Skills'); y -= s(1);
+    section('Skills'); y -= v(1);
     for (const group of resume.skills) {
       const label = group.label ? `${group.label}: ` : '', indent = label ? measure(label, 'bold', s(9.8)) : 0;
       const lines = wrap(group.items.join(', '), 'regular', s(9.8), right - margin - indent);
-      lines.forEach((line, index) => { room(s(14)); y -= s(14); if (!index && label) draw(label, margin, 'bold', s(9.8)); draw(line, margin + indent, 'regular', s(9.8)); });
+      lines.forEach((line, index) => { room(v(14)); y -= v(14); if (!index && label) draw(label, margin, 'bold', s(9.8)); draw(line, margin + indent, 'regular', s(9.8)); });
     }
   }
-  for (const extra of resume.extras) { section(extra.title); y -= s(1); bullets(extra.items); }
+  for (const extra of resume.extras) { section(extra.title); y -= v(1); bullets(extra.items); }
 
   return { bytes: await pdf.save(), pages: pdf.getPageCount(), regions };
 }
 
-/** Renders the resume, tightening slightly when that brings a near-miss back onto one page. */
-export async function renderResumePdf(resume: StructuredResume, paper: Paper, template: TemplateId = 'classic', highlight?: Highlight): Promise<Rendered> {
-  const full = await render(resume, paper, template, 1, highlight);
-  if (full.pages === 1) return { ...full, tightened: false };
-  for (const tighten of [0.95, 0.9]) { const tight = await render(resume, paper, template, tighten, highlight); if (tight.pages === 1) return { ...tight, tightened: true }; }
-  return { ...full, tightened: false };
+/**
+ * Renders the resume on as many pages as the original had (`target`), tightening type, spacing and margins
+ * only as far as needed. When the original's page count is unknown, it aims for the fewest pages it can reach.
+ * `over` is true when even the tightest setting needs more pages than the original.
+ */
+export async function renderResumePdf(resume: StructuredResume, paper: Paper, template: TemplateId = 'classic', highlight?: Highlight, target?: number | null): Promise<Rendered> {
+  const done = (result: Awaited<ReturnType<typeof render>>, level: number, goal: number): Rendered => ({ ...result, tightened: level > 0, fit: FITS[level], over: result.pages > goal });
+  const first = await render(resume, paper, template, FITS[0], highlight);
+  if (first.pages <= (target ?? 1)) return done(first, 0, target ?? 1);
+  const tightest = await render(resume, paper, template, FITS[FITS.length - 1], highlight);
+  const goal = target ?? tightest.pages;
+  if (tightest.pages > goal) return done(tightest, FITS.length - 1, goal);
+  if (first.pages <= goal) return done(first, 0, goal);
+  // The loosest setting that still fits.
+  for (let level = 1; level < FITS.length - 1; level++) { const tried = await render(resume, paper, template, FITS[level], highlight); if (tried.pages <= goal) return done(tried, level, goal); }
+  return done(tightest, FITS.length - 1, goal);
 }

@@ -1,6 +1,6 @@
 import { regionClient, type RegionId } from '../auth/regions';
 import { mergeResume, sameContent, type ResumeRecord } from './model';
-import { deleteResume, listResumes, putResume } from './store';
+import { deleteResume, listResumes, loadMemory, putResume, saveMemory } from './store';
 
 /**
  * Signed-in users get a copy of their resumes in their own region's database, so the work follows
@@ -43,9 +43,11 @@ export async function accountSaving(account: Account): Promise<boolean> {
 }
 /** Removes every copy from the account. Local resumes are kept, on this device and the others. */
 async function removeAllRemote(account: Account): Promise<void> {
-  const { error } = await regionClient(account.region).from('resumes').delete().eq('account_id', await accountId(account)).eq('schema_version', 2);
+  const { error } = await regionClient(account.region).from('resumes').delete().eq('account_id', await accountId(account)).in('schema_version', [2, 3]);
   if (error) throw new Error('remove');
   for (const record of await listResumes()) if (record.synced) { const { synced: _synced, ...rest } = record; await putResume(rest); }
+  const memory = await loadMemory<{ synced?: unknown }>();
+  if (memory?.synced) { const { synced: _synced, ...rest } = memory; await saveMemory(rest); }
 }
 export async function setAccountSaving(account: Account, on: boolean): Promise<void> {
   const { error } = await regionClient(account.region).auth.updateUser({ data: { folio_sync: on ? 'on' : 'off' } });
@@ -85,4 +87,6 @@ export async function syncAll(account: Account): Promise<ResumeRecord[]> {
 /** On sign-out, copies that are safely in the account leave this browser; anything not yet saved there stays. */
 export async function clearSyncedCopies(user: string): Promise<void> {
   for (const record of await listResumes()) if (record.synced?.user === user && record.synced.at >= record.updatedAt) await deleteResume(record.id);
+  const memory = await loadMemory<{ updatedAt: string; synced?: { user: string; at: string } }>();
+  if (memory?.synced?.user === user && memory.synced.at >= memory.updatedAt) await saveMemory(null);
 }

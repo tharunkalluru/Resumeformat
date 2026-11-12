@@ -1,21 +1,21 @@
 import JSZip from 'jszip';
-import type { Paper } from './pdf';
+import type { Fit, Paper } from './pdf';
 import type { StructuredResume, TemplateId } from './model';
 
 /** A plain, editable Word file with the same content and order as the PDF. */
 const esc = (text: string) => text.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 type Run = { text: string; bold?: boolean; italic?: boolean; size?: number; color?: string; tab?: boolean };
-/** Compact templates set every run two half-points smaller. */
-let shrink = 0;
+/** Type is scaled the same way the PDF was tightened, so the Word file stays on as many pages. */
+let scale = 1, spacing = 1;
 const run = ({ text, bold, italic, size = 20, color, tab }: Run) =>
-  `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${bold ? '<w:b/>' : ''}${italic ? '<w:i/>' : ''}${color ? `<w:color w:val="${color}"/>` : ''}<w:sz w:val="${size - shrink}"/><w:szCs w:val="${size - shrink}"/></w:rPr>${tab ? '<w:tab/>' : ''}<w:t xml:space="preserve">${esc(text)}</w:t></w:r>`;
+  `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${bold ? '<w:b/>' : ''}${italic ? '<w:i/>' : ''}${color ? `<w:color w:val="${color}"/>` : ''}<w:sz w:val="${Math.round(size * scale)}"/><w:szCs w:val="${Math.round(size * scale)}"/></w:rPr>${tab ? '<w:tab/>' : ''}<w:t xml:space="preserve">${esc(text)}</w:t></w:r>`;
 const para = (runs: Run[], options: { before?: number; after?: number; bullet?: boolean; rightTab?: number; rule?: string; center?: boolean } = {}) =>
-  `<w:p><w:pPr>${options.center ? '<w:jc w:val="center"/>' : ''}${options.bullet ? '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>' : ''}${options.rule ? `<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="2" w:color="${options.rule}"/></w:pBdr>` : ''}${options.rightTab ? `<w:tabs><w:tab w:val="right" w:pos="${options.rightTab}"/></w:tabs>` : ''}<w:spacing w:before="${options.before ?? 0}" w:after="${options.after ?? 0}" w:line="264" w:lineRule="auto"/></w:pPr>${runs.map(item => run(item)).join('')}</w:p>`;
+  `<w:p><w:pPr>${options.center ? '<w:jc w:val="center"/>' : ''}${options.bullet ? '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>' : ''}${options.rule ? `<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="2" w:color="${options.rule}"/></w:pBdr>` : ''}${options.rightTab ? `<w:tabs><w:tab w:val="right" w:pos="${options.rightTab}"/></w:tabs>` : ''}<w:spacing w:before="${Math.round((options.before ?? 0) * spacing)}" w:after="${Math.round((options.after ?? 0) * spacing)}" w:line="${Math.round(264 * spacing)}" w:lineRule="auto"/></w:pPr>${runs.map(item => run(item)).join('')}</w:p>`;
 
-export async function renderResumeDocx(resume: StructuredResume, paper: Paper, template: TemplateId = 'classic'): Promise<Blob> {
+export async function renderResumeDocx(resume: StructuredResume, paper: Paper, template: TemplateId = 'classic', fit?: Fit): Promise<Blob> {
   const modern = template === 'modern', compact = template === 'compact', accent = modern ? '17456F' : undefined;
-  const [width, height] = paper === 'a4' ? [11906, 16838] : [12240, 15840], margin = compact ? 720 : modern ? 1000 : 920, text = width - margin * 2, MUTED = '555552';
-  shrink = compact ? 2 : 0;
+  const [width, height] = paper === 'a4' ? [11906, 16838] : [12240, 15840], margin = Math.max(520, Math.round((compact ? 720 : modern ? 1000 : 920) * (fit?.margin ?? 1))), text = width - margin * 2, MUTED = '555552';
+  scale = Math.max(0.76, (compact ? 0.9 : 1) * (fit?.size ?? 1)); spacing = fit?.leading ?? 1;
   const body: string[] = [];
   const section = (title: string) => body.push(para([{ text: title.toUpperCase(), bold: true, size: 18, color: accent }], { before: compact ? 160 : 220, after: compact ? 50 : 80, rule: modern ? '9EB8D1' : 'C8C8C4' }));
   const heading = (left: string, note: string) => body.push(para([{ text: left, bold: true, size: 21 }, ...(note ? [{ text: note, size: 19, color: MUTED, tab: true }] : [])], { before: 100, rightTab: text }));
@@ -63,7 +63,7 @@ export async function renderResumeDocx(resume: StructuredResume, paper: Paper, t
 /** A cover letter as a plain Word file: one paragraph per block of text. */
 export async function renderLetterDocx(letter: string, paper: Paper): Promise<Blob> {
   const [width, height] = paper === 'a4' ? [11906, 16838] : [12240, 15840];
-  shrink = 0;
+  scale = 1; spacing = 1;
   const body = letter.trim().split(/\n{2,}/).flatMap(block => { const lines = block.split('\n').map(line => line.trim()).filter(Boolean); return lines.map((line, index) => para([{ text: line, size: 22 }], { after: index === lines.length - 1 ? 220 : 0 })); });
   return pack(body, width, height, 1300);
 }

@@ -21,11 +21,15 @@ export interface Tailoring {
   cuts: { id: string; reason: string }[];
   order: { parentId: string; ids: string[] }[];
   skills: { groupId: string; items: string[] }[];
+  /** From the applicant's career memory: new bullets under an existing role or project, skills, and whole projects. */
+  additions?: { id: string; parentId: string; text: string; reason: string }[];
+  newSkills?: { groupId: string; item: string }[];
+  newProjects?: { id: string; name: string; link: string; dates: string; bullets: Bullet[]; reason: string }[];
   missing: string[];
   dropped: Record<string, number>;
 }
 export type Decision = 'accepted' | 'rejected';
-/** Keys: `bullet:<id>`, `cut:<id>`, `summary`, `order`, `skills`. Undecided suggestions are not applied. */
+/** Keys: `bullet:<id>`, `cut:<id>`, `add:<id>`, `project:<id>`, `summary`, `order`, `skills`, `newSkills`. Undecided suggestions are not applied. */
 export type Decisions = Record<string, Decision>;
 
 export interface Job { title: string; company: string; description: string }
@@ -43,14 +47,16 @@ export interface JobRecord {
 /** A resume and every job it has been tailored for. `synced` is local bookkeeping and is never sent to the account. */
 export interface ResumeRecord {
   id: string; sourceName: string; base: StructuredResume; template: TemplateId; createdAt: string; updatedAt: string;
+  /** How many pages the original file had; tailored versions are kept to this. Null when unknown. */
+  pages?: number | null;
   jobs: JobRecord[]; deletedJobs: string[]; synced?: { user: string; at: string };
 }
 
 const newId = () => crypto.randomUUID().slice(0, 8);
 const now = () => new Date().toISOString();
 
-export function newResume(sourceName: string, base: StructuredResume): ResumeRecord {
-  return { id: crypto.randomUUID(), sourceName, base, template: 'classic', createdAt: now(), updatedAt: now(), jobs: [], deletedJobs: [] };
+export function newResume(sourceName: string, base: StructuredResume, pages: number | null = null): ResumeRecord {
+  return { id: crypto.randomUUID(), sourceName, base, template: 'classic', pages, createdAt: now(), updatedAt: now(), jobs: [], deletedJobs: [] };
 }
 export function newJob(job: Job, tailoring: Tailoring): JobRecord {
   return { id: crypto.randomUUID(), job, tailoring, decisions: Object.fromEntries(suggestionKeys(tailoring).map(key => [key, 'accepted' as const])), edits: {}, letter: '', status: 'draft', appliedAt: null, createdAt: now(), updatedAt: now() };
@@ -133,26 +139,35 @@ export function applyTailoring(base: StructuredResume, tailoring: Tailoring | nu
   const cuts = new Set(tailoring.cuts.filter(item => yes(`cut:${item.id}`)).map(item => item.id));
   const order = new Map(yes('order') ? tailoring.order.map(item => [item.parentId, item.ids]) : []);
   const skills = new Map(yes('skills') ? tailoring.skills.map(item => [item.groupId, item.items]) : []);
+  const added = (tailoring.additions ?? []).filter(item => yes(`add:${item.id}`)), extraSkills = yes('newSkills') ? tailoring.newSkills ?? [] : [];
+  const own = (bullet: Bullet): Bullet => { const text = edits[`bullet:${bullet.id}`]; return text !== undefined ? { ...bullet, text } : bullet; };
   const bullets = <T extends { id: string; bullets: Bullet[] }>(parent: T): T => {
     const ranked = order.get(parent.id);
     const sorted = ranked ? [...parent.bullets].sort((a, b) => ranked.indexOf(a.id) - ranked.indexOf(b.id)) : parent.bullets;
+    // Lines brought in from career memory lead the role: they were chosen for this job.
+    const fresh = added.filter(item => item.parentId === parent.id).map(item => own({ id: item.id, text: item.text }));
     // The applicant's own wording for this job wins over both the original line and a suggestion.
-    return { ...parent, bullets: sorted.filter(bullet => !cuts.has(bullet.id)).map(bullet => {
-      const own = edits[`bullet:${bullet.id}`];
-      return own !== undefined ? { ...bullet, text: own } : rewrites.has(bullet.id) ? { ...bullet, text: rewrites.get(bullet.id)! } : bullet;
-    }).filter(bullet => bullet.text.trim()) };
+    return { ...parent, bullets: [...fresh, ...sorted.filter(bullet => !cuts.has(bullet.id)).map(bullet => {
+      const mine = edits[`bullet:${bullet.id}`];
+      return mine !== undefined ? { ...bullet, text: mine } : rewrites.has(bullet.id) ? { ...bullet, text: rewrites.get(bullet.id)! } : bullet;
+    })].filter(bullet => bullet.text.trim()) };
   };
   return {
     ...base,
     summary: edits.summary !== undefined ? edits.summary : tailoring.summary && yes('summary') ? tailoring.summary.text : base.summary,
-    experience: base.experience.map(bullets), projects: base.projects.map(bullets),
-    skills: base.skills.map(group => skills.has(group.id) ? { ...group, items: skills.get(group.id)! } : group),
+    experience: base.experience.map(bullets),
+    projects: [...base.projects.map(bullets), ...(tailoring.newProjects ?? []).filter(item => yes(`project:${item.id}`)).map(item => ({ id: item.id, name: item.name, link: item.link, dates: item.dates, bullets: item.bullets.map(own).filter(bullet => bullet.text.trim()) }))],
+    skills: base.skills.map(group => {
+      const items = skills.get(group.id) ?? group.items, extra = extraSkills.filter(item => item.groupId === group.id && !items.includes(item.item)).map(item => item.item);
+      return extra.length || skills.has(group.id) ? { ...group, items: [...items, ...extra] } : group;
+    }),
   };
 }
 
 export const suggestionKeys = (tailoring: Tailoring): string[] => [
   ...(tailoring.summary ? ['summary'] : []), ...tailoring.bullets.map(item => `bullet:${item.id}`), ...tailoring.cuts.map(item => `cut:${item.id}`),
   ...(tailoring.order.length ? ['order'] : []), ...(tailoring.skills.length ? ['skills'] : []),
+  ...(tailoring.additions ?? []).map(item => `add:${item.id}`), ...(tailoring.newSkills?.length ? ['newSkills'] : []), ...(tailoring.newProjects ?? []).map(item => `project:${item.id}`),
 ];
 
 /** Share of the posting's key terms that the resume text contains. A reading aid, not a hiring score. */

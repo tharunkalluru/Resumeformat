@@ -7,6 +7,9 @@ const MESSAGES: Record<string, string> = {
   trial_used: 'You’ve used your free try. Create a free account to keep going.',
   trial_closed: 'Free tries are used up for today. Create a free account to continue.',
   job_unreadable: 'That page couldn’t be read. Paste the job text instead.',
+  job_refused: 'This site doesn’t let Folio read its pages. Open the posting and use the Send to Folio button, or paste the job text here.',
+  job_gone: 'This posting seems to have closed or moved. Check the link, or paste the job text.',
+  job_empty: 'Folio couldn’t find the job text on that page. Open the posting and use the Send to Folio button, or paste the job text here.',
   request_already_sent: 'That request was already sent. Try again.',
   daily_limit: 'You’ve used today’s AI runs. Try again tomorrow.',
   service_limit: 'AI is at capacity for today. Try again tomorrow.',
@@ -60,10 +63,17 @@ export async function readResume(text: string, signal?: AbortSignal): Promise<St
   return withIds(resume);
 }
 
-export const tailorResume = (resume: StructuredResume, job: Job, signal?: AbortSignal) => call<Tailoring>('tailor', { resume, job }, signal);
+const short = () => crypto.randomUUID().slice(0, 8);
+/** `memory` is the applicant's career memory as text; the server may draw on it as well as the resume. */
+export async function tailorResume(resume: StructuredResume, job: Job, memory = '', signal?: AbortSignal): Promise<Tailoring> {
+  type Raw = Omit<Tailoring, 'additions' | 'newProjects'> & { additions?: { parentId: string; text: string; reason: string }[]; newProjects?: { name: string; link: string; dates: string; bullets: string[]; reason: string }[] };
+  const raw = await call<Raw>('tailor', { resume, job, ...(memory ? { memory } : {}) }, signal);
+  // Suggestions that add lines need ids of their own, so each can be undone or reworded.
+  return { ...raw, additions: (raw.additions ?? []).map(item => ({ ...item, id: short() })), newProjects: (raw.newProjects ?? []).map(item => ({ ...item, id: short(), bullets: item.bullets.map(text => ({ id: short(), text })) })) };
+}
 
 /** A single web address and nothing else: the user pasted a link to the posting instead of its text. */
 export const jobLink = (text: string) => /^https?:\/\/\S+$/i.test(text.trim()) ? text.trim().replace(/^http:/i, 'https:') : null;
 /** The text of a job posting page. Many job sites refuse automated readers; the caller then asks for the text. */
-export const readJobLink = async (url: string, signal?: AbortSignal) => (await call<{ text: string }>('job', { url }, signal)).text;
-export const writeLetter = async (resume: StructuredResume, job: Job, signal?: AbortSignal) => (await call<{ letter: string }>('cover', { resume, job }, signal)).letter;
+export const readJobLink = (url: string, signal?: AbortSignal) => call<{ text: string; via?: string }>('job', { url }, signal);
+export const writeLetter = async (resume: StructuredResume, job: Job, memory = '', signal?: AbortSignal) => (await call<{ letter: string }>('cover', { resume, job, ...(memory ? { memory } : {}) }, signal)).letter;

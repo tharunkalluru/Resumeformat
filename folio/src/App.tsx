@@ -226,7 +226,7 @@ export default function App() {
   const auth = useOptionalAuth();
   // Project id whose sectioned (template) workspace is open over the shell.
   // The main workspace only needs the resume's words; it takes over from here.
-  const openTemplate = (item: Project) => { setHandoff({ name: item.source.name, text: contentText(item.baseline) }); navigate('app'); };
+  const openTemplate = (item: Project) => { setHandoff({ name: item.source.name, text: contentText(item.baseline), pages: item.template.pages.length || null }); navigate('app'); };
   const [downloadProgress, setDownloadProgress] = useState('');
   const [, setPdfReview] = useState<PreviewReview | null>(null);
   const [historyTick, setHistoryTick] = useState(0);
@@ -728,9 +728,9 @@ export default function App() {
       // The exact layout could not be kept, but a template only needs the words.
       if (!fictional) {
         try {
-          const { plainText } = await import('./structured/plainText');
-          const text = await plainText(file);
-          if (text.length >= 200) { setHandoff({ name: file.name, text, note: 'This file’s exact layout couldn’t be kept, so Folio put your content into a clean template.' }); navigate('app'); return; }
+          const { readFile } = await import('./structured/plainText');
+          const { text, pages } = await readFile(file);
+          if (text.length >= 200) { setHandoff({ name: file.name, text, pages, note: 'This file’s exact layout couldn’t be kept, so Folio put your content into a clean template.' }); navigate('app'); return; }
         } catch { /* fall through to the original message */ }
       }
       setError(errorMessage(reason));

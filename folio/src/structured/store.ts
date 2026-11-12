@@ -2,7 +2,11 @@ import { openDB } from 'idb';
 import { fromV1, type ResumeRecord, type StructuredRecord } from './model';
 
 /** Resumes and the jobs they were tailored for, kept in this browser. Signed-in users also get a copy in their account (see sync.ts). */
-const database = () => openDB('folio-resumes-v2', 1, { upgrade(db) { db.createObjectStore('resumes', { keyPath: 'id' }); } });
+const database = () => openDB('folio-resumes-v2', 2, { upgrade(db) {
+  if (!db.objectStoreNames.contains('resumes')) db.createObjectStore('resumes', { keyPath: 'id' });
+  // One record: the applicant's career memory.
+  if (!db.objectStoreNames.contains('memory')) db.createObjectStore('memory', { keyPath: 'key' });
+} });
 const MIGRATED = 'folio.resumes.migrated';
 
 /** Brings over resumes saved by the first template workspace. The old copies are left in place. */
@@ -33,3 +37,8 @@ export async function putResume(record: ResumeRecord): Promise<void> { await (aw
 export async function deleteResume(id: string): Promise<void> {
   try { await (await database()).delete('resumes', id); } catch { /* nothing stored */ }
 }
+
+export async function loadMemory<T>(): Promise<T | null> {
+  try { return ((await (await database()).get('memory', 'main')) as { value: T } | undefined)?.value ?? null; } catch { return null; }
+}
+export async function saveMemory<T>(value: T | null): Promise<void> { const db = await database(); if (value === null) await db.delete('memory', 'main'); else await db.put('memory', { key: 'main', value }); }

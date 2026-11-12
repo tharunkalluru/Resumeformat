@@ -1,14 +1,15 @@
 // Folio structured-resume AI, deployed identically to each regional project.
 // POST /structure reads a resume's text into sections. POST /tailor proposes changes for one job.
-// POST /job reads a job posting from a public page. POST /cover drafts a cover letter (signed-in only).
+// POST /job reads a job posting from a link (job-readers.mjs). POST /cover drafts a cover letter (signed-in only).
 // Signed-in users share the daily limits and the public.ai_runs log with the `ai` function.
 // Visitors without an account get one try (one /structure and one /tailor per address per day),
 // under a daily cap for all visitors, logged in public.ai_anon_runs by a salted hash of the address.
 import { createClient } from '@supabase/supabase-js';
 import {
-  MODEL, MAX_RESUME_CHARS, MAX_JOB_CHARS, STRUCTURE_SCHEMA, STRUCTURE_INSTRUCTIONS, TAILOR_SCHEMA, TAILOR_INSTRUCTIONS,
-  COVER_SCHEMA, COVER_INSTRUCTIONS, checkStructure, checkTailoring, checkLetter, validResume, safeJobUrl, htmlToJobText,
+  MODEL, MAX_RESUME_CHARS, MAX_JOB_CHARS, MAX_MEMORY_CHARS, STRUCTURE_SCHEMA, STRUCTURE_INSTRUCTIONS, TAILOR_SCHEMA, TAILOR_INSTRUCTIONS,
+  COVER_SCHEMA, COVER_INSTRUCTIONS, checkStructure, checkTailoring, checkLetter, validResume, safeJobUrl,
 } from './structured.mjs';
+import { readJob } from './job-readers.mjs';
 
 const env = (name: string) => Deno.env.get(name)?.trim() ?? '';
 const USER_DAILY_LIMIT = Number(env('AI_DAILY_USER_LIMIT') || 20);
@@ -16,7 +17,7 @@ const GLOBAL_DAILY_LIMIT = Number(env('AI_DAILY_GLOBAL_LIMIT') || 300);
 const ANON_DAILY_LIMIT = Number(env('AI_DAILY_ANON_LIMIT') || 100); // AI calls; one try is two calls
 const ALLOWED_ORIGINS = new Set(['http://localhost:4594', 'http://127.0.0.1:4594', ...env('ALLOWED_ORIGINS').split(',').map(o => o.trim()).filter(Boolean)]);
 const PAGES_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?folio-app-78s\.pages\.dev$/;
-const MAX_BODY_BYTES = 160 * 1024;
+const MAX_BODY_BYTES = 200 * 1024;
 
 const admin = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
 const apiKey = env('OPENAI_API_KEY');
@@ -95,7 +96,8 @@ Deno.serve(async request => {
   } else {
     const job = body.job;
     if (!validResume(body.resume) || !job || typeof job.description !== 'string' || !job.description.trim() || job.description.length > MAX_JOB_CHARS ||
-        typeof (job.title ?? '') !== 'string' || (job.title ?? '').length > 300 || typeof (job.company ?? '') !== 'string' || (job.company ?? '').length > 300) return fail(400, 'invalid_request', 'The resume or job is missing or too long.');
+        typeof (job.title ?? '') !== 'string' || (job.title ?? '').length > 300 || typeof (job.company ?? '') !== 'string' || (job.company ?? '').length > 300 ||
+        typeof (body.memory ?? '') !== 'string' || (body.memory ?? '').length > MAX_MEMORY_CHARS) return fail(400, 'invalid_request', 'The resume, job or career memory is missing or too long.');
   }
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -140,26 +142,19 @@ Deno.serve(async request => {
       if (problem) { console.error('structure rejected', problem); throw new Failure(502, 'provider_invalid_response', 'The resume could not be read reliably. Try again.'); }
       result = { resume: answer.value }; usage = answer.usage;
     } else if (route === 'job') {
-      const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 9000);
-      try {
-        const page = await fetch(safeJobUrl(body.url)!, { signal: controller.signal, redirect: 'follow', headers: { Accept: 'text/html', 'User-Agent': 'Mozilla/5.0 (compatible; FolioJobReader/1.0)' } });
-        // A redirect must not lead somewhere the first check would have refused.
-        if (!page.ok || !safeJobUrl(page.url) || !(page.headers.get('content-type') ?? '').includes('text/html')) { await page.body?.cancel().catch(() => {}); throw new Error('unreadable'); }
-        const html = (await page.text()).slice(0, 1_500_000), text = htmlToJobText(html);
-        if (!text) throw new Error('unreadable');
-        result = { text };
-      } catch { throw new Failure(422, 'job_unreadable', 'That page couldn’t be read. Paste the job text instead.'); }
-      finally { clearTimeout(timer); }
+      const read = await readJob(body.url);
+      if (!read.text) throw new Failure(422, read.problem === 'gone' ? 'job_gone' : read.problem === 'empty' ? 'job_empty' : 'job_refused', 'That link couldn\u2019t be read. Paste the job text instead.');
+      result = { text: read.text, via: read.via };
     } else if (route === 'cover') {
-      const { description } = body.job;
-      const answer = await ask(COVER_INSTRUCTIONS, { job: { description }, resume: body.resume }, COVER_SCHEMA, 'folio_cover_letter', 'low', 3000);
-      const checked = checkLetter(answer.value, body.resume, description);
+      const { description } = body.job, memory = (body.memory ?? '').trim();
+      const answer = await ask(COVER_INSTRUCTIONS, { job: { description }, resume: body.resume, ...(memory ? { careerNotes: memory } : {}) }, COVER_SCHEMA, 'folio_cover_letter', 'low', 3000);
+      const checked = checkLetter(answer.value, body.resume, description, memory);
       if (!checked.letter) { console.error('letter rejected', checked.problem); throw new Failure(502, 'provider_invalid_response', 'The letter could not be written reliably. Try again.'); }
       result = { letter: checked.letter }; usage = answer.usage;
     } else {
-      const description = body.job.description;
-      const answer = await ask(TAILOR_INSTRUCTIONS, { job: { description }, resume: body.resume }, TAILOR_SCHEMA, 'folio_resume_tailoring', 'medium', 9000);
-      const checked = checkTailoring(answer.value, body.resume, description);
+      const description = body.job.description, memory = (body.memory ?? '').trim();
+      const answer = await ask(TAILOR_INSTRUCTIONS, { job: { description }, resume: body.resume, ...(memory ? { careerNotes: memory } : {}) }, TAILOR_SCHEMA, 'folio_resume_tailoring', 'medium', 10000);
+      const checked = checkTailoring(answer.value, body.resume, description, memory);
       if (Object.keys(checked.dropped).length) console.error('tailoring dropped', JSON.stringify(checked.dropped), 'kept', checked.bullets.length);
       result = checked; usage = answer.usage;
     }
