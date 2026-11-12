@@ -20,8 +20,21 @@ export function AuthDialog({ initialMode, initialMessage, signedInRegion, onClos
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => { panel.current?.querySelector<HTMLInputElement>('input:not([type=hidden])')?.focus(); }, [view]);
+  // Return focus to whatever opened the dialog.
+  const [opener] = useState(() => (typeof document === 'undefined' ? null : document.activeElement));
+  useEffect(() => () => { if (opener instanceof HTMLElement && opener.isConnected) opener.focus(); }, [opener]);
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape' && !busy) onClose(); };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !busy) { onClose(); return; }
+      if (event.key !== 'Tab' || !panel.current) return;
+      // Keep Tab inside the dialog.
+      const items = [...panel.current.querySelectorAll<HTMLElement>('button, a[href], input:not([type=hidden]), select, textarea')].filter(item => !item.hasAttribute('disabled') && item.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1], active = document.activeElement;
+      if (!panel.current.contains(active)) { event.preventDefault(); first.focus(); }
+      else if (event.shiftKey && active === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && active === last) { event.preventDefault(); first.focus(); }
+    };
     window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey);
   }, [busy, onClose]);
 

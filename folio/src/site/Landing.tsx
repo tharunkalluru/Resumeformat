@@ -1,12 +1,12 @@
-import { ArrowRight, Check, FileText, Lock, ShieldCheck, Sparkles, Upload } from 'lucide-react';
+import { ArrowRight, Lock, ShieldCheck } from 'lucide-react';
 import { useOptionalAuth } from '../auth/AuthProvider';
 import { SiteFooter, SiteHeader } from './Site';
 import { linkProps, navigate } from './router';
 
 const STEPS = [
-  { icon: Upload, title: 'Add your resume', text: 'Drop in your PDF or Word file. Folio keeps your exact layout, fonts and spacing.' },
-  { icon: FileText, title: 'Paste the job', text: 'Add the job description. Folio finds which of your experiences match what they ask for.' },
-  { icon: Sparkles, title: 'Review and download', text: 'Accept the suggested wording you like, check the page, and download a PDF that looks like yours.' },
+  { title: 'Add your resume', text: 'Drop in your PDF or Word file. Folio keeps your exact layout, fonts and spacing.' },
+  { title: 'Paste the job', text: 'Add the job description. Folio finds which of your experiences match what they ask for.' },
+  { title: 'Review and download', text: 'Accept the suggested wording you like, check the page, and download a PDF that looks like yours.' },
 ];
 
 const PROMISES = [
@@ -36,10 +36,10 @@ export function Landing() {
       <button type="button" className="site-button site-button-small" onClick={startFree}>Get started</button>
     </SiteHeader>
 
-    <main>
+    <main id="main">
       <section className="site-hero">
         <div className="site-hero-copy">
-          <p className="site-eyebrow">Resume tailoring that respects your work</p>
+          <p className="site-eyebrow">Resume tailoring</p>
           <h1>Tailor your resume to every job, without losing your layout.</h1>
           <p className="site-lead">Folio rewrites the lines that matter for each job using only your real experience, then gives you back a PDF that looks exactly like yours.</p>
           <div className="site-actions">
@@ -51,36 +51,32 @@ export function Landing() {
         <div className="site-hero-art" aria-hidden="true">
           <div className="site-paper">
             <div className="site-paper-name">Alex Morgan</div>
-            <div className="site-paper-role">Product Manager</div>
+            <div className="site-paper-role">Product Manager · Pune</div>
             <div className="site-paper-rule" />
             <div className="site-paper-head">Experience</div>
+            <div className="site-paper-job">Northwind Analytics <span>2022 – Present</span></div>
             <div className="site-line site-line-old">Led roadmap for the reporting product across three teams.</div>
-            <div className="site-line site-line-new"><Sparkles size={12} /> Owned the reporting roadmap across three teams, prioritising enterprise customer requests.</div>
-            <div className="site-line" />
-            <div className="site-line site-line-short" />
+            <div className="site-line site-line-new">Owned the reporting roadmap across three teams, prioritising enterprise customer requests.</div>
+            <div className="site-line">Cut report load time by redesigning the export flow with engineering.</div>
+            <div className="site-skel" /><div className="site-skel site-skel-short" />
             <div className="site-paper-head">Skills</div>
-            <div className="site-line" />
-            <div className="site-line site-line-short" />
+            <div className="site-skel" /><div className="site-skel site-skel-short" />
           </div>
-          <div className="site-badge"><ShieldCheck size={14} /> Matches your source resume</div>
+          <div className="site-badge"><ShieldCheck size={14} /> Same layout, one line changed</div>
         </div>
       </section>
 
       <section id="how" className="site-section">
         <h2>How it works</h2>
         <ol className="site-steps">
-          {STEPS.map(({ icon: Icon, title, text }, index) => <li key={title}>
-            <span className="site-step-icon"><Icon size={18} aria-hidden="true" /></span>
-            <span className="site-step-number">Step {index + 1}</span>
-            <h3>{title}</h3><p>{text}</p>
-          </li>)}
+          {STEPS.map(({ title, text }) => <li key={title}><h3>{title}</h3><p>{text}</p></li>)}
         </ol>
       </section>
 
       <section className="site-section site-band">
         <h2>Built to be trusted</h2>
         <ul className="site-promises">
-          {PROMISES.map(item => <li key={item.title}><Check size={18} aria-hidden="true" /><div><h3>{item.title}</h3><p>{item.text}</p></div></li>)}
+          {PROMISES.map(item => <li key={item.title}><h3>{item.title}</h3><p>{item.text}</p></li>)}
         </ul>
       </section>
 

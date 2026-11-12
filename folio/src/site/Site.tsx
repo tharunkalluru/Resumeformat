@@ -5,6 +5,7 @@ import { rememberedRegion } from '../auth/regions';
 import { Landing } from './Landing';
 import { LegalPage } from './LegalPage';
 import { carriesAuthReturn, linkProps, navigate, useRoute } from './router';
+import '../ui/folio-kit-tokens.css';
 import './site.css';
 
 const TITLES = { landing: 'Folio — Tailor your resume to every job, in your own layout', app: 'Folio — Workspace', privacy: 'Privacy — Folio', terms: 'Terms — Folio', notFound: 'Page not found — Folio' };
@@ -32,6 +33,7 @@ export function Site() {
 
 export function SiteHeader({ children }: { children?: ReactNode }) {
   return <header className="site-header">
+    <a className="site-skip" href="#main">Skip to content</a>
     <a className="site-brand" {...linkProps('landing')}><span className="site-logo" aria-hidden="true">F</span>Folio</a>
     <nav className="site-nav" aria-label="Main">{children}</nav>
   </header>;
@@ -47,7 +49,7 @@ export function SiteFooter() {
 function NotFound() {
   return <div className="site">
     <SiteHeader />
-    <main className="site-main site-narrow"><h1>Page not found</h1><p className="site-lead">That page doesn’t exist.</p>
+    <main id="main" className="site-main site-narrow"><h1>Page not found</h1><p className="site-lead">That page doesn’t exist.</p>
       <p><a className="site-button" {...linkProps('landing')}>Go to the home page</a></p></main>
     <SiteFooter />
   </div>;

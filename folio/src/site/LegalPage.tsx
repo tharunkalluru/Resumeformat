@@ -7,7 +7,7 @@ const CONTACT = 'tharun99.kalluru@gmail.com';
 export function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
   return <div className="site">
     <SiteHeader><a className="site-button site-button-small" {...linkProps('app')}>Open Folio</a></SiteHeader>
-    <main className="site-main site-narrow site-legal">{kind === 'privacy' ? <Privacy /> : <Terms />}</main>
+    <main id="main" className="site-main site-narrow site-legal">{kind === 'privacy' ? <Privacy /> : <Terms />}</main>
     <SiteFooter />
   </div>;
 }
