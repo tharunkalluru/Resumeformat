@@ -14,6 +14,7 @@ export default defineConfig({
     // A few App integration tests depend on debounce timing; retry before failing.
     retry: 2,
     include: [
+      'src/structured/model.test.ts',
       'src/core/careerMemory.test.ts',
       'src/core/applications.test.ts',
       'src/core/composerSources.test.ts',

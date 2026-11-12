@@ -32,6 +32,15 @@ Do not treat those as regressions. Needs Node 22.9 or newer.
   the OpenAI key as a secret, requires a signed-in user, enforces 20 runs per user and 300 per
   region per day, and logs each run in `public.ai_runs`. The client is `folio/src/tailoring/ai.ts`.
   Never put the OpenAI key in code, files or chat.
+- Template mode (`folio/src/structured/`, server `supabase/functions/resume-ai/`): the default for
+  signed-in users. The resume's text is read into sections by AI (`/structure`), rendered with a
+  reflowing template (`pdf.ts`, `docx.ts`), and tailored per job (`/tailor`: rewrite, reorder, cut).
+  The server drops any suggestion that uses a number, name, term or job-posting word the resume
+  does not already contain (`structured.mjs`, tested in `model.test.ts`). It works from plain text,
+  so it also handles files the exact-layout importer rejects. Data is in IndexedDB
+  `folio-structured-v1`. The exact-layout engine is the "Keep my exact layout" alternative.
+  Template PDFs embed full Inter fonts (about 550 KB per file) because pdf-lib's subsetter drops
+  Inter glyphs; do not turn subsetting back on without checking the rendered output.
 - Database schema: `supabase/migrations/`. Apply the same migration to both regions.
 - Hosting: Cloudflare Pages project `folio-app`, live at https://folio-app-78s.pages.dev, built
   from `folio/` with `npm ci && npm run build`. Every branch gets a preview at
@@ -61,7 +70,9 @@ unit tests.
 
 Next, in order:
 
-1. Merge `phase-4-design` into `main`; close PR #8.
+1. Merge `phase-5-structured` (it contains `phase-4-design`) into `main`; close PR #8.
+   Template mode still to do: show template resumes in Applications and the sidebar, editing for
+   education/projects/extras, two more templates, streaming suggestions.
 2. Account sync: back up resumes and applications to the user's region so they follow the user to
    another device. Idea: reuse `backupProject` / `restoreBackup` ZIP blobs in a storage bucket.
 3. Publish the Google sign-in screen (currently Testing mode, Google Cloud project `folio-513701`)
