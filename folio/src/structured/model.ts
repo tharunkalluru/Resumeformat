@@ -100,3 +100,11 @@ export function jobMatch(resume: StructuredResume, jobDescription: string): { fo
   const found = terms.filter(has), absent = terms.filter(term => !has(term));
   return { found, absent, percent: terms.length ? Math.round(found.length / terms.length * 100) : 0 };
 }
+
+/** Best guess at role and company from the posting's first line, e.g. "Senior PM, Platform at Acme". */
+export function jobHeading(description: string): { title: string; company: string } {
+  const first = description.trim().split(/\n|(?<=[.!?])\s/u)[0]?.trim().replace(/[.!?]$/u, '') ?? '';
+  const match = first.length <= 140 ? first.match(/^(.{3,90}?)\s+(?:at|@)\s+(\p{Lu}[\p{L}\p{N}&.' -]{1,50})$/u) ?? first.match(/^(.{3,90}?)\s+[|–—-]\s+(\p{Lu}[\p{L}\p{N}&.' -]{1,50})$/u) : null;
+  if (match) return { title: match[1].trim(), company: match[2].trim() };
+  return { title: first.length <= 70 && !/[.:;]/u.test(first) ? first : '', company: '' };
+}

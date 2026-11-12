@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDownToLine, ArrowLeft, Check, LoaderCircle, RotateCcw, Sparkles, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowLeft, LoaderCircle, MoreHorizontal, RotateCcw, Sparkles } from 'lucide-react';
 import { detectRegion, rememberedRegion } from '../auth/regions';
 import { useOptionalAuth } from '../auth/AuthProvider';
 import { PdfPreview } from '../ui/PdfPreview';
 import { safeName } from '../ui/fileNames';
 import { readResume, tailorResume, StructuredAiError } from './api';
-import { applyTailoring, clean, jobMatch, suggestionKeys, type Decisions, type Job, type StructuredRecord, type StructuredResume, type Tailoring } from './model';
-import { renderResumePdf, type Paper } from './pdf';
+import { applyTailoring, clean, jobHeading, jobMatch, suggestionKeys, type Job, type StructuredRecord, type StructuredResume } from './model';
+import { renderResumePdf, type Highlight, type Paper } from './pdf';
 import { loadStructured, saveStructured } from './store';
 import './structured.css';
 
@@ -24,7 +24,7 @@ export function StructuredStudio({ source, onExit, onExactLayout }: { source: St
   const [paper, setPaper] = useState<Paper>(() => (rememberedRegion() ?? detectRegion()) === 'in' ? 'a4' : 'letter');
   const [pdf, setPdf] = useState<{ bytes: Uint8Array; pages: number; tightened: boolean } | null>(null);
   const [editing, setEditing] = useState(false), [busyFile, setBusyFile] = useState<'' | 'pdf' | 'docx'>('');
-  const abort = useRef<AbortController | null>(null), layer = useRef<HTMLDivElement>(null);
+  const abort = useRef<AbortController | null>(null), layer = useRef<HTMLDivElement>(null), menu = useRef<HTMLDetailsElement>(null);
 
   // The workspace covers the app, so keyboard focus stays inside it and returns to the opener on close.
   useEffect(() => {
@@ -68,115 +68,130 @@ export function StructuredStudio({ source, onExit, onExactLayout }: { source: St
   }, [source.id, signedIn, read]);
 
   const current = useMemo(() => record ? applyTailoring(clean(record.base), record.tailoring, record.decisions) : null, [record]);
+  // Changed lines are tinted in the preview only; the downloaded file is rendered clean.
+  const highlight = useMemo<Highlight>(() => new Set(record?.tailoring ? [...record.tailoring.bullets.filter(item => record.decisions[`bullet:${item.id}`] === 'accepted').map(item => item.id), ...(record.tailoring.summary && record.decisions.summary === 'accepted' ? ['summary'] : [])] : []), [record]);
   useEffect(() => {
     if (!current) return;
     let active = true;
-    const timer = setTimeout(() => { void renderResumePdf(current, paper).then(result => { if (active) setPdf(result); }).catch(reason => { if (active) setError(message(reason)); }); }, 150);
+    const timer = setTimeout(() => { void renderResumePdf(current, paper, highlight).then(result => { if (active) setPdf(result); }).catch(reason => { if (active) setError(message(reason)); }); }, 150);
     return () => { active = false; clearTimeout(timer); };
-  }, [current, paper]);
+  }, [current, paper, highlight]);
 
   async function tailor() {
     if (!record?.job.description.trim()) return;
     setPhase('tailoring'); setError('');
     const controller = new AbortController(); abort.current = controller;
     try {
-      const tailoring = await tailorResume(clean(record.base), record.job, controller.signal);
-      update(value => ({ ...value, tailoring, decisions: {} })); setPhase('ready');
+      // Role and company are read from the posting, so the user only pastes it.
+      const job = { ...record.job, ...jobHeading(record.job.description) };
+      const tailoring = await tailorResume(clean(record.base), job, controller.signal);
+      // Changes are applied straight away; each one can be undone.
+      update(value => ({ ...value, job, tailoring, decisions: Object.fromEntries(suggestionKeys(tailoring).map(key => [key, 'accepted' as const])) })); setPhase('ready');
     } catch (reason) { if (!controller.signal.aborted) { setError(message(reason)); } setPhase('ready'); }
   }
   async function download(kind: 'pdf' | 'docx') {
     if (!current || !record) return;
-    setBusyFile(kind);
+    setBusyFile(kind); menu.current?.removeAttribute('open');
     try {
-      const name = [current.name, record.tailoring ? record.job.company : '', record.tailoring ? record.job.title : 'Resume'].map(part => safeName(part)).filter(Boolean).join('-') || 'Resume';
-      if (kind === 'pdf') { const { bytes } = pdf ?? await renderResumePdf(current, paper); save(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }), `${name}.pdf`); }
+      const name = [current.name, record.tailoring ? record.job.company : '', record.tailoring ? record.job.title : ''].map(part => safeName(part)).filter(Boolean).join('-') || 'Resume';
+      if (kind === 'pdf') { const { bytes } = await renderResumePdf(current, paper); save(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }), `${name}.pdf`); }
       else { const { renderResumeDocx } = await import('./docx'); save(await renderResumeDocx(current, paper), `${name}.docx`); }
     } catch (reason) { setError(message(reason)); } finally { setBusyFile(''); }
   }
 
   const tailoring = record?.tailoring ?? null, keys = tailoring ? suggestionKeys(tailoring) : [];
-  const decide = (key: string, decision: Decisions[string] | null) => update(value => { const decisions = { ...value.decisions }; if (decision) decisions[key] = decision; else delete decisions[key]; return { ...value, decisions }; });
-  const accepted = keys.filter(key => record?.decisions[key] === 'accepted').length, held = tailoring ? Object.values(tailoring.dropped).reduce((sum, count) => sum + count, 0) : 0;
+  const on = (key: string) => record?.decisions[key] === 'accepted';
+  const toggle = (key: string) => update(value => ({ ...value, decisions: { ...value.decisions, [key]: value.decisions[key] === 'accepted' ? 'rejected' : 'accepted' } }));
+  const applied = keys.filter(on).length, held = tailoring ? Object.values(tailoring.dropped).reduce((sum, count) => sum + count, 0) : 0;
   const match = current && record?.job.description.trim() ? jobMatch(current, record.job.description) : null;
   const bulletText = (id: string) => [...(record?.base.experience ?? []), ...(record?.base.projects ?? [])].flatMap(parent => parent.bullets).find(bullet => bullet.id === id)?.text ?? '';
-  const setJob = (patch: Partial<Job>) => update(value => ({ ...value, job: { ...value.job, ...patch } }));
+  const closeMenu = () => menu.current?.removeAttribute('open');
+  const jobLine = record ? [record.job.title, record.job.company].filter(Boolean).join(' at ') : '';
 
   return <div ref={layer} className="structured" role="dialog" aria-modal="true" aria-label="Resume template workspace">
     <header className="structured-bar">
       <button type="button" className="structured-back" onClick={onExit}><ArrowLeft size={18} aria-hidden="true" />Back</button>
       <strong title={source.name}>{current?.name || source.name}</strong>
       <div className="structured-bar-actions">
-        {onExactLayout && <button type="button" className="text-button" onClick={onExactLayout}>Keep my exact layout instead</button>}
-        <button type="button" className="button button-secondary button-small" disabled={!current || !!busyFile} onClick={() => void download('docx')}>{busyFile === 'docx' ? <LoaderCircle size={14} className="spin" /> : <ArrowDownToLine size={14} />}Word</button>
-        <button type="button" className="button button-primary button-small" disabled={!current || !!busyFile} onClick={() => void download('pdf')}>{busyFile === 'pdf' ? <LoaderCircle size={14} className="spin" /> : <ArrowDownToLine size={14} />}Download PDF</button>
+        <details className="structured-menu" ref={menu} onKeyDown={event => { if (event.key === 'Escape') { closeMenu(); event.stopPropagation(); } }}>
+          <summary className="button button-secondary button-small" aria-label="More options"><MoreHorizontal size={16} aria-hidden="true" /></summary>
+          <div className="structured-menu-list">
+            <button type="button" disabled={!current || !!busyFile} onClick={() => void download('docx')}>Download as Word</button>
+            <button type="button" disabled={!record} onClick={() => { setEditing(true); closeMenu(); }}>Edit resume text</button>
+            <div className="structured-menu-row" role="group" aria-label="Paper size"><span>Paper</span>{(['a4', 'letter'] as Paper[]).map(size => <button key={size} type="button" aria-pressed={paper === size} onClick={() => setPaper(size)}>{size === 'a4' ? 'A4' : 'US Letter'}</button>)}</div>
+            {onExactLayout && <button type="button" onClick={onExactLayout}>Keep my exact layout instead</button>}
+          </div>
+        </details>
+        <button type="button" className="button button-primary button-small" disabled={!current || !!busyFile} onClick={() => void download('pdf')}>{busyFile ? <LoaderCircle size={14} className="spin" /> : <ArrowDownToLine size={14} />}Download</button>
       </div>
     </header>
 
     <div className="structured-body">
       <section className="structured-panel" aria-label="Tailoring">
         {error && <p className="structured-error" role="alert">{error}</p>}
-        {source.note && !error && phase !== 'failed' && <p className="structured-note structured-source-note">{source.note}</p>}
+        {source.note && !error && phase !== 'failed' && !tailoring && <p className="structured-note structured-source-note">{source.note}</p>}
 
-        {(phase === 'loading' || phase === 'reading') && <div className="structured-wait" role="status"><LoaderCircle size={20} className="spin" aria-hidden="true" /><div><strong>Reading your resume</strong><p>Folio is sorting it into sections. This takes about 10 seconds.</p></div></div>}
+        {(phase === 'loading' || phase === 'reading') && <div className="structured-wait" role="status"><LoaderCircle size={20} className="spin" aria-hidden="true" /><div><strong>Reading your resume</strong><p>About 10 seconds.</p></div></div>}
 
         {phase === 'failed' && <div className="structured-empty">
-          <h1>{signedIn ? 'Your resume could not be read' : 'Sign in to use a Folio template'}</h1>
-          <p>{signedIn ? (onExactLayout ? 'You can try again, or keep working with your exact layout.' : 'You can try again in a moment.') : 'Templates let AI rewrite and reorder your resume for each job. Reading your resume uses AI, so it needs a free account.'}</p>
+          <h1>{signedIn ? 'Your resume could not be read' : 'Sign in to tailor your resume'}</h1>
+          <p>{signedIn ? 'Try again in a moment.' : 'Folio uses AI to read your resume and tailor it for each job, so it needs a free account.'}</p>
           <div className="structured-row">{signedIn ? <button type="button" className="button button-primary" onClick={() => void read()}><RotateCcw size={15} />Try again</button> : <button type="button" className="button button-primary" onClick={() => auth?.openAuth('signup')}>Create a free account</button>}{onExactLayout && <button type="button" className="button button-secondary" onClick={onExactLayout}>Keep my exact layout</button>}</div>
         </div>}
 
-        {record && phase !== 'reading' && phase !== 'loading' && phase !== 'failed' && !tailoring && <>
-          <h1>Tailor for a job</h1>
-          <p className="structured-lead">Paste the posting. Folio rewrites, reorders and trims using only what your resume already says.</p>
-          <div className="structured-fields"><label>Role<input value={record.job.title} maxLength={300} placeholder="e.g. Product Designer" onChange={event => setJob({ title: event.target.value })} /></label><label>Company<input value={record.job.company} maxLength={300} placeholder="e.g. Northstar" onChange={event => setJob({ company: event.target.value })} /></label></div>
-          <label className="structured-job">Job description<textarea value={record.job.description} maxLength={20000} rows={9} placeholder="Paste responsibilities and requirements…" readOnly={phase === 'tailoring'} onChange={event => setJob({ description: event.target.value })} /></label>
-          {phase === 'tailoring'
-            ? <div className="structured-wait" role="status"><LoaderCircle size={20} className="spin" aria-hidden="true" /><div><strong>Tailoring your resume</strong><p>About 20 seconds. Nothing changes until you accept it.</p></div><button type="button" className="text-button" onClick={() => { abort.current?.abort(); setPhase('ready'); }}>Cancel</button></div>
-            : <><button type="button" className="button button-primary structured-primary" disabled={!record.job.description.trim()} onClick={() => void tailor()}><Sparkles size={16} aria-hidden="true" />Tailor resume</button>
-              <p className="structured-note">Sends this job and your resume text to OpenAI through Folio. Uses 1 of your daily AI runs.</p></>}
-          <button type="button" className="text-button structured-edit-toggle" aria-expanded={editing} onClick={() => setEditing(value => !value)}>{editing ? 'Done editing' : 'Fix something Folio read wrong'}</button>
-          {editing && <ResumeEditor resume={record.base} onChange={base => update(value => ({ ...value, base }))} />}
+        {record && editing && phase !== 'failed' && <>
+          <div className="structured-review-head"><h1>Edit resume text</h1><button type="button" className="button button-primary button-small" onClick={() => setEditing(false)}>Done</button></div>
+          <ResumeEditor resume={record.base} onChange={base => update(value => ({ ...value, base }))} />
         </>}
 
-        {record && tailoring && phase !== 'failed' && <>
-          <div className="structured-review-head"><div><h1>{keys.length ? `${keys.length} ${keys.length === 1 ? 'suggestion' : 'suggestions'}` : 'No changes suggested'}</h1><p className="structured-lead">{record.job.title || 'This job'}{record.job.company ? ` at ${record.job.company}` : ''}{keys.length ? ` · ${accepted} accepted` : ''}</p></div>
-            {keys.length > 0 && <button type="button" className="button button-secondary button-small" onClick={() => update(value => ({ ...value, decisions: accepted === keys.length ? {} : Object.fromEntries(keys.map(key => [key, 'accepted' as const])) }))}>{accepted === keys.length ? 'Undo all' : 'Accept all'}</button>}</div>
-          {match && <p className="structured-match"><strong>{match.found.length} of {match.found.length + match.absent.length}</strong> key terms from the posting are in your resume.</p>}
-          {!keys.length && <p className="structured-note">Your resume already reads well for this posting. You can download it as it is.</p>}
+        {record && !editing && phase !== 'reading' && phase !== 'loading' && phase !== 'failed' && !tailoring && <>
+          <h1>Paste the job</h1>
+          <label className="structured-job"><span className="visually-hidden">Job description</span><textarea value={record.job.description} maxLength={20000} rows={12} placeholder="Paste the job posting here…" readOnly={phase === 'tailoring'} onChange={event => update(value => ({ ...value, job: { ...value.job, description: event.target.value } }))} /></label>
+          {phase === 'tailoring'
+            ? <div className="structured-wait" role="status"><LoaderCircle size={20} className="spin" aria-hidden="true" /><div><strong>Tailoring your resume</strong><p>About 20 seconds.</p></div><button type="button" className="text-button" onClick={() => { abort.current?.abort(); setPhase('ready'); }}>Cancel</button></div>
+            : <><button type="button" className="button button-primary structured-primary" disabled={!record.job.description.trim()} onClick={() => void tailor()}><Sparkles size={16} aria-hidden="true" />Tailor my resume</button>
+              <p className="structured-note">Folio only uses what your resume already says. The job and your resume text are sent to OpenAI.</p></>}
+        </>}
+
+        {record && tailoring && !editing && phase !== 'failed' && <>
+          <div className="structured-review-head"><div><h1>{keys.length ? `${applied} of ${keys.length} ${keys.length === 1 ? 'change' : 'changes'} applied` : 'Your resume already fits'}</h1>{jobLine && <p className="structured-lead">For {jobLine}</p>}</div>
+            {keys.length > 1 && <button type="button" className="text-button" onClick={() => update(value => ({ ...value, decisions: Object.fromEntries(keys.map(key => [key, applied ? 'rejected' as const : 'accepted' as const])) }))}>{applied ? 'Undo all' : 'Apply all'}</button>}</div>
+          <p className="structured-note">{keys.length ? 'Your resume is ready to download. Changed lines are highlighted on the right; undo any you don’t want.' : 'Nothing needed changing for this posting. You can download it as it is.'}</p>
+
+          {tailoring.cuts.length > 0 && <div className="structured-cuts"><h2>{tailoring.cuts.length} {tailoring.cuts.length === 1 ? 'line' : 'lines'} removed</h2>
+            <ul>{tailoring.cuts.map(item => <li key={item.id} className={on(`cut:${item.id}`) ? '' : 'is-undone'}><p>{bulletText(item.id)}</p><button type="button" className="text-button" onClick={() => toggle(`cut:${item.id}`)}>{on(`cut:${item.id}`) ? 'Put back' : 'Remove again'}</button></li>)}</ul></div>}
 
           <ul className="structured-suggestions">
-            {tailoring.summary && <Suggestion label="Summary" before={record.base.summary} after={tailoring.summary.text} reason={tailoring.summary.reason} state={record.decisions.summary} onDecide={decision => decide('summary', decision)} />}
-            {tailoring.bullets.map(item => <Suggestion key={item.id} label="Rewrite" before={bulletText(item.id)} after={item.text} reason={item.reason} state={record.decisions[`bullet:${item.id}`]} onDecide={decision => decide(`bullet:${item.id}`, decision)} />)}
-            {tailoring.cuts.map(item => <Suggestion key={item.id} label="Remove" before={bulletText(item.id)} after="" reason={item.reason} state={record.decisions[`cut:${item.id}`]} onDecide={decision => decide(`cut:${item.id}`, decision)} />)}
-            {tailoring.order.length > 0 && <Suggestion label="Reorder bullets" before="" after={`Most relevant bullets first in ${tailoring.order.length} ${tailoring.order.length === 1 ? 'section' : 'sections'}.`} reason="Recruiters read the first lines of each role." state={record.decisions.order} onDecide={decision => decide('order', decision)} />}
-            {tailoring.skills.length > 0 && <Suggestion label="Reorder skills" before="" after={tailoring.skills.map(group => group.items.slice(0, 6).join(', ')).join(' · ')} reason="Puts the skills this posting names first. Nothing is added." state={record.decisions.skills} onDecide={decision => decide('skills', decision)} />}
+            {tailoring.summary && <Change label="Summary" before={record.base.summary} after={tailoring.summary.text} reason={tailoring.summary.reason} applied={on('summary')} onToggle={() => toggle('summary')} />}
+            {tailoring.bullets.map(item => <Change key={item.id} label="Reworded" before={bulletText(item.id)} after={item.text} reason={item.reason} applied={on(`bullet:${item.id}`)} onToggle={() => toggle(`bullet:${item.id}`)} />)}
+            {tailoring.order.length > 0 && <Change label="Reordered" before="" after="Most relevant bullets moved to the top of each role." reason="" applied={on('order')} onToggle={() => toggle('order')} />}
+            {tailoring.skills.length > 0 && <Change label="Skills" before="" after={`Now leads with ${tailoring.skills.map(group => group.items.slice(0, 3).join(', ')).join(' · ')}.`} reason="" applied={on('skills')} onToggle={() => toggle('skills')} />}
           </ul>
 
-          {tailoring.missing.length > 0 && <div className="structured-missing"><h2>The posting asks for these, and your resume doesn’t show them</h2><ul>{tailoring.missing.map(item => <li key={item}>{item}</li>)}</ul><p>Folio won’t add them for you. If you have this experience, add it to your resume in your own words.</p></div>}
-          {held > 0 && <p className="structured-note">Folio held back {held} {held === 1 ? 'suggestion' : 'suggestions'} that used words or numbers not found in your resume.</p>}
-          <button type="button" className="text-button" onClick={() => update(value => ({ ...value, tailoring: null, decisions: {} }))}>Tailor for a different job</button>
+          {(tailoring.missing.length > 0 || match || held > 0) && <details className="structured-more"><summary>How this resume fits the posting</summary>
+            {match && <p><strong>{match.found.length} of {match.found.length + match.absent.length}</strong> key terms from the posting are in your resume.</p>}
+            {tailoring.missing.length > 0 && <><p>The posting also asks for these. Folio won’t add them; if you have the experience, add it in your own words.</p><ul>{tailoring.missing.map(item => <li key={item}>{item}</li>)}</ul></>}
+            {held > 0 && <p>{held} {held === 1 ? 'suggestion was' : 'suggestions were'} held back for using words or numbers not in your resume.</p>}
+          </details>}
+          <button type="button" className="text-button structured-again" onClick={() => update(value => ({ ...value, tailoring: null, decisions: {}, job: { title: '', company: '', description: '' } }))}>Tailor for a different job</button>
         </>}
       </section>
 
       <section className="structured-preview" aria-label="Resume preview">
         {pdf ? <>{Array.from({ length: pdf.pages }, (_, index) => <div className="structured-page" key={index}><PdfPreview bytes={pdf.bytes} page={index + 1} label={`Resume page ${index + 1} of ${pdf.pages}`} scale={1.6} /></div>)}
-          <p className="structured-preview-foot"><span>{pdf.pages} {pdf.pages === 1 ? 'page' : 'pages'}{pdf.tightened ? ' · spacing tightened to fit' : ''}</span><label>Paper<select value={paper} onChange={event => setPaper(event.target.value as Paper)}><option value="a4">A4</option><option value="letter">US Letter</option></select></label></p></>
+          {pdf.pages > 1 && <p className="structured-preview-foot">{pdf.pages} pages</p>}</>
           : <div className="structured-page structured-page-empty" aria-hidden="true" />}
       </section>
     </div>
   </div>;
 }
 
-function Suggestion({ label, before, after, reason, state, onDecide }: { label: string; before: string; after: string; reason: string; state?: Decisions[string]; onDecide: (decision: Decisions[string] | null) => void }) {
-  return <li className={`structured-suggestion ${state ? `is-${state}` : ''}`}>
-    <span className="structured-kind">{label}</span>
+function Change({ label, before, after, reason, applied, onToggle }: { label: string; before: string; after: string; reason: string; applied: boolean; onToggle: () => void }) {
+  return <li className={`structured-suggestion ${applied ? '' : 'is-undone'}`}>
+    <div className="structured-change-head"><span className="structured-kind">{label}</span><button type="button" className="text-button" onClick={onToggle}>{applied ? 'Undo' : 'Apply'}</button></div>
     {before && <p className="structured-before">{before}</p>}
-    {after && <p className="structured-after">{after}</p>}
+    <p className="structured-after">{after}</p>
     {reason && <p className="structured-reason">{reason}</p>}
-    <div className="structured-row">
-      <button type="button" className={`button button-small ${state === 'accepted' ? 'button-primary' : 'button-secondary'}`} aria-pressed={state === 'accepted'} onClick={() => onDecide(state === 'accepted' ? null : 'accepted')}><Check size={14} aria-hidden="true" />{state === 'accepted' ? 'Accepted' : 'Accept'}</button>
-      <button type="button" className="button button-small button-secondary" aria-pressed={state === 'rejected'} onClick={() => onDecide(state === 'rejected' ? null : 'rejected')}><X size={14} aria-hidden="true" />{state === 'rejected' ? 'Skipped' : 'Skip'}</button>
-    </div>
   </li>;
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyTailoring, clean, jobMatch, suggestionKeys, withIds, type StructuredResume, type Tailoring } from './model';
+import { applyTailoring, clean, jobHeading, jobMatch, suggestionKeys, withIds, type StructuredResume, type Tailoring } from './model';
 // The server-side checks are plain JavaScript shared with the edge function.
 // @ts-expect-error no type declarations for the edge function module
 import { checkStructure, checkTailoring, corpus, ungrounded, validResume } from '../../../supabase/functions/resume-ai/structured.mjs';
@@ -70,5 +70,10 @@ describe('structured resume: applying decisions', () => {
     expect(clean({ ...resume, experience: [{ ...resume.experience[0], bullets: [{ id: 'x', text: '  ' }] }] }).experience[0].bullets).toHaveLength(0);
     const match = jobMatch(resume, job);
     expect(match.found).toContain('figma'); expect(match.absent).toContain('kubernetes');
+  });
+  it('reads role and company from the posting’s first line when it can', () => {
+    expect(jobHeading('Senior Product Manager, Platform at Acme. We are looking for a PM.')).toEqual({ title: 'Senior Product Manager, Platform', company: 'Acme' });
+    expect(jobHeading('Product Designer | Northstar Studio\nAbout the role')).toEqual({ title: 'Product Designer', company: 'Northstar Studio' });
+    expect(jobHeading('We are a fast-growing company; you will own the roadmap and work with engineering every day of the week.')).toEqual({ title: '', company: '' });
   });
 });

@@ -27,7 +27,11 @@ function loadFont(file: string): Promise<Uint8Array> {
 interface Fonts { face: Record<Face, PDFFont>; fallback: Partial<Record<Face, PDFFont>>; covered: Set<number> }
 type Segment = { text: string; font: PDFFont };
 
-async function render(resume: StructuredResume, paper: Paper, scale: number) {
+/** Ids of changed bullets (and 'summary') to tint in the on-screen preview. Never used for downloads. */
+export type Highlight = ReadonlySet<string>;
+const TINT = rgb(0.996, 0.953, 0.78);
+
+async function render(resume: StructuredResume, paper: Paper, scale: number, highlight?: Highlight) {
   const pdf = await PDFDocument.create(); pdf.registerFontkit(fontkit);
   pdf.setTitle(`${resume.name} — Resume`); pdf.setAuthor(resume.name); pdf.setCreator('Folio');
   // Each face needs its own name, or viewers treat the subsets as one font and drop glyphs.
@@ -64,8 +68,9 @@ async function render(resume: StructuredResume, paper: Paper, scale: number) {
     if (line) lines.push(line);
     return lines;
   };
-  const paragraph = (text: string, face: Face, size: number, leading: number, x = margin, color = INK) => {
-    for (const line of wrap(text, face, size, right - x)) { room(leading); y -= leading; draw(line, x, face, size, color); }
+  const tint = (x: number, leading: number) => page.drawRectangle({ x: x - 3, y: y - leading * 0.26, width: right - x + 6, height: leading, color: TINT });
+  const paragraph = (text: string, face: Face, size: number, leading: number, x = margin, color = INK, marked = false) => {
+    for (const line of wrap(text, face, size, right - x)) { room(leading); y -= leading; if (marked) tint(x, leading); draw(line, x, face, size, color); }
   };
   const section = (title: string) => {
     room(s(48)); y -= s(20);
@@ -83,14 +88,15 @@ async function render(resume: StructuredResume, paper: Paper, scale: number) {
   const bullets = (items: Bullet[] | string[]) => {
     for (const item of items) {
       const text = typeof item === 'string' ? item : item.text, lines = wrap(text, 'regular', s(9.8), right - margin - s(11));
-      lines.forEach((line, index) => { room(s(13.6)); y -= s(13.6); if (!index) draw('•', margin + s(1), 'regular', s(9.8), MUTED); draw(line, margin + s(11), 'regular', s(9.8)); });
+      const marked = typeof item !== 'string' && !!highlight?.has(item.id);
+      lines.forEach((line, index) => { room(s(13.6)); y -= s(13.6); if (marked) tint(margin + s(11), s(13.6)); if (!index) draw('•', margin + s(1), 'regular', s(9.8), MUTED); draw(line, margin + s(11), 'regular', s(9.8)); });
     }
   };
 
   y -= s(21); draw(resume.name, margin, 'bold', s(21));
   if (resume.headline) { y -= s(15); draw(resume.headline, margin, 'regular', s(11), MUTED); }
   if (resume.contact.length) { y -= s(3); paragraph(resume.contact.join('  ·  '), 'regular', s(9.2), s(13), margin, MUTED); }
-  if (resume.summary) { section('Summary'); y -= s(1); paragraph(resume.summary, 'regular', s(9.8), s(14)); }
+  if (resume.summary) { section('Summary'); y -= s(1); paragraph(resume.summary, 'regular', s(9.8), s(14), margin, INK, !!highlight?.has('summary')); }
   if (resume.experience.length) {
     section('Experience');
     for (const role of resume.experience) {
@@ -135,9 +141,9 @@ async function render(resume: StructuredResume, paper: Paper, scale: number) {
 }
 
 /** Renders the resume, tightening slightly when that brings a near-miss back onto one page. */
-export async function renderResumePdf(resume: StructuredResume, paper: Paper): Promise<{ bytes: Uint8Array; pages: number; tightened: boolean }> {
-  const full = await render(resume, paper, 1);
+export async function renderResumePdf(resume: StructuredResume, paper: Paper, highlight?: Highlight): Promise<{ bytes: Uint8Array; pages: number; tightened: boolean }> {
+  const full = await render(resume, paper, 1, highlight);
   if (full.pages === 1) return { ...full, tightened: false };
-  for (const scale of [0.95, 0.9]) { const tight = await render(resume, paper, scale); if (tight.pages === 1) return { ...tight, tightened: true }; }
+  for (const scale of [0.95, 0.9]) { const tight = await render(resume, paper, scale, highlight); if (tight.pages === 1) return { ...tight, tightened: true }; }
   return { ...full, tightened: false };
 }

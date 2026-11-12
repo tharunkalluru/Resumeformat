@@ -17,7 +17,7 @@ export function AuthDialog({ initialMode, initialMessage, signedInRegion, onClos
   const [name, setName] = useState(''), [email, setEmail] = useState(''), [password, setPassword] = useState('');
   const [region, setRegion] = useState<RegionId>(() => rememberedRegion() ?? detectRegion());
   const [busy, setBusy] = useState<'' | 'form' | 'google'>(''), [error, setError] = useState(initialMessage ?? ''), [notice, setNotice] = useState('');
-  const panel = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null), [regionOpen, setRegionOpen] = useState(false);
 
   useEffect(() => { panel.current?.querySelector<HTMLInputElement>('input:not([type=hidden])')?.focus(); }, [view]);
   // Return focus to whatever opened the dialog.
@@ -103,10 +103,10 @@ export function AuthDialog({ initialMode, initialMessage, signedInRegion, onClos
         <button type="submit" className="auth-primary" disabled={!!busy}>{busy === 'form' && <LoaderCircle className="spin" size={16} />}{view === 'signin' ? 'Sign in' : view === 'signup' ? 'Create account' : view === 'forgot' ? 'Send reset link' : 'Save new password'}</button>
       </form>}
 
-      {(view === 'signup' || view === 'signin') && <label className="auth-region"><span>{view === 'signup' ? 'Store my data in' : 'Account region'}</span>
-        <select value={region} onChange={event => setRegion(event.target.value as RegionId)} disabled={!!busy}>{REGION_IDS.map(option => <option key={option} value={option}>{REGIONS[option].label}</option>)}</select>
-        <small>{view === 'signup' ? 'Pick where you live for the fastest experience. Your data stays in this region.' : 'Email sign-in checks both regions automatically. For Google, choose the region you signed up in.'}</small>
-      </label>}
+      {/* The region is detected; it is only shown when the user asks to change it. */}
+      {(view === 'signup' || view === 'signin') && (regionOpen
+        ? <label className="auth-region"><span>{view === 'signup' ? 'Store my data in' : 'Account region'}</span><select value={region} onChange={event => setRegion(event.target.value as RegionId)} disabled={!!busy}>{REGION_IDS.map(option => <option key={option} value={option}>{REGIONS[option].label}</option>)}</select><small>{view === 'signup' ? 'Your data stays in this region.' : 'For Google sign-in, choose the region you signed up in.'}</small></label>
+        : <p className="auth-fineprint auth-region-line">{view === 'signup' ? 'Your data will be stored in' : 'Account region:'} {REGIONS[region].label}. <button type="button" className="auth-link" onClick={() => setRegionOpen(true)}>Change</button></p>)}
 
       {view === 'signin' && <p className="auth-switch">New to Folio? <button type="button" className="auth-link" onClick={() => go('signup')}>Create an account</button></p>}
       {view === 'signup' && <p className="auth-switch">Already have an account? <button type="button" className="auth-link" onClick={() => go('signin')}>Sign in</button></p>}

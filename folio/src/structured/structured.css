@@ -68,3 +68,31 @@
 .structured-source-note { padding: var(--space-3); border-radius: var(--radius-control); background: var(--bg-subtle); color: var(--text-secondary); }
 .structured-recent { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); margin-top: var(--space-3); font: var(--text-small); color: var(--text-muted); }
 .structured-entry { margin-bottom: var(--space-2); }
+
+/* ---- Fewer decisions: changes arrive applied, options live in one menu ---- */
+.structured-menu { position: relative; }
+.structured-menu > summary { list-style: none; cursor: pointer; min-width: var(--control-md); justify-content: center; }
+.structured-menu > summary::-webkit-details-marker { display: none; }
+.structured-menu-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 5; min-width: 248px; padding: var(--space-1); display: grid; border-radius: var(--radius-card); background: var(--bg-surface); box-shadow: var(--shadow-overlay); }
+.structured-menu-list > button { min-height: 44px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-xs); background: none; text-align: left; font: var(--text-small); color: var(--text-primary); }
+.structured-menu-list > button:hover:not(:disabled) { background: var(--bg-hover); }
+.structured-menu-row { display: flex; align-items: center; gap: var(--space-1); min-height: 44px; padding: 0 var(--space-3); color: var(--text-muted); }
+.structured-menu-row > span { flex: 1; }
+.structured-menu-row > button { min-height: 32px; padding: 0 var(--space-3); border: 1px solid var(--border-default); border-radius: var(--radius-pill); background: none; font: var(--text-caption); color: var(--text-secondary); }
+.structured-menu-row > button[aria-pressed="true"] { border-color: var(--text-primary); color: var(--text-primary); font-weight: 600; }
+.structured-review-head .text-button, .structured-change-head .text-button, .structured-cuts .text-button { min-height: 32px; flex: none; }
+.structured-change-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.structured-suggestion.is-undone .structured-after { background: none; box-shadow: none; padding: 0; color: var(--text-muted); text-decoration: line-through; }
+.structured-suggestion.is-undone .structured-before { color: var(--text-primary); text-decoration: none; }
+.structured-suggestion.is-undone .structured-reason { display: none; }
+.structured-cuts { display: grid; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-card); background: var(--status-warning-bg); }
+.structured-cuts ul { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.structured-cuts li { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.structured-cuts li p { color: var(--text-secondary); text-decoration: line-through; }
+.structured-cuts li.is-undone p { text-decoration: none; color: var(--text-primary); }
+.structured-more { border-top: 1px solid var(--border-default); padding-top: var(--space-2); color: var(--text-secondary); }
+.structured-more > summary { min-height: 44px; display: flex; align-items: center; font: var(--text-label); cursor: pointer; }
+.structured-more p { margin: 0 0 var(--space-2); }
+.structured-more ul { margin: 0 0 var(--space-3); padding-left: 18px; }
+.structured-again { align-self: flex-start; min-height: 44px; }
+.structured-job textarea { min-height: 260px; }
