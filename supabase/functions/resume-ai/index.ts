@@ -1,15 +1,19 @@
 // Folio structured-resume AI, deployed identically to each regional project.
 // POST /structure reads a resume's text into sections. POST /tailor proposes changes for one job.
-// Signed-in users only; shares the daily limits and the public.ai_runs log with the `ai` function.
+// POST /job reads a job posting from a public page. POST /cover drafts a cover letter (signed-in only).
+// Signed-in users share the daily limits and the public.ai_runs log with the `ai` function.
+// Visitors without an account get one try (one /structure and one /tailor per address per day),
+// under a daily cap for all visitors, logged in public.ai_anon_runs by a salted hash of the address.
 import { createClient } from '@supabase/supabase-js';
 import {
   MODEL, MAX_RESUME_CHARS, MAX_JOB_CHARS, STRUCTURE_SCHEMA, STRUCTURE_INSTRUCTIONS, TAILOR_SCHEMA, TAILOR_INSTRUCTIONS,
-  checkStructure, checkTailoring, validResume,
+  COVER_SCHEMA, COVER_INSTRUCTIONS, checkStructure, checkTailoring, checkLetter, validResume, safeJobUrl, htmlToJobText,
 } from './structured.mjs';
 
 const env = (name: string) => Deno.env.get(name)?.trim() ?? '';
 const USER_DAILY_LIMIT = Number(env('AI_DAILY_USER_LIMIT') || 20);
 const GLOBAL_DAILY_LIMIT = Number(env('AI_DAILY_GLOBAL_LIMIT') || 300);
+const ANON_DAILY_LIMIT = Number(env('AI_DAILY_ANON_LIMIT') || 100); // AI calls; one try is two calls
 const ALLOWED_ORIGINS = new Set(['http://localhost:4594', 'http://127.0.0.1:4594', ...env('ALLOWED_ORIGINS').split(',').map(o => o.trim()).filter(Boolean)]);
 const PAGES_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?folio-app-78s\.pages\.dev$/;
 const MAX_BODY_BYTES = 160 * 1024;
@@ -71,11 +75,10 @@ Deno.serve(async request => {
   const route = new URL(request.url).pathname.split('/').filter(Boolean).at(-1);
 
   const token = (request.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
-  const { data: auth } = await admin.auth.getUser(token);
-  const user = auth?.user;
-  if (!user) return fail(401, 'sign_in_required', 'Sign in to use AI.');
-  if (request.method !== 'POST' || (route !== 'structure' && route !== 'tailor')) return fail(404, 'not_found', 'Unknown route.');
-  if (!apiKey) return fail(503, 'not_configured', 'AI is not configured yet.');
+  const user = token.split('.').length === 3 ? (await admin.auth.getUser(token)).data?.user ?? null : null;
+  if (request.method !== 'POST' || !['structure', 'tailor', 'job', 'cover'].includes(route ?? '')) return fail(404, 'not_found', 'Unknown route.');
+  if (!user && route === 'cover') return fail(401, 'sign_in_required', 'Sign in to write a cover letter.');
+  if (!apiKey && route !== 'job') return fail(503, 'not_configured', 'AI is not configured yet.');
 
   const raw = await request.text();
   if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) return fail(413, 'body_too_large', 'The request is too large.');
@@ -87,23 +90,45 @@ Deno.serve(async request => {
 
   if (route === 'structure') {
     if (typeof body.text !== 'string' || body.text.trim().length < 40 || body.text.length > MAX_RESUME_CHARS) return fail(400, 'invalid_request', 'The resume text is missing or too long.');
+  } else if (route === 'job') {
+    if (!safeJobUrl(body.url)) return fail(400, 'job_unreadable', 'That link can’t be read. Paste the job text instead.');
   } else {
     const job = body.job;
     if (!validResume(body.resume) || !job || typeof job.description !== 'string' || !job.description.trim() || job.description.length > MAX_JOB_CHARS ||
-        typeof job.title !== 'string' || job.title.length > 300 || typeof job.company !== 'string' || job.company.length > 300) return fail(400, 'invalid_request', 'The resume or job is missing or too long.');
+        typeof (job.title ?? '') !== 'string' || (job.title ?? '').length > 300 || typeof (job.company ?? '') !== 'string' || (job.company ?? '').length > 300) return fail(400, 'invalid_request', 'The resume or job is missing or too long.');
   }
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const [mine, everyone] = await Promise.all([
-    admin.from('ai_runs').select('id', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', since),
-    admin.from('ai_runs').select('id', { count: 'exact', head: true }).gte('created_at', since),
-  ]);
-  if ((mine.count ?? 0) >= USER_DAILY_LIMIT) return fail(429, 'daily_limit', `You’ve used today’s ${USER_DAILY_LIMIT} AI runs. Try again tomorrow.`);
-  if ((everyone.count ?? 0) >= GLOBAL_DAILY_LIMIT) return fail(429, 'service_limit', 'AI is at capacity for today. Try again tomorrow.');
-
-  const claim = await admin.from('ai_runs').insert({ user_id: user.id, request_id: `${user.id}:${route}:${requestId}`, model: MODEL }).select('id').single();
-  if (claim.error) return fail(409, 'request_already_sent', 'This request was already sent.');
-  const finish = (fields: Record<string, unknown>) => admin.from('ai_runs').update(fields).eq('id', claim.data.id);
+  let finish = async (_fields: Record<string, unknown>, _ok: boolean) => {};
+  if (user) {
+    if (route !== 'job') {
+      const [mine, everyone] = await Promise.all([
+        admin.from('ai_runs').select('id', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', since),
+        admin.from('ai_runs').select('id', { count: 'exact', head: true }).gte('created_at', since),
+      ]);
+      if ((mine.count ?? 0) >= USER_DAILY_LIMIT) return fail(429, 'daily_limit', `You’ve used today’s ${USER_DAILY_LIMIT} AI runs. Try again tomorrow.`);
+      if ((everyone.count ?? 0) >= GLOBAL_DAILY_LIMIT) return fail(429, 'service_limit', 'AI is at capacity for today. Try again tomorrow.');
+      const claim = await admin.from('ai_runs').insert({ user_id: user.id, request_id: `${user.id}:${route}:${requestId}`, model: MODEL }).select('id').single();
+      if (claim.error) return fail(409, 'request_already_sent', 'This request was already sent.');
+      finish = async (fields) => { await admin.from('ai_runs').update(fields).eq('id', claim.data.id); };
+    }
+  } else {
+    // No account: one try per address per day. Only a salted hash of the address is kept.
+    const address = (request.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown';
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${address}:${env('SUPABASE_SERVICE_ROLE_KEY').slice(-24)}`));
+    const ipHash = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+    const [mine, everyone] = await Promise.all([
+      admin.from('ai_anon_runs').select('id', { count: 'exact', head: true }).eq('ip_hash', ipHash).eq('route', route).gte('created_at', since),
+      admin.from('ai_anon_runs').select('id', { count: 'exact', head: true }).neq('route', 'job').gte('created_at', since),
+    ]);
+    if (mine.error || everyone.error) return fail(503, 'not_configured', 'Free tries are not available right now. Create a free account to continue.');
+    if ((mine.count ?? 0) >= (route === 'job' ? 5 : 1)) return fail(429, 'trial_used', 'You’ve used your free try. Create a free account to keep going.');
+    if (route !== 'job' && (everyone.count ?? 0) >= ANON_DAILY_LIMIT) return fail(429, 'trial_closed', 'Free tries are used up for today. Create a free account to continue.');
+    const claim = await admin.from('ai_anon_runs').insert({ ip_hash: ipHash, route }).select('id').single();
+    if (claim.error) return fail(503, 'not_configured', 'Free tries are not available right now. Create a free account to continue.');
+    // A failed call does not use up the visitor's try.
+    finish = async (_fields, ok) => { if (!ok) await admin.from('ai_anon_runs').delete().eq('id', claim.data.id); };
+  }
 
   try {
     let result: unknown, usage;
@@ -112,19 +137,36 @@ Deno.serve(async request => {
       const problem = checkStructure(answer.value, body.text);
       if (problem) { console.error('structure rejected', problem); throw new Failure(502, 'provider_invalid_response', 'The resume could not be read reliably. Try again.'); }
       result = { resume: answer.value }; usage = answer.usage;
+    } else if (route === 'job') {
+      const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 9000);
+      try {
+        const page = await fetch(safeJobUrl(body.url)!, { signal: controller.signal, redirect: 'follow', headers: { Accept: 'text/html', 'User-Agent': 'Mozilla/5.0 (compatible; FolioJobReader/1.0)' } });
+        // A redirect must not lead somewhere the first check would have refused.
+        if (!page.ok || !safeJobUrl(page.url) || !(page.headers.get('content-type') ?? '').includes('text/html')) { await page.body?.cancel().catch(() => {}); throw new Error('unreadable'); }
+        const html = (await page.text()).slice(0, 1_500_000), text = htmlToJobText(html);
+        if (!text) throw new Error('unreadable');
+        result = { text };
+      } catch { throw new Failure(422, 'job_unreadable', 'That page couldn’t be read. Paste the job text instead.'); }
+      finally { clearTimeout(timer); }
+    } else if (route === 'cover') {
+      const { description } = body.job;
+      const answer = await ask(COVER_INSTRUCTIONS, { job: { description }, resume: body.resume }, COVER_SCHEMA, 'folio_cover_letter', 'low', 3000);
+      const checked = checkLetter(answer.value, body.resume, description);
+      if (!checked.letter) { console.error('letter rejected', checked.problem); throw new Failure(502, 'provider_invalid_response', 'The letter could not be written reliably. Try again.'); }
+      result = { letter: checked.letter }; usage = answer.usage;
     } else {
-      const { title, company, description } = body.job;
-      const answer = await ask(TAILOR_INSTRUCTIONS, { job: { title, company, description }, resume: body.resume }, TAILOR_SCHEMA, 'folio_resume_tailoring', 'medium', 9000);
-      const checked = checkTailoring(answer.value, body.resume, `${title}\n${company}\n${description}`);
+      const description = body.job.description;
+      const answer = await ask(TAILOR_INSTRUCTIONS, { job: { description }, resume: body.resume }, TAILOR_SCHEMA, 'folio_resume_tailoring', 'medium', 9000);
+      const checked = checkTailoring(answer.value, body.resume, description);
       if (Object.keys(checked.dropped).length) console.error('tailoring dropped', JSON.stringify(checked.dropped), 'kept', checked.bullets.length);
       result = checked; usage = answer.usage;
     }
-    await finish({ status: 'succeeded', input_tokens: usage?.input_tokens ?? null, output_tokens: usage?.output_tokens ?? null });
+    await finish({ status: 'succeeded', input_tokens: usage?.input_tokens ?? null, output_tokens: usage?.output_tokens ?? null }, true);
     return json(200, result, origin);
   } catch (error) {
     const failure = error instanceof Failure ? error : new Failure(500, 'internal_error', 'The AI service could not complete the request.');
     if (!(error instanceof Failure)) console.error('unexpected', String(error).slice(0, 300));
-    await finish({ status: 'failed', error_code: failure.code });
+    await finish({ status: 'failed', error_code: failure.code }, false);
     return fail(failure.status, failure.code, failure.message);
   }
 });
