@@ -168,7 +168,7 @@ export function TemplateInspection(props: TemplateInspectionProps) {
     <div className="inspection-viewport" ref={viewport} tabIndex={0} role="region" aria-label="Synchronized document previews" aria-describedby={`${id}-caption`}>
       <div className={`inspection-stage inspection-mode-${displayedMode}`} style={stageStyle}>
         <div className="inspection-column inspection-source">
-          <div className="inspection-paper-label"><strong>Original source</strong><span>{project.source.format === 'pdf' ? `PDF · Page ${page}${page <= sourceCount ? ` of ${sourceCount}` : ' unavailable'}` : 'DOCX · Browser reference'}</span></div>
+          <div className="inspection-paper-label"><strong>Your original</strong><span>{project.source.format === 'pdf' ? `PDF · Page ${page}${page <= sourceCount ? ` of ${sourceCount}` : ' unavailable'}` : 'DOCX · Browser reference'}</span></div>
           <div ref={sourceFrame} className="inspection-paper inspection-original-paper">{page > sourceCount && project.source.format === 'pdf'
             ? <div className="inspection-placeholder">The original has no page {page}.</div>
             : project.source.format === 'pdf'
@@ -176,7 +176,7 @@ export function TemplateInspection(props: TemplateInspectionProps) {
               : <DocxReference bytes={project.source.bytes} page={page} />}</div>
         </div>
         <div className="inspection-column inspection-baseline">
-          <div className="inspection-paper-label"><strong>{originalReplay ? 'Original layout preview' : 'Reconstructed template'}</strong><span>{hasValidApproval(project) ? 'Approved' : 'What Folio will edit'}</span></div>
+          <div className="inspection-paper-label"><strong>{originalReplay ? 'Original layout preview' : 'Folio’s copy'}</strong><span>{hasValidApproval(project) ? 'Approved' : 'What Folio will edit'}</span></div>
           <div ref={baselineFrame} className="inspection-paper inspection-reconstruction-paper">{!templatePage
             ? <div className="inspection-placeholder">The template has no page {page}.</div>
             : render

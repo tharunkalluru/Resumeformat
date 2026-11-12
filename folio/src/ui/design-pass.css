@@ -84,6 +84,23 @@
 /* ---- Tab strip: the review toggle stays reachable when tabs scroll on small screens ---- */
 @media (max-width: 899px) { .folio-kit .kit-tabs .kit-tabs-review { position: sticky; right: 0; margin-left: auto; background: var(--bg-surface); box-shadow: -12px 0 12px -4px var(--bg-surface); } }
 
+/* ---- Layout check: one question, one primary action, escape hatches tucked away ---- */
+.folio-kit .workspace-header .header-backup { display: none; }
+.folio-kit .workspace-header:has(.header-backup):not(:has(.intake-privacy-link)) { min-height: 0; border-bottom: 0; }
+.folio-kit .document-titlebar h1 { font: var(--text-h3); letter-spacing: -.01em; }
+.folio-kit .document-titlebar .eyebrow { display: none; }
+.folio-kit .context-panel .rebuild-original > summary { min-height: 44px; display: flex; align-items: center; font: var(--text-label); color: var(--text-secondary); cursor: pointer; }
+.folio-kit .context-panel .rebuild-original > summary:hover { color: var(--text-primary); }
+.folio-kit .context-panel .rebuild-original[open] > summary { margin-bottom: var(--space-2); }
+.folio-kit .context-panel .import-notes > summary { min-height: 44px; display: flex; align-items: center; font: var(--text-label); color: var(--text-secondary); cursor: pointer; }
+@media (min-width: 900px) {
+  .folio-kit:not(.kit-review-open) .context-panel > .panel-action { position: sticky; bottom: 0; z-index: 2; margin: var(--space-4) calc(var(--space-6) * -1) 0; padding: var(--space-4) var(--space-6); background: var(--bg-surface); border-top: 1px solid var(--border-default); }
+}
+.folio-kit .context-panel .rebuild-original > summary, .folio-kit .context-panel .import-notes > summary { list-style: none; justify-content: space-between; gap: var(--space-3); }
+.folio-kit .context-panel .rebuild-original > summary::-webkit-details-marker, .folio-kit .context-panel .import-notes > summary::-webkit-details-marker { display: none; }
+.folio-kit .context-panel .rebuild-original > summary::after, .folio-kit .context-panel .import-notes > summary::after { content: ''; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform var(--dur-base) var(--ease-standard); flex: none; margin-right: 4px; }
+.folio-kit .context-panel .rebuild-original[open] > summary::after, .folio-kit .context-panel .import-notes[open] > summary::after { transform: rotate(-135deg); }
+
 /* ---- Disclosure rows need a real hit area ---- */
 .folio-kit .upgrade-readability > summary, .folio-kit .ai-tailoring summary { min-height: 32px; display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
 
