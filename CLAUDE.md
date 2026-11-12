@@ -70,5 +70,9 @@ Next, in order:
 5. Design proposals not yet done: remove the browser-style tab strip, trim the sidebar, group
    Career Memory by role, pin the Compose action, consolidate the CSS.
 
+Both Supabase projects are on the free plan, which pauses a project after 7 days without
+activity and breaks sign-in. `.github/workflows/keep-databases-awake.yml` pings both twice a week
+(it only runs from `main`). If sign-in fails everywhere, check whether the projects are paused.
+
 Open housekeeping: a QA user `folio-qa-us@folio.test` exists in the US database; a Cloudflare
 Worker `resumeformat` and two Vercel projects also build this repo and can be turned off.

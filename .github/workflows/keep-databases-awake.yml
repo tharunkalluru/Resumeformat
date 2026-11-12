@@ -1,0 +1,33 @@
+name: Keep databases awake
+
+# Supabase's free plan pauses a project after 7 days without activity, which breaks sign-in.
+# This makes one small read against each regional database twice a week.
+# The keys below are the publishable (browser-safe) keys, the same ones shipped in the app.
+
+on:
+  schedule:
+    - cron: '17 3 * * 1,4'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - region: India
+            url: https://asjgodeofdxtncyeband.supabase.co
+            key: sb_publishable__JJvvk3Jr8TrjlHDMS1iiA_vx92pCT8
+          - region: US
+            url: https://nocejvdlrazsvopyjrvo.supabase.co
+            key: sb_publishable_HQUz99GOCVyu7pXijAsHjw_wkjOpnV7
+    steps:
+      - name: Read from the ${{ matrix.region }} database
+        run: |
+          status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
+            "${{ matrix.url }}/rest/v1/profiles?select=user_id&limit=1" \
+            -H "apikey: ${{ matrix.key }}")
+          echo "${{ matrix.region }} database answered $status"
+          # 200 or an access-denied answer both mean the database is awake; anything else is a problem.
+          case "$status" in 200|401|403) ;; *) exit 1 ;; esac
