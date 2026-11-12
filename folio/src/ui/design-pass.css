@@ -46,6 +46,29 @@
 .folio-kit .preservation-note strong { color: var(--text-secondary); }
 .folio-kit .preservation-note > svg { color: var(--status-success); }
 
+/* ---- Review: the resume is the focal point; status is one line, not three tiles ---- */
+.folio-kit .kit-review-title { display: block; margin-bottom: var(--space-5); }
+.folio-kit .kit-review-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4) var(--space-6); flex-wrap: wrap; }
+.folio-kit .kit-review-heading > div:first-child { min-width: 0; flex: 1 1 280px; display: block; }
+.folio-kit .kit-review-title h1 { font: var(--text-h2); letter-spacing: var(--tracking-display); overflow-wrap: anywhere; }
+.folio-kit .kit-review-title p { margin-top: 2px; font: var(--text-small); color: var(--text-muted); }
+.folio-kit .kit-review-title p time { font: inherit; color: inherit; }
+.folio-kit .kit-review-heading > .kit-resume-actions { flex: none; flex-direction: row; align-items: center; gap: var(--space-2); }
+.folio-kit .kit-fit-line { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); margin: var(--space-4) 0 0; padding: var(--space-3) 0 0; border-top: 1px solid var(--border-default); list-style: none; font: var(--text-small); color: var(--text-secondary); }
+.folio-kit .kit-fit-line strong { font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.folio-kit .kit-fit-line li { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; }
+.folio-kit .kit-fit-line .is-ready, .folio-kit .kit-fit-line .is-pending { margin-left: auto; font-weight: 500; }
+.folio-kit .kit-fit-line .is-ready::before, .folio-kit .kit-fit-line .is-pending::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--status-success); }
+.folio-kit .kit-fit-line .is-pending::before { background: var(--status-warning); }
+.folio-kit .kit-fit-line .is-ready { color: var(--status-success); }
+.folio-kit .kit-fit-line .is-pending { color: var(--status-warning-text); }
+/* With the review panel open the panel owns Download; one primary action per screen. */
+@media (min-width: 1000px) { .folio-kit.kit-review-open:has(.working-area:not(.insights-closed)) .kit-review-heading .button-primary { display: none; } }
+@media (max-width: 699px) {
+  .folio-kit .kit-fit-line { flex-direction: column; gap: 2px; }
+  .folio-kit .kit-fit-line .is-ready, .folio-kit .kit-fit-line .is-pending { margin-left: 0; }
+}
+
 /* ---- One page-title style everywhere (was 22/28/30px at weights 500/600/700) ---- */
 .folio-kit .folio-compose-copy h1, .folio-kit .kit-page-heading h1, .folio-kit .memory-design-heading h1, .folio-kit .folio-privacy-content > h1, .folio-kit .folio-help > h1 { font: var(--text-h1); letter-spacing: var(--tracking-display); }
 @media (max-width: 699px) {
